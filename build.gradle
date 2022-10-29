@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.mingbai'
+version '1.0-SNAPSHOT'
+
+repositories {
+    maven { url 'https://maven.aliyun.com/repository/public/' }
+    maven {
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+        content {
+            includeGroup 'org.bukkit'
+            includeGroup 'org.spigotmc'
+        }
+    }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url = 'https://oss.sonatype.org/content/repositories/central' }
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT' // The Spigot API with no shadowing. Requires the OSS repo.
+    compileOnly 'org.spigotmc:spigot:1.19.2-R0.1-SNAPSHOT'
+//    implementation 'com.alibaba.fastjson2:fastjson2:2.0.16'
+
+}
+jar.from {
+    configurations.compileClasspath.findAll {
+        // 搜索条件
+//        it.name.contains('fastjson2')
+    }.collect {
+        // 处理搜索结果
+        zipTree it
+    }
+}
+test {
+    useJUnitPlatform()
+}
