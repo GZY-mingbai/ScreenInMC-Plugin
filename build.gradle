@@ -9,14 +9,12 @@ repositories {
     maven { url 'https://maven.aliyun.com/repository/public/' }
     maven { url 'https://maven.aliyun.com/repository/jcenter/' }
     maven {
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+        url = 'https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/content/'
         content {
             includeGroup 'org.bukkit'
             includeGroup 'org.spigotmc'
         }
     }
-    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
-    maven { url = 'https://oss.sonatype.org/content/repositories/central' }
     mavenLocal()
     mavenCentral()
 }
