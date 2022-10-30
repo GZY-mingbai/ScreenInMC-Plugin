@@ -29,13 +29,14 @@ jobs:
       with:
         java-version: '8'
         distribution: 'temurin'
-        gradle-version: '7.5.1'
     - name: Build with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
         arguments: build
+        gradle-version: '7.5.1'
     - name: Make Jar File with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
         arguments: jar
+        gradle-version: '7.5.1'
 
