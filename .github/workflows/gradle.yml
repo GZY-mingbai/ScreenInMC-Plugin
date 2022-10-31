@@ -40,3 +40,9 @@ jobs:
         arguments: jar
         gradle-version: '7.5.1'
 
+    - name: Upload Jar File
+      uses: actions/upload-artifact@master
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: ScreenInMC.jar
+        path: build/libs/*.jar
