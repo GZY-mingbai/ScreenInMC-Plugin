@@ -6,3 +6,4 @@ download-browser-core:
     url: "https://github.com/jcefmaven/jcefbuild"
     system-type: "" #仅在type为1时生效 可设置为: linux-amd64, linux-arm, linux-arm64, macosx-amd64, macosx-arm64, windows-amd64, windows-arm64,windows-i386 留空为自动获取
     version: "" #仅在type为1时生效 JCEF版本号(Tags) 留空为自动获取
+language: "zh_cn" #支持zh_cn en_us

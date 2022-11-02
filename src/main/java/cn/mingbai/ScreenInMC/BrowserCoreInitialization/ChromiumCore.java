@@ -2,11 +2,14 @@ package cn.mingbai.ScreenInMC.BrowserCoreInitialization;
 
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.HttpUtils;
+import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import com.google.gson.Gson;
+import org.bukkit.Bukkit;
 
 public class ChromiumCore implements BrowserCore{
     @Override
     public void installCore() {
+        Main.getPluginLogger().info(LangUtils.getText("start-download-chromium-core"));
         int type = Main.getConfiguration().getInt("download-browser-core.jcef-download-url.type");
         String downloadUrl="";
         String httpProxyUrl = Main.getConfiguration().getString("download-browser-core.http-proxy");
@@ -35,7 +38,11 @@ public class ChromiumCore implements BrowserCore{
                 }else{
 
                 }
-                repoUrl=downloadUrl+"/releases/download/"+version+"/"+"";
+                downloadUrl=repoUrl+"/releases/download/"+version+"/"+"";
+                if(githubProxyUrl.length()!=0) {
+                    downloadUrl = githubProxyUrl.replace("%URL%",downloadUrl);
+                }
+                Bukkit.broadcastMessage(downloadUrl);
                 break;
         }
     }

@@ -41,5 +41,15 @@
       <option name="name" value="maven4" />
       <option name="url" value="https://oss.sonatype.org/content/repositories/central" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven3" />
+      <option name="name" value="maven3" />
+      <option name="url" value="https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/content/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven2" />
+      <option name="name" value="maven2" />
+      <option name="url" value="https://maven.aliyun.com/repository/jcenter/" />
+    </remote-repository>
   </component>
 </project>
