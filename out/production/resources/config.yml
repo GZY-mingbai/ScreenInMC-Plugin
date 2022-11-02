@@ -1,0 +1,9 @@
+download-browser-core:
+  github-proxy: "https://ghproxy.com/%URL%" #留空为不使用Github代理
+  http-proxy: "" #留空为不使用http代理 例: http://127.0.0.1:1080
+  jcef-download-url:
+    type: 1 #0:直接下载文件(支持.zip .tar.gz .7z)(须手动选择对应系统) 1:下载Github仓库Releases文件(自动选择系统)
+    url: "https://github.com/jcefmaven/jcefbuild"
+    system-type: "" #仅在type为1时生效 可设置为: linux-amd64, linux-arm, linux-arm64, macosx-amd64, macosx-arm64, windows-amd64, windows-arm64,windows-i386 留空为自动获取
+    version: "" #仅在type为1时生效 JCEF版本号(Tags) 留空为自动获取
+language: "zh_cn" #支持zh_cn en_us
