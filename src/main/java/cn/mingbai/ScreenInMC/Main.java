@@ -28,16 +28,9 @@ public class Main extends JavaPlugin {
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
         LangUtils.setLanguage(config.getString("language"));
+        Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
+        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(),thisPlugin);
         isEnabled=true;
-        ChromiumCore core = new ChromiumCore();
-        BukkitRunnable runnable = new BukkitRunnable() {
-            @Override
-            public void run() {
-                core.installCore();
-            }
-        };
-        runnable.runTaskAsynchronously(thisPlugin);
-        ((CraftPlayer)Bukkit.getWorld("world").getPlayers().get(0)).getHandle().kill();
     }
     public static Plugin thisPlugin(){
         return thisPlugin;

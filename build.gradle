@@ -23,6 +23,24 @@ dependencies {
     compileOnly 'org.spigotmc:spigot:1.19.2-R0.1-SNAPSHOT:remapped-mojang'
 
 }
+task remappingJar{
+    doLast {
+        def path = new File('build/libs/remapped/')
+        if (!path.exists()) {
+            path.mkdirs()
+        }
+        def out = new ByteArrayOutputStream()
+        exec {
+            ExecSpec execSpec ->
+                executable 'cmd'
+                args '/c', "remapping.bat"
+                standardOutput = out
+        }
+        println(out.toString())
+        out.close()
+    }
+}
+remappingJar.dependsOn jar
 jar {
     baseName = 'ScreenInMC'
     version = ''
