@@ -30,10 +30,12 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
     - name: Build Spigot
-    - run: md BuildTools
-    - run: cd BuildTools
-    - run: C:\msys64\usr\bin\wget.exe "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
-    - run: java -jar BuildTools.jar --rev 1.19.2
+      run: | 
+        md BuildTools
+        cd BuildTools
+        C:\msys64\usr\bin\wget.exe "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
+        java -jar BuildTools.jar --rev 1.19.2
+        cd ..
     - name: Build with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
