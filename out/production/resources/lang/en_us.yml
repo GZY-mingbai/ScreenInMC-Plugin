@@ -1,1 +1,2 @@
 start-download-chromium-core: "Start downloading Chromium core."
+download-progress: "Downloaded %%."

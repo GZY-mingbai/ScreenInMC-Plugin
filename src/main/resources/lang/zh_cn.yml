@@ -1,1 +1,3 @@
 start-download-chromium-core: "开始下载Chromium核心"
+download-progress: "已下载 %%"
+download-success: "下载完成"

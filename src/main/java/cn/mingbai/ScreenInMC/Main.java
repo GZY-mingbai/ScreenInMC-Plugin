@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.logging.Logger;
 
@@ -14,6 +15,7 @@ public class Main extends JavaPlugin {
     private static boolean isEnabled = false;
     private static Logger logger;
     private static FileConfiguration config;
+    public static final String PluginFilesPath = "./plugins/ScreenInMC/";
     @Override
     public void onDisable() {
     }
@@ -27,7 +29,13 @@ public class Main extends JavaPlugin {
         LangUtils.setLanguage(config.getString("language"));
         isEnabled=true;
         ChromiumCore core = new ChromiumCore();
-        core.installCore();
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                core.installCore();
+            }
+        };
+        runnable.runTaskAsynchronously(thisPlugin);
     }
     public static Plugin thisPlugin(){
         return thisPlugin;
