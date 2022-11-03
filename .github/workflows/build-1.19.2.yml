@@ -49,7 +49,7 @@ jobs:
     - name: Remapping Jar File
       run: |
         mkdir build/libs/remapped/
-        C:\msys64\usr\bin\wget.exe "https://repo.maven.apache.org/maven2/net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar" -o "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar"
+        C:\msys64\usr\bin\wget.exe "https://repo.maven.apache.org/maven2/net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar" -O "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar"
         java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.2-R0.1-SNAPSHOT\spigot-1.19.2-R0.1-SNAPSHOT-remapped-mojang.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC.jar -o build\libs\ScreenInMC-obf.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.2-R0.1-SNAPSHOT\minecraft-server-1.19.2-R0.1-SNAPSHOT-maps-mojang.txt --reverse
         java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.2-R0.1-SNAPSHOT\spigot-1.19.2-R0.1-SNAPSHOT-remapped-obf.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC-obf.jar -o build\libs\remapped\ScreenInMC.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.2-R0.1-SNAPSHOT\minecraft-server-1.19.2-R0.1-SNAPSHOT-maps-spigot.csrg
     - name: Upload Plugin Jar File
