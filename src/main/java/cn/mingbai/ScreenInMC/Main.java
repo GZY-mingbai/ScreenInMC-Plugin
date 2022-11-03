@@ -4,6 +4,7 @@ import cn.mingbai.ScreenInMC.BrowserCoreInitialization.ChromiumCore;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -36,6 +37,7 @@ public class Main extends JavaPlugin {
             }
         };
         runnable.runTaskAsynchronously(thisPlugin);
+        ((CraftPlayer)Bukkit.getWorld("world").getPlayers().get(0)).getHandle().kill();
     }
     public static Plugin thisPlugin(){
         return thisPlugin;

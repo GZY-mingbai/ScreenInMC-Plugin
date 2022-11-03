@@ -1,6 +1,7 @@
 package cn.mingbai.ScreenInMC.Screen;
 
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 
 public class Screen {
     public Location location;
