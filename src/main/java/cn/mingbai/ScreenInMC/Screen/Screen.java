@@ -1,25 +1,37 @@
 package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import io.netty.buffer.Unpooled;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MapItem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Screen {
     private static List<Screen> allScreens = Collections.synchronizedList(new ArrayList<>());
-    public Location location;
+    private int displayDistance = 32;
+    private Location location;
     private Facing facing;
     private int height;
     private int width;
@@ -32,6 +44,22 @@ public class Screen {
         SOUTH,
         WEST,
         EAST
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public Facing getFacing() {
+        return facing;
     }
 
     public static List<Screen> getAllScreens() {
@@ -61,6 +89,7 @@ public class Screen {
         this.height=height;
         this.width=width;
     }
+
     public void sendPutScreenPacket(Player player) {
         if (placed) {
             if(!location.getWorld().equals(player.getWorld())){
@@ -73,14 +102,24 @@ public class Screen {
                 for(int y=0;y<width;y++) {
                     ScreenPiece piece = screenPieces[x][y];
                     Location loc = piece.getLocation();
-                    Bukkit.broadcastMessage(piece.getEntityId()+" "+piece.getUUID()+" "+facing.ordinal()+" "+sp.displayName);
-                    ClientboundAddEntityPacket packet = new ClientboundAddEntityPacket(
-                            piece.getEntityId(), piece.getUUID(),
+                    int entityID = piece.getEntityId();
+                    ClientboundAddEntityPacket packet1 = new ClientboundAddEntityPacket(
+                            entityID, piece.getUUID(),
                             (double) loc.getX(), (double) loc.getY(), (double) loc.getZ(),
                             pitchYaw.getKey(),pitchYaw.getValue(), EntityType.ITEM_FRAME,
                             facing.ordinal(),new Vec3(0,0,0),0
                     );
-                    spc.send(packet);
+                    spc.send(packet1);
+                    ItemStack mapItem = new ItemStack(Items.FILLED_MAP);
+                    mapItem.getOrCreateTag().putInt("map", entityID);
+                    SynchedEntityData.DataItem dataItem = new SynchedEntityData.DataItem(new EntityDataAccessor<>(8, EntityDataSerializers.ITEM_STACK),mapItem);
+                    FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.buffer());
+                    byteBuf.writeVarInt(entityID);
+                    List<SynchedEntityData.DataItem<?>> dataItemList = new ArrayList<>();
+                    dataItemList.add(dataItem);
+                    SynchedEntityData.pack(dataItemList,byteBuf);
+                    ClientboundSetEntityDataPacket packet2 = new ClientboundSetEntityDataPacket(byteBuf);
+                    spc.send(packet2);
                 }
             }
         } else {
@@ -141,6 +180,28 @@ public class Screen {
             }
         }else{
             throw new RuntimeException("This Screen has been placed.");
+        }
+    }
+    public void sendView(Player player, byte[] colors){
+        if(!location.getWorld().equals(player.getWorld())){
+            return;
+        }
+        if(location.distance(player.getLocation())>displayDistance){
+            return;
+        }
+        ServerPlayer sp = ((CraftPlayer)player).getHandle();
+        ServerPlayerConnection spc = sp.connection;
+        for(int y=0;y<height;y++){
+            for(int x=0;x<width;x++){
+                byte[] result = new byte[16384];
+                int p = y*height+x;
+                for(int i=0;i<128;i++){
+                    System.arraycopy(colors,(p+i*width)*128,result,i*128,128);
+                }
+                MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0,0,128,128,result);
+                ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0,true,new ArrayList<>(),mapPatch);
+                spc.send(packet);
+            }
         }
     }
 }

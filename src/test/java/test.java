@@ -1,5 +1,8 @@
+import cn.mingbai.ScreenInMC.Cores.AWTCore;
+
 public class test {
     public static void main(String[] args) {
-        System.out.println(System.getProperty("os.arch"));
+        AWTCore core = new AWTCore();
+        core.onCreate();
     }
 }
