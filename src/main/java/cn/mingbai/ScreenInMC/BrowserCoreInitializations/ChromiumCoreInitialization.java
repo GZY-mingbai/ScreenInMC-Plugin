@@ -1,16 +1,15 @@
-package cn.mingbai.ScreenInMC.BrowserCoreInitialization;
+package cn.mingbai.ScreenInMC.BrowserCoreInitializations;
 
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.HttpUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
-import org.bukkit.Bukkit;
 
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public class ChromiumCore implements BrowserCore{
+public class ChromiumCoreInitialization implements BrowserCoreInitialization {
     @Override
     public void installCore() {
         Logger logger = Main.getPluginLogger();

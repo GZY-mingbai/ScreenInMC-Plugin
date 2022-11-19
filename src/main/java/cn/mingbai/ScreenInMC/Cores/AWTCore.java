@@ -2,15 +2,17 @@ package cn.mingbai.ScreenInMC.Cores;
 
 
 import cn.mingbai.ScreenInMC.Core;
+import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 public class AWTCore extends Core {
 //    public static class ScreenInMCAWTContainer extends Container{
@@ -37,16 +39,72 @@ public class AWTCore extends Core {
 //            }
 //        }
 //    }
-    protected Container container;
+    public static class ScreenInMCAWTContainer extends JPanel{
+        private AWTCore core;
+        public ScreenInMCAWTContainer(Container panel){
+            this.add(panel);
+        }
+
+    public void setCore(AWTCore core) {
+        this.core = core;
+    }
+
+    public void clickAt(int x, int y){
+            Component nowComponent = this;
+            while (true){
+                Bukkit.broadcastMessage(nowComponent.getClass().getName());
+                for(MouseListener i:nowComponent.getMouseListeners()){
+                    i.mouseClicked(new MouseEvent(nowComponent,MouseEvent.MOUSE_CLICKED,
+                            System.currentTimeMillis(), 0,x,y,0,0,1,
+                            false,MouseEvent.BUTTON1));
+                }
+                if(nowComponent instanceof Container){
+                    Component newComponent = ((Container) nowComponent).getComponentAt(x,y);
+                    Bukkit.broadcastMessage(newComponent.getClass().getName());
+                    x-=newComponent.getX();
+                    y-=newComponent.getY();
+                    if(nowComponent.equals(newComponent)){
+                        break;
+                    }else{
+                        nowComponent=newComponent;
+                        continue;
+                    }
+                }
+                break;
+            }
+        }
+    @Override
+    public void repaint() {
+        if(core!=null){
+            Bukkit.broadcastMessage("rerender....");
+            core.renderGUI();
+        }
+    }
+}
+    protected ScreenInMCAWTContainer container;
+    public AWTCore(Container container){
+        this.container = new ScreenInMCAWTContainer(container);
+    }
+    private BufferedImage image;
+    private Graphics graphics;
     @Override
     public void onCreate() {
-        int width = screen.getWidth();
-        int height = screen.getHeight();
-        container = new Container();
-        container.setSize(width,height);
-        BufferedImage image = new BufferedImage(width,height, BufferedImage.TYPE_INT_RGB);
-        Graphics graphics = image.createGraphics();
-        container.paintAll(graphics);
-        graphics.dispose();
+        container.setCore(this);
+        int screenWidth = screen.getWidth()*128;
+        int screenHeight = screen.getHeight()*128;
+        container.setSize(screenWidth,screenHeight);
+        image = new BufferedImage(screenWidth,screenHeight, BufferedImage.TYPE_INT_ARGB);
+        graphics = image.createGraphics();
+        container.addNotify();
+    }
+
+    @Override
+    public void onMouseClick(int x, int y) {
+        container.clickAt(x,y);
+    }
+
+    public void renderGUI(){
+        container.paintComponents(graphics);
+        screen.sendView(ImageUtils.imageToMapColors(image));
     }
 }

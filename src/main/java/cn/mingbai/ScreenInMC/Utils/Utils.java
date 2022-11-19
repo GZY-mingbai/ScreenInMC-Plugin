@@ -113,4 +113,8 @@ public class Utils {
                 (byte)(value >>> 8),
                 (byte)value};
     }
+    public enum MouseClickType{
+        LEFT,
+        RIGHT
+    }
 }

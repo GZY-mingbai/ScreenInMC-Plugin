@@ -1,6 +1,8 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -26,7 +28,11 @@ public class CommandListener implements TabExecutor {
                     );
             screen.putScreen();
         }
-        return false;
+        if(args[0].equals("download")){
+            ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
+            initialization.installCore();
+        }
+        return true;
     }
 
     @Override
