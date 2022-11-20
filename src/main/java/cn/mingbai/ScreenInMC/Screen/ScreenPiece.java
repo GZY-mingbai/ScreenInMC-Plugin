@@ -10,15 +10,17 @@ public class ScreenPiece {
     private Location location;
     private int id;
     private UUID uuid;
-    public ScreenPiece(Location location){
-        this.location=location;
+
+    public ScreenPiece(Location location) {
+        this.location = location;
         this.id = nowId;
         this.uuid = UUID.nameUUIDFromBytes(Utils.intToByteArray(this.id));
         nowId++;
-        if(nowId<0){
+        if (nowId < 0) {
             nowId = 6000000;
         }
     }
+
     public Location getLocation() {
         return location;
     }

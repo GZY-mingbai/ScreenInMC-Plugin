@@ -15,6 +15,7 @@ public class Main extends JavaPlugin {
     private static Logger logger;
     private static FileConfiguration config;
     public static final String PluginFilesPath = "./plugins/ScreenInMC/";
+
     @Override
     public void onDisable() {
     }
@@ -22,22 +23,25 @@ public class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         ImageUtils.initImageUtils();
-        thisPlugin=Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
-        logger=thisPlugin.getLogger();
+        thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
+        logger = thisPlugin.getLogger();
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
         LangUtils.setLanguage(config.getString("language"));
         Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
-        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(),thisPlugin);
-        isEnabled=true;
+        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
+        isEnabled = true;
     }
-    public static Plugin thisPlugin(){
+
+    public static Plugin thisPlugin() {
         return thisPlugin;
     }
-    public static FileConfiguration getConfiguration(){
+
+    public static FileConfiguration getConfiguration() {
         return config;
     }
-    public static Logger getPluginLogger(){
+
+    public static Logger getPluginLogger() {
         return logger;
     }
 

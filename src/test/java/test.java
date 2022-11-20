@@ -41,7 +41,13 @@ public class test {
         }
     }
     public static void main(String[] args) throws Exception{
-        ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
-        initialization.installCore();
+        BufferedImage image = new BufferedImage(256,256,BufferedImage.TYPE_INT_ARGB);
+        Container container = testAwt.createContainer();
+        container.paintComponents(image.getGraphics());
+        ImageUtils.initImageUtils();
+        ImageUtils.imageToBufferedImage(image);
+        ImageIO.write(image,"png",new File("test.png"));
+//        ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
+//        initialization.installCore();
     }
 }

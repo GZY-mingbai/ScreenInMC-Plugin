@@ -1,43 +1,47 @@
 package cn.mingbai.ScreenInMC.Utils;
 
 import net.minecraft.world.level.material.MaterialColor;
-import org.bukkit.map.MapPalette;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.Raster;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ImageUtils {
     private static ColorPalette palette;
-    public static void initImageUtils(){
+
+    public static void initImageUtils() {
         try {
             List<Color> colors = new ArrayList<>();
-            for(int i=1;i<MaterialColor.MATERIAL_COLORS.length-1;i++){
+            for (int i = 1; i < MaterialColor.MATERIAL_COLORS.length - 1; i++) {
                 MaterialColor materialColor = MaterialColor.byId(i);
-                if(materialColor==null||materialColor.equals(MaterialColor.NONE)){
+                if (materialColor == null || materialColor.equals(MaterialColor.NONE)) {
                     break;
                 }
-                for(int b=0;b<4;b++){
-                    colors.add(new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)),true));
+                for (int b = 0; b < 4; b++) {
+                    colors.add(new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)), true));
                 }
             }
             palette = new ColorPalette(colors.toArray(new Color[0]));
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    public static byte[] imageToMapColorsWithGPU(Image image){
+//        BufferedImage img = imageToBufferedImage(image);
+//        int height = img.getHeight();
+//        int width = img.getWidth();
+        return null;
+    }
+
     public static byte[] imageToMapColors(Image image) {
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                Color color = new Color(img.getRGB(x, y),true);
-                if(color.getAlpha()!=255){
+                Color color = new Color(img.getRGB(x, y), true);
+                if (color.getAlpha() != 255) {
                     continue;
                 }
                 VectorRGB current_color = new VectorRGB(img.getRGB(x, y));
@@ -47,30 +51,28 @@ public class ImageUtils {
                 img.setRGB(x, y, closest_match.toRGB());
 
                 if (!(x == img.getWidth() - 1)) {
-                    if(((img.getRGB(x+1,y) >> 24) & 0xff)==255){
+                    if (((img.getRGB(x + 1, y) >> 24) & 0xff) == 255) {
                         img.setRGB(x + 1, y,
                                 ((new VectorRGB(img.getRGB(x + 1, y)).add(error.scalarMultiply((float) 7 / 16)))
                                         .clip(0, 255).toRGB()));
                     }
-                        if (!(y == img.getHeight() - 1)) {
-                            if(((img.getRGB(x+1,y+1) >> 24) & 0xff)==255) {
-                                img.setRGB(x + 1, y + 1,
+                    if (!(y == img.getHeight() - 1)) {
+                        if (((img.getRGB(x + 1, y + 1) >> 24) & 0xff) == 255) {
+                            img.setRGB(x + 1, y + 1,
                                     ((new VectorRGB(img.getRGB(x + 1, y + 1)).add(error.scalarMultiply((float) 1 / 16)))
                                             .clip(0, 255).toRGB()));
                         }
                     }
                 }
 
-                if (!(y == img.getHeight() - 1))
-
-                {
-                    if(((img.getRGB(x,y+1) >> 24) & 0xff)==255) {
+                if (!(y == img.getHeight() - 1)) {
+                    if (((img.getRGB(x, y + 1) >> 24) & 0xff) == 255) {
                         img.setRGB(x, y + 1,
                                 ((new VectorRGB(img.getRGB(x, y + 1)).add(error.scalarMultiply((float) 3 / 16)))
                                         .clip(0, 255).toRGB()));
                     }
                     if (!(x == 0)) {
-                        if(((img.getRGB(x-1,y+1) >> 24) & 0xff)==255) {
+                        if (((img.getRGB(x - 1, y + 1) >> 24) & 0xff) == 255) {
                             img.setRGB(x - 1, y + 1, ((new VectorRGB(img.getRGB(x - 1, y + 1))
                                     .add(error.scalarMultiply(5 / 16)).clip(0, 255).toRGB())));
                         }
@@ -79,26 +81,25 @@ public class ImageUtils {
                 }
             }
         }
-        byte[] result = new byte[height*width];
+        byte[] result = new byte[height * width];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                int color = img.getRGB(x,y);
+                int color = img.getRGB(x, y);
                 int alpha = (color >> 24) & 0xff;
                 int indexInt;
-                if(alpha==255){
-                    indexInt=palette.getColorIndex(color)+4;
-                }else{
+                if (alpha == 255) {
+                    indexInt = palette.getColorIndex(color) + 4;
+                } else {
                     indexInt = 0;
                 }
-                result[y*width+x] = (byte)((indexInt/4) << 2 | (indexInt%4) & 3);
+                result[y * width + x] = (byte) ((indexInt / 4) << 2 | (indexInt % 4) & 3);
             }
         }
         return result;
     }
-    public static BufferedImage imageToBufferedImage(Image img)
-    {
-        if (img instanceof BufferedImage)
-        {
+
+    public static BufferedImage imageToBufferedImage(Image img) {
+        if (img instanceof BufferedImage) {
             return (BufferedImage) img;
         }
         BufferedImage bufferedImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
@@ -107,6 +108,7 @@ public class ImageUtils {
         graphics.dispose();
         return bufferedImage;
     }
+
     public static class VectorRGB {
         public int r;
         public int g;
@@ -180,6 +182,7 @@ public class ImageUtils {
 
         }
     }
+
     public static class ColorPalette {
 
         private VectorRGB[] colors;
@@ -212,11 +215,12 @@ public class ImageUtils {
 
             return colors[minimum_index];
         }
+
         public int getColorIndex(int color) {
             for (int i = 0; i < colors.length; i++) {
                 Color c1 = colors[i].toColor();
-                Color c2 = new Color(color,true);
-                if(c1.equals(c2)){
+                Color c2 = new Color(color, true);
+                if (c1.equals(c2)) {
                     return i;
                 }
             }

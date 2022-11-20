@@ -5,32 +5,27 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.testAwt;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.MapItem;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Screen {
     private static List<Screen> allScreens = Collections.synchronizedList(new ArrayList<>());
@@ -41,7 +36,8 @@ public class Screen {
     private int width;
     private boolean placed = false;
     private ScreenPiece[][] screenPieces;
-    public enum Facing{
+
+    public enum Facing {
         DOWN,
         UP,
         NORTH,
@@ -70,59 +66,60 @@ public class Screen {
         return allScreens;
     }
 
-    public static Utils.Pair<Integer,Integer> getFacingPitchYaw(Facing facing){
-        switch (facing){
+    public static Utils.Pair<Integer, Integer> getFacingPitchYaw(Facing facing) {
+        switch (facing) {
             case UP:
-                return new Utils.Pair<>(0,-90);
+                return new Utils.Pair<>(0, -90);
             case DOWN:
-                return new Utils.Pair<>(0,90);
+                return new Utils.Pair<>(0, 90);
             case WEST:
-                return new Utils.Pair<>(90,0);
+                return new Utils.Pair<>(90, 0);
             case SOUTH:
-                return new Utils.Pair<>(0,0);
+                return new Utils.Pair<>(0, 0);
             case EAST:
-                return new Utils.Pair<>(-90,0);
+                return new Utils.Pair<>(-90, 0);
             case NORTH:
-                return new Utils.Pair<>(-180,0);
+                return new Utils.Pair<>(-180, 0);
         }
         return null;
     }
-    public Screen(Location location,Facing facing,int width,int height){
-        this.location=location;
-        this.facing=facing;
-        this.height=height;
-        this.width=width;
+
+    public Screen(Location location, Facing facing, int width, int height) {
+        this.location = location;
+        this.facing = facing;
+        this.height = height;
+        this.width = width;
     }
 
     public void sendPutScreenPacket(Player player) {
         if (placed) {
-            if(!location.getWorld().equals(player.getWorld())){
+            if (!location.getWorld().equals(player.getWorld())) {
                 return;
             }
-            ServerPlayer sp = ((CraftPlayer)player).getHandle();
+            ServerPlayer sp = ((CraftPlayer) player).getHandle();
             ServerPlayerConnection spc = sp.connection;
-            Utils.Pair<Integer,Integer> pitchYaw = getFacingPitchYaw(facing);
-            for(int x=0;x<width;x++){
-                for(int y=0;y<height;y++) {
+            Utils.Pair<Integer, Integer> pitchYaw = getFacingPitchYaw(facing);
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
                     ScreenPiece piece = screenPieces[x][y];
                     Location loc = piece.getLocation();
                     int entityID = piece.getEntityId();
                     ClientboundAddEntityPacket packet1 = new ClientboundAddEntityPacket(
                             entityID, piece.getUUID(),
                             (double) loc.getX(), (double) loc.getY(), (double) loc.getZ(),
-                            pitchYaw.getKey(),pitchYaw.getValue(), EntityType.ITEM_FRAME,
-                            facing.ordinal(),new Vec3(0,0,0),0
+                            pitchYaw.getKey(), pitchYaw.getValue(), EntityType.ITEM_FRAME,
+                            facing.ordinal(), new Vec3(0, 0, 0), 0
                     );
                     spc.send(packet1);
                     ItemStack mapItem = new ItemStack(Items.FILLED_MAP);
                     mapItem.getOrCreateTag().putInt("map", entityID);
-                    SynchedEntityData.DataItem dataItem = new SynchedEntityData.DataItem(new EntityDataAccessor<>(8, EntityDataSerializers.ITEM_STACK),mapItem);
+                    SynchedEntityData.DataItem dataItem = new SynchedEntityData.DataItem(new EntityDataAccessor<>(8, EntityDataSerializers.ITEM_STACK), mapItem);
                     FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.buffer());
                     byteBuf.writeVarInt(entityID);
                     List<SynchedEntityData.DataItem<?>> dataItemList = new ArrayList<>();
                     dataItemList.add(dataItem);
-                    dataItemList.add(new SynchedEntityData.DataItem<>(new EntityDataAccessor<>(0, EntityDataSerializers.BYTE),(byte)0x20));
-                    SynchedEntityData.pack(dataItemList,byteBuf);
+                    dataItemList.add(new SynchedEntityData.DataItem<>(new EntityDataAccessor<>(0, EntityDataSerializers.BYTE), (byte) 0x20));
+                    SynchedEntityData.pack(dataItemList, byteBuf);
                     ClientboundSetEntityDataPacket packet2 = new ClientboundSetEntityDataPacket(byteBuf);
                     spc.send(packet2);
                 }
@@ -131,54 +128,55 @@ public class Screen {
             throw new RuntimeException("This Screen has not been placed.");
         }
     }
-    public void putScreen(){
-        if(!placed) {
+
+    public void putScreen() {
+        if (!placed) {
             screenPieces = new ScreenPiece[width][height];
             switch (facing) {
                 case UP:
-                    for(int x=0;x<width;x++){
-                        for(int y=0;y<height;y++) {
-                            screenPieces[x][y] = new ScreenPiece(location.clone().add(x,0,y));
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            screenPieces[x][y] = new ScreenPiece(location.clone().add(x, 0, y));
                         }
                     }
                     break;
                 case DOWN:
-                    for(int x=0;x<width;x++){
-                        for(int y=0;y<height;y++) {
-                            screenPieces[x][y] = new ScreenPiece(location.clone().add(x,0,-y));
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            screenPieces[x][y] = new ScreenPiece(location.clone().add(x, 0, -y));
                         }
                     }
                     break;
                 case EAST:
-                    for(int x=0;x<width;x++){
-                        for(int y=0;y<height;y++) {
-                            screenPieces[x][y] = new ScreenPiece(location.clone().add(0,-y,-x));
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            screenPieces[x][y] = new ScreenPiece(location.clone().add(0, -y, -x));
                         }
                     }
                     break;
                 case SOUTH:
-                    for(int x=0;x<width;x++){
-                        for(int y=0;y<height;y++) {
-                            screenPieces[x][y] = new ScreenPiece(location.clone().add(x,-y,0));
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            screenPieces[x][y] = new ScreenPiece(location.clone().add(x, -y, 0));
                         }
                     }
                     break;
                 case WEST:
-                    for(int x=0;x<width;x++){
-                        for(int y=0;y<height;y++) {
-                            screenPieces[x][y] = new ScreenPiece(location.clone().add(0,-y,x));
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            screenPieces[x][y] = new ScreenPiece(location.clone().add(0, -y, x));
                         }
                     }
                     break;
                 case NORTH:
-                    for(int x=0;x<width;x++){
-                        for(int y=0;y<height;y++) {
-                            screenPieces[x][y] = new ScreenPiece(location.clone().add(-x,-y,0));
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            screenPieces[x][y] = new ScreenPiece(location.clone().add(-x, -y, 0));
                         }
                     }
                     break;
             }
-            placed=true;
+            placed = true;
             allScreens.add(this);
 //            byte[] testg = new byte[width*height*128*128];
 //            for(int i=0;i<testg.length;i++)
@@ -189,16 +187,18 @@ public class Screen {
 //                    break;
 //                }
 //            }
-            Core test = new testAwt();
-            test.create(this);
-            for(Player player : location.getWorld().getPlayers()){
+
+            for (Player player : location.getWorld().getPlayers()) {
                 sendPutScreenPacket(player);
 //                sendView(player,testg);
             }
-        }else{
+            Core test = new test();
+            test.create(this);
+        } else {
             throw new RuntimeException("This Screen has been placed.");
         }
     }
+
     private Core core;
 
     public void setCore(Core core) {
@@ -209,29 +209,30 @@ public class Screen {
         return core;
     }
 
-    public void sendView(byte[] colors){
-        for(Player player : location.getWorld().getPlayers()) {
-            sendView(player,colors);
+    public void sendView(byte[] colors) {
+        for (Player player : location.getWorld().getPlayers()) {
+            sendView(player, colors);
         }
     }
-    public void sendView(Player player, byte[] colors){
-        if(!location.getWorld().equals(player.getWorld())){
+
+    public void sendView(Player player, byte[] colors) {
+        if (!location.getWorld().equals(player.getWorld())) {
             return;
         }
-        if(location.distance(player.getLocation())>displayDistance){
+        if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
-        ServerPlayer sp = ((CraftPlayer)player).getHandle();
+        ServerPlayer sp = ((CraftPlayer) player).getHandle();
         ServerPlayerConnection spc = sp.connection;
-        for(int y=0;y<height;y++){
-            for(int x=0;x<width;x++){
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 byte[] result = new byte[16384];
-                int p = (y*width*128+x);
-                for(int i=0;i<128;i++){
-                    System.arraycopy(colors,(p+i*width)*128,result,i*128,128);
+                int p = (y * width * 128 + x);
+                for (int i = 0; i < 128; i++) {
+                    System.arraycopy(colors, (p + i * width) * 128, result, i * 128, 128);
                 }
-                MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0,0,128,128,result);
-                ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0,true,new ArrayList<>(),mapPatch);
+                MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0, 0, 128, 128, result);
+                ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
                 spc.send(packet);
             }
         }

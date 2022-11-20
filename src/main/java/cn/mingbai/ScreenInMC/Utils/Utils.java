@@ -6,7 +6,7 @@ import java.util.Objects;
 
 //From javafx.utils.Pair
 public class Utils {
-    public static class Pair<K,V> implements Serializable {
+    public static class Pair<K, V> implements Serializable {
 
         /**
          * Key of this <code>Pair</code>.
@@ -106,14 +106,16 @@ public class Utils {
             return false;
         }
     }
+
     public static final byte[] intToByteArray(int value) {
-        return new byte[] {
-                (byte)(value >>> 24),
-                (byte)(value >>> 16),
-                (byte)(value >>> 8),
-                (byte)value};
+        return new byte[]{
+                (byte) (value >>> 24),
+                (byte) (value >>> 16),
+                (byte) (value >>> 8),
+                (byte) value};
     }
-    public enum MouseClickType{
+
+    public enum MouseClickType {
         LEFT,
         RIGHT
     }
