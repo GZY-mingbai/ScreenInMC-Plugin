@@ -30,31 +30,18 @@ public class ChromiumCoreInitialization implements BrowserCoreInitialization {
                 String systemName;
                 String systemArch;
                 if (systemType.length() == 0) {
-                    systemName = System.getProperty("os.name").replace(" ", "").toLowerCase();
-                    systemArch = System.getProperty("os.arch");
+                    Utils.Pair<String,String> systemNameAndArch = Utils.getSystem();
+                    systemName = systemNameAndArch.getKey();
+                    systemArch = systemNameAndArch.getValue();
                 } else {
                     String[] systemNameAndArch = systemType.split("-", 1);
                     systemName = systemNameAndArch[0];
                     systemArch = systemNameAndArch[1];
                 }
-                if (systemName.indexOf("windows") != 0) {
-                    systemName = "windows";
-                } else if (systemName.indexOf("linux") != 0) {
-                    systemName = "linux";
-                } else if (systemName.indexOf("macosx") != 0) {
-                    systemName = "macosx";
-                } else {
+                if (systemName == null) {
                     throw new RuntimeException("Current system is not supported: " + systemName + ".");
                 }
-                if (systemArch.equals("x86_64") || systemArch.equals("amd64") || systemArch.equals("x64") || systemArch.equals("ia64")) {
-                    systemArch = "amd64";
-                } else if (systemArch.equals("x86_32") || systemArch.equals("i386") || systemArch.equals("x86") || systemArch.equals("x32") || systemArch.equals("ia32")) {
-                    systemArch = "i386";
-                } else if (systemArch.equals("arm") || systemArch.equals("arm32") || systemArch.equals("aarch32")) {
-                    systemArch = "arm";
-                } else if (systemArch.equals("arm64") || systemArch.equals("aarch64")) {
-                    systemArch = "arm64";
-                } else {
+                if (systemArch == null) {
                     throw new RuntimeException("Current arch is not supported: " + systemArch + ".");
                 }
                 if (version.length() == 0) {

@@ -3,4 +3,9 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="17" />
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="ScreenInMC2.main" options="--add-exports java.base/jdk.internal.loader=ALL-UNNAMED" />
+    </option>
+  </component>
 </project>

@@ -1,6 +1,8 @@
 package cn.mingbai.ScreenInMC.Utils;
 
+import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import net.minecraft.world.level.material.MaterialColor;
+import org.bukkit.Bukkit;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -9,37 +11,100 @@ import java.util.List;
 
 public class ImageUtils {
     private static ColorPalette palette;
+    private static int[] palette_;
 
+    public static int[] getPalette() {
+        return palette_;
+    }
+    public static float[] RGBToHSL(int r,int g,int b) {
+        float H, S, L, var_Min, var_Max, del_Max, del_R, del_G, del_B;
+        H = 0;
+        var_Min = Math.min(r, Math.min(g, b));
+        var_Max = Math.max(r, Math.max(g, b));
+        del_Max = var_Max - var_Min;
+        L = (var_Max + var_Min) / 2;
+        if (del_Max == 0) {
+            H = 0;
+            S = 0;
+        } else {
+            if (L < 128) {
+                S = 256 * del_Max / (var_Max + var_Min);
+            } else {
+                S = 256 * del_Max / (512 - var_Max - var_Min);
+            }
+            del_R = ((360 * (var_Max - r) / 6) + (360 * del_Max / 2))
+                    / del_Max;
+            del_G = ((360 * (var_Max - g) / 6) + (360 * del_Max / 2))
+                    / del_Max;
+            del_B = ((360 * (var_Max - b) / 6) + (360 * del_Max / 2))
+                    / del_Max;
+            if (r == var_Max) {
+                H = del_B - del_G;
+            } else if (g == var_Max) {
+                H = 120 + del_R - del_B;
+            } else if (b == var_Max) {
+                H = 240 + del_G - del_R;
+            }
+            if (H < 0) {
+                H += 360;
+            }
+            if (H >= 360) {
+                H -= 360;
+            }
+            if (L >= 256) {
+                L = 255;
+            }
+            if (S >= 256) {
+                S = 255;
+            }
+        }
+        return new float[]{H, S, L};
+    }
     public static void initImageUtils() {
         try {
             List<Color> colors = new ArrayList<>();
+            List<Integer> colors_ = new ArrayList<>();
             for (int i = 1; i < MaterialColor.MATERIAL_COLORS.length - 1; i++) {
                 MaterialColor materialColor = MaterialColor.byId(i);
                 if (materialColor == null || materialColor.equals(MaterialColor.NONE)) {
                     break;
                 }
                 for (int b = 0; b < 4; b++) {
-                    colors.add(new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)), true));
+                    Color color = new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)), true);
+                    colors.add(color);
+                    float[] hsv = RGBToHSL(color.getRed(),color.getGreen(),color.getBlue());
+                    colors_.add((int)(hsv[0]));
+                    colors_.add((int)(hsv[1]));
+                    colors_.add((int)(hsv[2]));
+
                 }
             }
             palette = new ColorPalette(colors.toArray(new Color[0]));
+            palette_ = Utils.toPrimitive(colors_.toArray(new Integer[0]));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
     public static byte[] imageToMapColorsWithGPU(Image image){
-//        BufferedImage img = imageToBufferedImage(image);
-//        int height = img.getHeight();
-//        int width = img.getWidth();
-        return null;
-    }
-
-    public static byte[] imageToMapColors(Image image) {
+        long start = System.currentTimeMillis();
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+        int[] data = img.getRGB(0,0,width,height,null,0,width);
+//        Bukkit.broadcastMessage("Time: "+(System.currentTimeMillis()-start));
+        return GPUDither.dither(data,width,height);
+    }
+    public static boolean useGPU = true;
+    public static byte[] imageToMapColors(Image image) {
+        if(useGPU){
+            return imageToMapColorsWithGPU(image);
+        }
+        long start = System.currentTimeMillis();
+        BufferedImage img = imageToBufferedImage(image);
+        int height = img.getHeight();
+        int width = img.getWidth();
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
                 Color color = new Color(img.getRGB(x, y), true);
                 if (color.getAlpha() != 255) {
                     continue;
@@ -82,8 +147,8 @@ public class ImageUtils {
             }
         }
         byte[] result = new byte[height * width];
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
                 int color = img.getRGB(x, y);
                 int alpha = (color >> 24) & 0xff;
                 int indexInt;
@@ -95,6 +160,7 @@ public class ImageUtils {
                 result[y * width + x] = (byte) ((indexInt / 4) << 2 | (indexInt % 4) & 3);
             }
         }
+        Bukkit.broadcastMessage("Time: "+(System.currentTimeMillis()-start));
         return result;
     }
 

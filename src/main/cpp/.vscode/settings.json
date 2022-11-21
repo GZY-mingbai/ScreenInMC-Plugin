@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "cmath": "cpp",
+        "cstdlib": "cpp",
+        "xlocnum": "cpp",
+        "xutility": "cpp",
+        "*.cl": "cpp"
+    }
+}

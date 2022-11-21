@@ -1,7 +1,9 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
+import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -9,6 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 
 import java.util.List;
+
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.useGPU;
 
 public class CommandListener implements TabExecutor {
     @Override
@@ -29,6 +33,19 @@ public class CommandListener implements TabExecutor {
         if (args[0].equals("download")) {
             ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
             initialization.installCore();
+        }
+        if (args[0].equals("plat")) {
+            String[] plats= GPUDither.getPlatforms();
+            for(String i:plats){
+                Bukkit.broadcastMessage("Find device: "+i);
+            }
+        }
+        if (args[0].equals("init")) {
+            int[] p = ImageUtils.getPalette();
+            Bukkit.broadcastMessage("Init: "+GPUDither.init(Integer.parseInt(args[1]), p,p.length/3));
+        }
+        if(args[0].equals("switch")){
+            useGPU=!useGPU;
         }
         return true;
     }
