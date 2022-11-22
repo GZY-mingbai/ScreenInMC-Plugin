@@ -42,7 +42,7 @@ public class CommandListener implements TabExecutor {
         }
         if (args[0].equals("init")) {
             int[] p = ImageUtils.getPalette();
-            Bukkit.broadcastMessage("Init: "+GPUDither.init(Integer.parseInt(args[1]), p,p.length/3));
+            Bukkit.broadcastMessage("Init: "+GPUDither.init(Integer.parseInt(args[1]), p,p.length));
         }
         if(args[0].equals("switch")){
             useGPU=!useGPU;

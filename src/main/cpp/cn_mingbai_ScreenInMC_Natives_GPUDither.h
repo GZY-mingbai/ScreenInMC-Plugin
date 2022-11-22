@@ -35,13 +35,13 @@ static cl_program program;
 static int paletteColorCount;
 static int* palette;
 
-//#include <windows.h>
-//#include <GdiPlus.h>
-//#include <iostream>
-//#pragma comment(lib,"Gdiplus.lib")
-//
-//#include <string>
-//using namespace Gdiplus;
+#include <windows.h>
+#include <GdiPlus.h>
+#include <iostream>
+#pragma comment(lib,"Gdiplus.lib")
+
+#include <string>
+using namespace Gdiplus;
 
 bool getPlatforms(cl_uint* count, cl_platform_id** result);
 bool getPlatformNames(cl_uint* count, char*** names);

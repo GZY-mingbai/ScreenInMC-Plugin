@@ -1,4 +1,4 @@
-float hueDistance(float h1, float h2) {
+float colorDistance(int* h1, int* h2) {
     float diff = abs((h1 - h2));
     return min(abs((1.0 - diff)), diff);
 }
@@ -49,7 +49,8 @@ int* intToRgba(int rgb) {
     result[3] = (rgb >> 24) & 0xff;
     return result;
 }
-int* closestColors(float hue,__global int *colors,int colorCount) {
+// int* closestColors(float hue,__global int *colors,int colorCount) {
+int* closestColors(float hue,int *colors,int colorCount) {
     int closest[4] = { -2, 0, 0 ,0};
     int secondClosest[4] = {-2, 0, 0, 0};
     int *temp;
@@ -87,14 +88,16 @@ int* closestColors(float hue,__global int *colors,int colorCount) {
     return ret;
 
 }
-__kernel void dither(__global int *image,__global int *palette,__global int *settings,__global char *result) {
+// __kernel void dither(__global int *image,__global int *palette,__global int *settings,__global char *result) {
+void dither(int *image,int *palette,int *settings,char *result) {
     int colorCount = settings[2];
-    int id = get_global_id(0);
+    // int id = get_global_id(0);
+    int id = 0;
     int* hsl = rgbToHsl(intToRgb(image[id]));
     int* cs = closestColors(hsl[0],palette,colorCount);
     int c1[4] = {cs[0],cs[1],cs[2],cs[6]+4};
     int c2[4] = {cs[3],cs[4],cs[5],cs[7]+4};
     float d = id;
-    float hueDiff = hueDistance(hsl[0], c1[0] / hueDistance(c2[0], c1[0]));
+    float hueDiff = colorDistance(hsl[0], c1[0] / hueDistance(c2[0], c1[0]));
     result[id] = (char) hueDiff < d ? c1[3] : c2[3];
 }

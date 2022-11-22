@@ -1,132 +1,110 @@
-float hslDistance(float* h1, float* h2) {
-    const float pi=3.1415926;
-    const float r=0.999958243;
-    const float h=0.00913839539;
-    float x1 = r * h1[2] * h1[1] * cos(h1[0] / 2 * pi);
-    float y1 = r * h1[2] * h1[1] * sin(h1[0] / 2 * pi);
-    float z1 = h * (1 - h1[2]);
-    float x2 = r * h2[2] * h2[1] * cos(h2[0] / 2 * pi);
-    float y2 = r * h2[2] * h2[1] * sin(h2[0] / 2 * pi);
-    float z2 = h * (1 - h2[2]);
-    float dx = x1 - x2;
-    float dy = y1 - y2;
-    float dz = z1 - z2;
-    return sqrt(dx * dx + dy * dy + dz * dz);
-}
-float* rgbToHsl(int* rgb)
-{
-    float H,S,L;
-    float r = rgb[0];
-    float g = rgb[1];
-    float b = rgb[2];
-    r = r / 255.0;
-    g = g / 255.0;
-    b = b / 255.0;
-    float M = max(max(r, g), b);
-    float m = min(min(r, g), b);
-    float d = M - m;
-    if (d == 0) H = 0;
-    else if (M == r)
-    {
-        H = ((g - b) / d);
-        H = H + ((int)H % 6);
-    }
-    else if (M == g) H = (b - r) / d + 2;
-    else H = (r - g) / d + 4;
-    H *= 60;
-    if (H < 0) H += 360;
-    L = (M + m) / 2;
-    if (d == 0)
-        S = 0;
-    else
-        S = d / (1 - fabs(2 * L - 1));
-    H/=360.0;
-    float hsl[3]={H,S,L};
-    return hsl;
-}
-int* intToRgb(int rgb) {
-    int result[3];
-    result[0] = (rgb >> 16) & 0xff;
-    result[1] = (rgb >>  8) & 0xff;
-    result[2] = (rgb  ) & 0xff;
-    return result;
-}
 int* intToRgba(int rgb) {
     int result[4];
     result[0] = (rgb >> 16) & 0xff;
     result[1] = (rgb >>  8) & 0xff;
-    result[2] = (rgb) & 0xff;
+    result[2] = (rgb  ) & 0xff;
     result[3] = (rgb >> 24) & 0xff;
     return result;
 }
-float* closestColors(float *hsl,__global int *colors,int colorCount) {
-    float closest[4] = { -2, 0, 0 ,-4};
-    float secondClosest[4] = {-2, 0, 0, -4};
-    float temp[4];
-    for (int i = 0; i < colorCount; ++i) {
-        temp[0]=((float)colors[i*3])/360.0;
-        temp[1]=((float)colors[i*3+1])/255.0;
-        temp[2]=((float)colors[i*3+2])/255.0;
-        temp[3]=i;
-        float tempDistance = hslDistance(temp, hsl);
-        if (closest[0]==-2 || tempDistance < hslDistance(closest, hsl)) {
-            secondClosest[0] = closest[0];
-            secondClosest[1] = closest[1];
-            secondClosest[2] = closest[2];
-            secondClosest[3] = closest[3];
-            closest[0] = temp[0];
-            closest[1] = temp[1];
-            closest[2] = temp[2];
-            closest[3] = temp[3];
+int rgbToInt(int r,int g,int b) {
+    if(r>255) {
+        r=255;
+        
+    }
+    if(g>255) {
+        g=255;
+    }
+    if(b>255) {
+        b=255;
+    }
+    if(r<0) {
+        r=0;
+    }
+    if(g<0) {
+        g=0;
+    }
+    if(b<0) {
+        b=0;
+    }
+    return 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);
+}
+float colorDistance(int* c1, int* c2) {
+    int rmean = (c1[0] + c2[0]) / 2;
+    int r = c1[0] - c2[0];
+    int g = c1[1] - c2[1];
+    int b = c1[2] - c2[2];
+    return sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8)));
+}
+int* getNearlyColor(__global int *palette,int colorCount,int* rgb) {
+    int min = colorDistance(intToRgba(palette[0]),rgb);
+    int minIndex = 0;
+    int* minColor;
+    for (int i=1;i<colorCount;i++) {
+        int* tempColor = intToRgba(palette[i]);
+        int temp = colorDistance(tempColor,rgb);
+        if(temp<min) {
+            min = temp;
+            minIndex = i;
+            minColor=tempColor;
         }
-        else {
-            if (secondClosest[0]==-2 || tempDistance < hslDistance(secondClosest, hsl)) {
-                secondClosest[0] = temp[0];
-                secondClosest[1] = temp[1];
-                secondClosest[2] = temp[2];
-                secondClosest[3] = temp[3];
+    }
+    int result[8];
+    result[0]=min;
+    result[1]=minIndex+4;
+    result[2]=minColor[0];
+    result[3]=minColor[1];
+    result[4]=minColor[2];
+    result[5]=rgb[0]-result[2];
+    result[6]=rgb[1]-result[3];
+    result[7]=rgb[2]-result[4];
+    return result;
+}
+__kernel void dither(__global int *colors,__global int *palette,__global int *settings,__global char *result,
+__global volatile uint *temp) {
+    int gid = get_global_id(0);
+    printf("%d START\n",gid);
+    int width = settings[0];
+    int height = settings[1];
+    int colorCount = settings[2];
+    int size = width*height;
+    barrier(CLK_LOCAL_MEM_FENCE);
+    int* rgba = intToRgba(colors[gid]);
+    if(rgba[3]!=255) {
+        result[gid]=0;
+        return;
+    }
+    int* near = getNearlyColor(palette,colorCount,rgba);
+    colors[gid] = rgbToInt(near[2],near[3],near[4]);
+    result[gid] = (char)((near[1] / 4) << 2 | (near[1] % 4) & 3);
+    int x = gid%width;
+    int y = gid/width;
+    if(!(x == width)-1) {
+        int index = width*y+x+1;
+        int* rgba_ = intToRgba(colors[index]);
+        if(rgba_[3]==255) {
+            colors[index]=rgbToInt(rgba_[0]+near[5]*7/16,rgba_[1]+near[6]*7/16,rgba_[2]+near[7]*7/16);
+        }
+        if(!(y == height)-1) {
+            int index_ = width*(y+1)+x+1;
+            rgba_ = intToRgba(colors[index_]);
+            if(rgba[3]==255) {
+                colors[index_]=rgbToInt(rgba_[0]+near[5]*1/16,rgba_[1]+near[6]*1/16,rgba_[2]+near[7]*1/16);
             }
         }
     }
-    float ret[8];
-    ret[0] = closest[0];
-    ret[1] = closest[1];
-    ret[2] = closest[2];
-    ret[3] = secondClosest[0];
-    ret[4] = secondClosest[1];
-    ret[5] = secondClosest[2];
-    ret[6] = closest[3];
-    ret[7] = secondClosest[3];
-    return ret;
-
-}
-float indexValue(int width,int index) {
-    int y = index / width;
-    int x = index % width;
-    int indexMatrix[64] = {0,  32, 8,  40, 2,  34, 10, 42,
-                            48, 16, 56, 24, 50, 18, 58, 26,
-                            12, 44, 4,  36, 14, 46, 6,  38,
-                            60, 28, 52, 20, 62, 30, 54, 22,
-                            3,  35, 11, 43, 1,  33, 9,  41,
-                            51, 19, 59, 27, 49, 17, 57, 25,
-                            15, 47, 7,  39, 13, 45, 5,  37,
-                            63, 31, 55, 23, 61, 29, 53, 21};
-    return indexMatrix[(x%8) + (y%8) * 8] / 64.0;
-}
-__kernel void dither(__global int *image,__global int *palette,__global int *settings,__global char *result) {
-    int colorCount = settings[2];
-    int id = get_global_id(0);
-    int* rgba = intToRgba(image[id]);
-    if(rgba[3]!=255){
-        result[id]=0;
-        return;
+    if(!(y == height)-1) {
+        int index = width*(y+1)+x;
+        int* rgba_ = intToRgba(colors[index]);
+        if(rgba_[3]==255) {
+            colors[index]=rgbToInt(rgba_[0]+near[5]*7/16,rgba_[1]+near[6]*7/16,rgba_[2]+near[7]*3/16);
+        }
+        if(x != 0) {
+            int index_ = width*(y+1)+x-1;
+            rgba_ = intToRgba(colors[index_]);
+            if(rgba[3]==255) {
+                colors[index_]=rgbToInt(rgba_[0]+near[5]*1/16,rgba_[1]+near[6]*1/16,rgba_[2]+near[7]*5/16);
+            }
+        }
     }
-    int rgb[3] = {rgba[0],rgba[1],rgba[2]};
-    float* hsl = rgbToHsl(rgb);
-    float* cs = closestColors(hsl,palette,colorCount);
-    float c1[4] = {cs[0],cs[1],cs[2],cs[6]+4};
-    float c2[4] = {cs[3],cs[4],cs[5],cs[7]+4};
-    float d = indexValue(settings[0],id);
-    float hslDiff = hslDistance(hsl, c1) / hslDistance(c2, c1);
-    result[id] = (char) (hslDiff < d ? (int)c1[3] : (int)c2[3]);
+    printf("%d END\n",gid);
 }

@@ -4,6 +4,7 @@
         "cstdlib": "cpp",
         "xlocnum": "cpp",
         "xutility": "cpp",
-        "*.cl": "cpp"
+        "*.cl": "cpp",
+        "xlocale": "cpp"
     }
 }
