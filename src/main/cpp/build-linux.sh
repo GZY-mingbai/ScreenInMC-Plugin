@@ -1,0 +1,2 @@
+g++ -I /usr/lib/jvm/java-17-openjdk-amd64/include -I /usr/lib/jvm/java-17-openjdk-amd64/include/linux/ -I /opt/intel/system_studio_2020/opencl/SDK/include/ -c ScreenInMC.cpp -shared -o ./out/screen-in-mc-linux-amd64.so -m64
+g++ -I /usr/lib/jvm/java-17-openjdk-amd64/include -I /usr/lib/jvm/java-17-openjdk-amd64/include/linux/ -I /opt/intel/system_studio_2020/opencl/SDK/include/ -c ScreenInMC.cpp -shared -o ./out/screen-in-mc-linux-i386.so -m32
