@@ -2,7 +2,6 @@ package cn.mingbai.ScreenInMC.Utils;
 
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import net.minecraft.world.level.material.MaterialColor;
-import org.bukkit.Bukkit;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -17,6 +16,8 @@ public class ImageUtils {
         return palette_;
     }
 
+    public static int pieceSize = 128;
+
     public static void initImageUtils() {
         try {
             List<Color> colors = new ArrayList<>();
@@ -27,7 +28,12 @@ public class ImageUtils {
                     break;
                 }
                 for (int b = 0; b < 4; b++) {
-                    Color color = new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)), true);
+                    Color color = new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)));
+                    int cr = color.getRed();
+                    int cg = color.getGreen();
+                    int cb = color.getBlue();
+                    int ca = color.getAlpha();
+                    color = new Color(cb, cg, cr, ca);
                     colors.add(color);
                     colors_.add(color.getRGB());
 //                    float[] hsv = RGBToHSL(color.getRed(),color.getGreen(),color.getBlue());
@@ -45,19 +51,16 @@ public class ImageUtils {
     }
 
     public static byte[] imageToMapColorsWithGPU(Image image) {
-        long start = System.currentTimeMillis();
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
-        Bukkit.broadcastMessage("Time: " + (System.currentTimeMillis() - start));
-        return GPUDither.dither(data, width, height);
+        return GPUDither.dither(data, width, height, pieceSize);
     }
-
     public static boolean useGPU = true;
 
     public static int colorDistance(Color c1, Color c2) {
-        int rmean = (c1.getRed() + c2.getRed()) / 2;
+        int rmean = (c1.getBlue() + c2.getBlue()) / 2;
         int r = c1.getRed() - c2.getRed();
         int g = c1.getGreen() - c2.getGreen();
         int b = c1.getBlue() - c2.getBlue();
@@ -96,7 +99,6 @@ public class ImageUtils {
         if (useGPU) {
             return imageToMapColorsWithGPU(image);
         }
-        long start = System.currentTimeMillis();
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
@@ -158,7 +160,6 @@ public class ImageUtils {
                 i++;
             }
         }
-        Bukkit.broadcastMessage("Time: " + (System.currentTimeMillis() - start));
         return result;
     }
 

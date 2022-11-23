@@ -34,10 +34,10 @@ JNIEXPORT jboolean JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_unInit
 /*
  * Class:     cn_mingbai_ScreenInMC_Natives_GPUDither
  * Method:    dither
- * Signature: ([III)[B
+ * Signature: ([IIII)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_dither
-  (JNIEnv *, jclass, jintArray, jint, jint);
+  (JNIEnv *, jclass, jintArray, jint, jint, jint);
 
 #ifdef __cplusplus
 }

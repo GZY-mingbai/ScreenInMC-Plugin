@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 
 public class testAwt extends AWTCore {
@@ -26,7 +27,10 @@ public class testAwt extends AWTCore {
 
     public static JPanel createContainer() {
         try {
-            image = ImageIO.read(new URL("https://pic4.zhimg.com/v2-bd09649cf732f00c620b0be275cdbc48_r.jpg")).getScaledInstance(256, 256, Image.SCALE_SMOOTH);
+            Image image = ImageIO.read(new URL("https://pic4.zhimg.com/v2-bd09649cf732f00c620b0be275cdbc48_r.jpg")).getScaledInstance(256, 256, Image.SCALE_SMOOTH);
+            BufferedImage img = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
+            img.getGraphics().drawImage(image, 0, 0, null);
+
         } catch (Exception e) {
         }
         JPanel container = new JPanel();

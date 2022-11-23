@@ -12,6 +12,7 @@ import org.bukkit.command.TabExecutor;
 
 import java.util.List;
 
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.pieceSize;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.useGPU;
 
 public class CommandListener implements TabExecutor {
@@ -37,15 +38,18 @@ public class CommandListener implements TabExecutor {
         if (args[0].equals("plat")) {
             String[] plats= GPUDither.getPlatforms();
             for(String i:plats){
-                Bukkit.broadcastMessage("Find device: "+i);
+                Bukkit.broadcastMessage("Find device: " + i);
             }
         }
         if (args[0].equals("init")) {
             int[] p = ImageUtils.getPalette();
-            Bukkit.broadcastMessage("Init: "+GPUDither.init(Integer.parseInt(args[1]), p,p.length));
+            Bukkit.broadcastMessage("Init: " + GPUDither.init(Integer.parseInt(args[1]), p, p.length));
         }
-        if(args[0].equals("switch")){
-            useGPU=!useGPU;
+        if (args[0].equals("switch")) {
+            useGPU = !useGPU;
+        }
+        if (args[0].equals("size")) {
+            pieceSize = Integer.parseInt(args[1]);
         }
         return true;
     }

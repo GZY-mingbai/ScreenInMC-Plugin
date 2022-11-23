@@ -3,8 +3,6 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -41,7 +39,7 @@ public class EventListener implements Listener {
         Location playerLocation = player.getLocation();
         for (Screen i : Screen.getAllScreens()) {
             Location screenLocation = i.getLocation().clone();
-            if (screenLocation.distance(playerLocation) <= 32) {
+            if (screenLocation.getWorld().equals(playerLocation.getWorld()) && screenLocation.distance(playerLocation) <= 32) {
                 Vector v1;
                 switch (i.getFacing()) {
                     case UP:
@@ -107,7 +105,7 @@ public class EventListener implements Listener {
                             return;
                         }
                         mouseX = clickedLocationX - screenLocationX;
-                        mouseY = clickedLocationZ - (screenLocationZ - screenHeight);
+                        mouseY = screenLocationZ - clickedLocationZ;
                         break;
                     case EAST:
                         screenLocationY++;
@@ -117,8 +115,8 @@ public class EventListener implements Listener {
                         ) {
                             return;
                         }
-                        mouseX = clickedLocationY - (screenLocationY - screenHeight);
-                        mouseY = clickedLocationZ - (screenLocationZ - screenWidth);
+                        mouseX = screenLocationZ - clickedLocationZ;
+                        mouseY = screenLocationY - clickedLocationY;
                         break;
                     case SOUTH:
                         screenLocationY++;
@@ -128,7 +126,7 @@ public class EventListener implements Listener {
                             return;
                         }
                         mouseX = clickedLocationX - screenLocationX;
-                        mouseY = clickedLocationY - (screenLocationY - screenHeight);
+                        mouseY = screenLocationY - clickedLocationY;
                         break;
                     case WEST:
                         screenLocationY++;
@@ -138,8 +136,8 @@ public class EventListener implements Listener {
                         ) {
                             return;
                         }
-                        mouseX = clickedLocationY - (screenLocationY - screenHeight);
-                        mouseY = clickedLocationZ - screenLocationZ;
+                        mouseX = clickedLocationZ - screenLocationZ;
+                        mouseY = screenLocationY - clickedLocationY;
                         break;
                     case NORTH:
                         screenLocationX++;
@@ -150,8 +148,8 @@ public class EventListener implements Listener {
                         ) {
                             return;
                         }
-                        mouseX = clickedLocationX - (screenLocationX - screenWidth);
-                        mouseY = clickedLocationY - (screenLocationY - screenHeight);
+                        mouseX = screenLocationX - clickedLocationX;
+                        mouseY = screenLocationY - clickedLocationY;
                         break;
                     default:
                         return;
