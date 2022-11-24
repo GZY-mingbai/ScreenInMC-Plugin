@@ -4,5 +4,10 @@
 
 Using MIT License.
 
+Required: 
+1. Bukkit compatible Minecraft Server
+2. OpenCL Support
+3. an x86-64 CPU
+
 This project is working in progress.
 
