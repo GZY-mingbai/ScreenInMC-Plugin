@@ -26,7 +26,7 @@ public class test extends Core {
         image = new BufferedImage(screen.getWidth() * 128, screen.getHeight() * 128, BufferedImage.TYPE_INT_ARGB);
         graphics=image.getGraphics();
         try{
-            graphics.drawImage(ImageIO.read(new URL("http://127.0.0.1:2080/test.png")), 0, 0, image.getWidth(), image.getHeight(), null);
+            graphics.drawImage(ImageIO.read(new URL("https://i1.hdslb.com/bfs/archive/360d6633673f1b403cbbeb9d33d02161eda3486a.jpg")), 0, 0, image.getWidth(), image.getHeight(), null);
         }catch (Exception e){
             e.printStackTrace();
         }
