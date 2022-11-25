@@ -5,13 +5,15 @@
 
 Using MIT License.
 
+Details:https://b23.tv/M7Y6xsb
+
 Requires: 
 1. Bukkit compatible Minecraft Server
 2. OpenCL Support
-3. an x86 CPU
+3. an x86 CPU(maybe?)
 
 This project is working in progress.
-At present,this plugin only support Minecraft 1.19.2.
+At present,this plugin only support Minecraft 1.19.2 on Windows x64.
 
 Tested devices:
 Intel Core i3-2120&NVIDIA Geforce GT 555M&Windows 10 1909&Java 18
