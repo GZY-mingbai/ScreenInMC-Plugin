@@ -36,11 +36,6 @@ public class ImageUtils {
                     color = new Color(cb, cg, cr, ca);
                     colors.add(color);
                     colors_.add(color.getRGB());
-//                    float[] hsv = RGBToHSL(color.getRed(),color.getGreen(),color.getBlue());
-//                    colors_.add((int)(hsv[0]));
-//                    colors_.add((int)(hsv[1]));
-//                    colors_.add((int)(hsv[2]));
-
                 }
             }
             palette = colors.toArray(new Color[0]);
@@ -57,7 +52,7 @@ public class ImageUtils {
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
         return GPUDither.dither(data, width, height, pieceSize);
     }
-    public static boolean useGPU = true;
+    public static boolean useOpenCL = true;
 
     public static int colorDistance(Color c1, Color c2) {
         int rmean = (c1.getBlue() + c2.getBlue()) / 2;
@@ -96,7 +91,7 @@ public class ImageUtils {
     }
 
     public static byte[] imageToMapColors(Image image) {
-        if (useGPU) {
+        if (useOpenCL) {
             return imageToMapColorsWithGPU(image);
         }
         BufferedImage img = imageToBufferedImage(image);

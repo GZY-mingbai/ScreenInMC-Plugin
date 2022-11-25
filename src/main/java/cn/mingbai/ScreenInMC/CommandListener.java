@@ -13,7 +13,7 @@ import org.bukkit.command.TabExecutor;
 import java.util.List;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.pieceSize;
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.useGPU;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.useOpenCL;
 
 public class CommandListener implements TabExecutor {
     @Override
@@ -37,8 +37,8 @@ public class CommandListener implements TabExecutor {
         }
         if (args[0].equals("plat")) {
             String[] plats= GPUDither.getPlatforms();
-            for(String i:plats){
-                Bukkit.broadcastMessage("Find device: " + i);
+            for(int i=0;i<plats.length;i++){
+                Bukkit.broadcastMessage("Find device: " + i+" "+plats[i]);
             }
         }
         if (args[0].equals("init")) {
@@ -46,7 +46,7 @@ public class CommandListener implements TabExecutor {
             Bukkit.broadcastMessage("Init: " + GPUDither.init(Integer.parseInt(args[1]), p, p.length));
         }
         if (args[0].equals("switch")) {
-            useGPU = !useGPU;
+            useOpenCL = !useOpenCL;
         }
         if (args[0].equals("size")) {
             pieceSize = Integer.parseInt(args[1]);

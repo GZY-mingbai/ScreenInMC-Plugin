@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "xlocale": "cpp",
+        "*.cl": "cpp",
+        "xiosbase": "cpp"
+    }
+}

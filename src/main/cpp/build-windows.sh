@@ -1,2 +1,0 @@
-g++ -I /c/Users/27857/.jdks/corretto-17.0.4/include -I /c/Users/27857/.jdks/corretto-17.0.4/include/win32 -c ScreenInMC.cpp -I /c/Program\ Files\ \(x86\)/IntelSWTools/system_studio_2020/OpenCL/sdk/include/ -D__int64="long long" -shared -o ./out/screen-in-mc-windows-amd64.dll -m64
-g++ -I /c/Users/27857/.jdks/corretto-17.0.4/include -I /c/Users/27857/.jdks/corretto-17.0.4/include/win32 -c ScreenInMC.cpp -I /c/Program\ Files\ \(x86\)/IntelSWTools/system_studio_2020/OpenCL/sdk/include/ -D__int64="long long" -shared -o ./out/screen-in-mc-windows-i386.dll -m32
