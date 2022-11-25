@@ -8,7 +8,7 @@ Using MIT License.
 Requires: 
 1. Bukkit compatible Minecraft Server
 2. OpenCL Support
-3. an x86-64 CPU
+3. an x86 CPU
 
 This project is working in progress.
 At present,this plugin only support Minecraft 1.19.2.
