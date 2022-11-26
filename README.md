@@ -3,6 +3,10 @@
 * 在Minecraft中呈现任何你喜欢的图片/视频！
 * Provide a video display in your world. 
 
+![Example](http://zw.mingbaitalk.cn/pic/example.png)
+![Example](http://zw.mingbaitalk.cn/pic/gera.jpg)
+
+
 Using MIT License.
 
 Details:https://b23.tv/M7Y6xsb
@@ -10,10 +14,10 @@ Details:https://b23.tv/M7Y6xsb
 Requires: 
 1. Bukkit compatible Minecraft Server
 2. OpenCL Support
-3. an x86 CPU(maybe?)
+
 
 This project is working in progress.
-At present,this plugin only support Minecraft 1.19.2 on Windows x64.
+At present,this plugin was only tested with Minecraft 1.19.2 on Windows x64.
 
 Tested devices:
 Intel Core i3-2120&NVIDIA Geforce GT 555M&Windows 10 1909&Java 18
