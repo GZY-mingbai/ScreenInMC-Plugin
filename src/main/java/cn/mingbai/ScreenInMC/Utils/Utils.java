@@ -6,12 +6,91 @@ import java.util.Objects;
 
 //From javafx.utils.Pair
 public class Utils {
+    public static final byte[] intToByteArray(int value) {
+        return new byte[]{
+                (byte) (value >>> 24),
+                (byte) (value >>> 16),
+                (byte) (value >>> 8),
+                (byte) value};
+    }
+
+    public static Pair<String, String> getSystem() {
+        String systemName = System.getProperty("os.name").replace(" ", "").toLowerCase();
+        String systemArch = System.getProperty("os.arch");
+        if (systemName.indexOf("windows") != -1) {
+            systemName = "windows";
+        } else if (systemName.indexOf("linux") != -1) {
+            systemName = "linux";
+        } else if (systemName.indexOf("macosx") != -1) {
+            systemName = "macosx";
+        } else {
+            systemName = null;
+        }
+        if (systemArch.equals("x86_64") || systemArch.equals("amd64") || systemArch.equals("x64") || systemArch.equals("ia64")) {
+            systemArch = "amd64";
+        } else if (systemArch.equals("x86_32") || systemArch.equals("i386") || systemArch.equals("x86") || systemArch.equals("x32") || systemArch.equals("ia32")) {
+            systemArch = "i386";
+        } else if (systemArch.equals("arm") || systemArch.equals("arm32") || systemArch.equals("aarch32")) {
+            systemArch = "arm";
+        } else if (systemArch.equals("arm64") || systemArch.equals("aarch64")) {
+            systemArch = "arm64";
+        } else {
+            systemArch = null;
+        }
+        return new Pair<>(systemName, systemArch);
+    }
+
+    public static String getLibraryPrefix(String type) {
+        switch (type) {
+            case "windows":
+                return ".dll";
+            case "linux":
+                return ".so";
+            case "macosx":
+                return "dylib";
+        }
+        return null;
+    }
+
+    public static int[] toPrimitive(Integer[] array) {
+        if (array == null) {
+            return null;
+        } else if (array.length == 0) {
+            return new int[0];
+        }
+        final int[] result = new int[array.length];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = array[i].intValue();
+        }
+        return result;
+    }
+
+    public enum MouseClickType {
+        LEFT,
+        RIGHT
+    }
+
     public static class Pair<K, V> implements Serializable {
 
         /**
          * Key of this <code>Pair</code>.
          */
-        private K key;
+        private final K key;
+        /**
+         * Value of this this <code>Pair</code>.
+         */
+        private final V value;
+
+        /**
+         * Creates a new pair
+         *
+         * @param key   The key for this pair
+         * @param value The value to use for this pair
+         */
+        public Pair(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
 
         /**
          * Gets the key for this pair.
@@ -23,28 +102,12 @@ public class Utils {
         }
 
         /**
-         * Value of this this <code>Pair</code>.
-         */
-        private V value;
-
-        /**
          * Gets the value for this pair.
          *
          * @return value for this pair
          */
         public V getValue() {
             return value;
-        }
-
-        /**
-         * Creates a new pair
-         *
-         * @param key   The key for this pair
-         * @param value The value to use for this pair
-         */
-        public Pair(K key, V value) {
-            this.key = key;
-            this.value = value;
         }
 
         /**
@@ -97,74 +160,11 @@ public class Utils {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o instanceof Pair) {
-                Pair pair = (Pair) o;
+            if (o instanceof Pair pair) {
                 if (!Objects.equals(key, pair.key)) return false;
-                if (!Objects.equals(value, pair.value)) return false;
-                return true;
+                return Objects.equals(value, pair.value);
             }
             return false;
         }
-    }
-
-    public static final byte[] intToByteArray(int value) {
-        return new byte[]{
-                (byte) (value >>> 24),
-                (byte) (value >>> 16),
-                (byte) (value >>> 8),
-                (byte) value};
-    }
-
-    public enum MouseClickType {
-        LEFT,
-        RIGHT
-    }
-    public static Pair<String,String> getSystem(){
-        String systemName = System.getProperty("os.name").replace(" ", "").toLowerCase();
-        String systemArch = System.getProperty("os.arch");
-        if (systemName.indexOf("windows") != -1) {
-            systemName = "windows";
-        } else if (systemName.indexOf("linux") != -1) {
-            systemName = "linux";
-        } else if (systemName.indexOf("macosx") != -1) {
-            systemName = "macosx";
-        } else {
-            systemName = null;
-        }
-        if (systemArch.equals("x86_64") || systemArch.equals("amd64") || systemArch.equals("x64") || systemArch.equals("ia64")) {
-            systemArch = "amd64";
-        } else if (systemArch.equals("x86_32") || systemArch.equals("i386") || systemArch.equals("x86") || systemArch.equals("x32") || systemArch.equals("ia32")) {
-            systemArch = "i386";
-        } else if (systemArch.equals("arm") || systemArch.equals("arm32") || systemArch.equals("aarch32")) {
-            systemArch = "arm";
-        } else if (systemArch.equals("arm64") || systemArch.equals("aarch64")) {
-            systemArch = "arm64";
-        } else {
-            systemArch = null;
-        }
-        return new Pair<>(systemName,systemArch);
-    }
-    public static String getLibraryPrefix(String type){
-        switch (type){
-            case "windows":
-                return ".dll";
-            case "linux":
-                return ".so";
-            case "macosx":
-                return "dylib";
-        }
-        return null;
-    }
-    public static int[] toPrimitive(Integer[] array) {
-        if (array == null) {
-            return null;
-        } else if (array.length == 0) {
-            return new int[0];
-        }
-        final int[] result = new int[array.length];
-        for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].intValue();
-        }
-        return result;
     }
 }

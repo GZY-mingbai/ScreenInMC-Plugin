@@ -9,14 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageUtils {
+    public static int pieceSize = 128;
     private static Color[] palette;
     private static int[] palette_;
+    private static boolean useOpenCL = true;
 
     public static int[] getPalette() {
         return palette_;
     }
-
-    public static int pieceSize = 128;
 
     public static void initImageUtils() {
         try {
@@ -52,7 +52,14 @@ public class ImageUtils {
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
         return GPUDither.dither(data, width, height, pieceSize);
     }
-    public static boolean useOpenCL = true;
+
+    public static boolean isUseOpenCL() {
+        return useOpenCL;
+    }
+
+    public static void setUseOpenCL(boolean useOpenCL) {
+        ImageUtils.useOpenCL = useOpenCL;
+    }
 
     public static int colorDistance(Color c1, Color c2) {
         int rmean = (c1.getBlue() + c2.getBlue()) / 2;
@@ -104,7 +111,7 @@ public class ImageUtils {
             for (int x = 0; x < width; ++x) {
                 Color current_color = new Color(data[i], true);
                 if (current_color.getAlpha() != 255) {
-                    data[i]=0;
+                    data[i] = 0;
                     i++;
                     continue;
                 }

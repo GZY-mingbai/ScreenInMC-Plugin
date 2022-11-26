@@ -11,23 +11,28 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 
-public class test extends Core {
+import static java.awt.Image.SCALE_SMOOTH;
 
-    private byte color = 0;
+public class test extends Core {
 
     BufferedImage image;
     Graphics graphics;
+    String imageUrl;
+    private final byte color = 0;
 
-    public test() {
+    public test(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     @Override
     public void onCreate() {
         image = new BufferedImage(screen.getWidth() * 128, screen.getHeight() * 128, BufferedImage.TYPE_INT_ARGB);
-        graphics=image.getGraphics();
-        try{
-            graphics.drawImage(ImageIO.read(new URL("https://i1.hdslb.com/bfs/archive/360d6633673f1b403cbbeb9d33d02161eda3486a.jpg")), 0, 0, image.getWidth(), image.getHeight(), null);
-        }catch (Exception e){
+        graphics = image.getGraphics();
+        try {
+            Image dimage = ImageIO.read(new URL(imageUrl));
+            dimage = dimage.getScaledInstance(image.getWidth(), image.getHeight(), SCALE_SMOOTH);
+            graphics.drawImage(dimage, 0, 0, image.getWidth(), image.getHeight(), null);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         graphics.setColor(Color.white);
@@ -40,7 +45,7 @@ public class test extends Core {
             @Override
             public void run() {
 
-                graphics.fillOval(x-8,y-8,16,16);
+                graphics.fillOval(x - 8, y - 8, 16, 16);
                 long start = System.currentTimeMillis();
                 byte[] colors = ImageUtils.imageToMapColors(image.getScaledInstance(image.getWidth(), image.getHeight(), Image.SCALE_FAST));
                 Bukkit.broadcastMessage("Time: " + (System.currentTimeMillis() - start));

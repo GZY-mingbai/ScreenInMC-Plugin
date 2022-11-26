@@ -48,34 +48,40 @@ public class test {
         }
     }
     public static void main(String[] args) throws Exception{
-        Utils.Pair<String,String> typeArch = Utils.getSystem();
-        String prefix="screen-in-mc-"+typeArch.getKey()+"-"+typeArch.getValue();
-        String suffix = Utils.getLibraryPrefix(typeArch.getKey());
-        String fileName = prefix+suffix;
-        try {
-            File file = File.createTempFile(prefix,suffix);
-            InputStream stream = test.class.getResourceAsStream("/lib/" + fileName);
-            ReadableByteChannel inputChannel = Channels.newChannel(stream);
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            FileChannel fileChannel = fileOutputStream.getChannel();
-            fileChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
-            fileChannel.close();
-            fileOutputStream.close();
-            inputChannel.close();
-            stream.close();
-            System.load(file.getAbsolutePath());
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        BufferedImage image = ImageIO.read(new File("test.png"));
-        ImageUtils.initImageUtils();
-        int[] p = ImageUtils.getPalette();
-        GPUDither.init(1, p,p.length);
-        byte[] ok = ImageUtils.imageToMapColorsWithGPU(image);
-        System.out.println(114514);
-//        ImageIO.write(image,"png",new File("test.png"));
-//        ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
-//        initialization.installCore();
+        Robot robot = new Robot();
+        int width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+        int height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+        long time =System.currentTimeMillis();
+        robot.createScreenCapture(new Rectangle(width, height));
+        System.out.println((System.currentTimeMillis()-time)+"");
+//        Utils.Pair<String,String> typeArch = Utils.getSystem();
+//        String prefix="screen-in-mc-"+typeArch.getKey()+"-"+typeArch.getValue();
+//        String suffix = Utils.getLibraryPrefix(typeArch.getKey());
+//        String fileName = prefix+suffix;
+//        try {
+//            File file = File.createTempFile(prefix,suffix);
+//            InputStream stream = test.class.getResourceAsStream("/lib/" + fileName);
+//            ReadableByteChannel inputChannel = Channels.newChannel(stream);
+//            FileOutputStream fileOutputStream = new FileOutputStream(file);
+//            FileChannel fileChannel = fileOutputStream.getChannel();
+//            fileChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+//            fileChannel.close();
+//            fileOutputStream.close();
+//            inputChannel.close();
+//            stream.close();
+//            System.load(file.getAbsolutePath());
+//
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+//        BufferedImage image = ImageIO.read(new File("test.png"));
+//        ImageUtils.initImageUtils();
+//        int[] p = ImageUtils.getPalette();
+//        GPUDither.init(1, p,p.length);
+//        byte[] ok = ImageUtils.imageToMapColorsWithGPU(image);
+//        System.out.println(114514);
+////        ImageIO.write(image,"png",new File("test.png"));
+////        ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
+////        initialization.installCore();
     }
 }

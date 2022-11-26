@@ -11,28 +11,25 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Iterator;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 public class Main extends JavaPlugin {
+    public static final String PluginFilesPath = "./plugins/ScreenInMC/";
     private static Plugin thisPlugin;
     private static boolean isEnabled = false;
     private static Logger logger;
     private static FileConfiguration config;
-    public static final String PluginFilesPath = "./plugins/ScreenInMC/";
+
     static {
-        Utils.Pair<String,String> typeArch = Utils.getSystem();
-        String prefix="screen-in-mc-"+typeArch.getKey()+"-"+typeArch.getValue();
+        Utils.Pair<String, String> typeArch = Utils.getSystem();
+        String prefix = "screen-in-mc-" + typeArch.getKey() + "-" + typeArch.getValue();
         String suffix = Utils.getLibraryPrefix(typeArch.getKey());
-        String fileName = prefix+suffix;
+        String fileName = prefix + suffix;
         try {
-            File file = File.createTempFile(prefix,suffix);
+            File file = File.createTempFile(prefix, suffix);
             InputStream stream = Main.class.getResourceAsStream("/lib/" + fileName);
             ReadableByteChannel inputChannel = Channels.newChannel(stream);
             FileOutputStream fileOutputStream = new FileOutputStream(file);
@@ -44,25 +41,9 @@ public class Main extends JavaPlugin {
             stream.close();
             System.load(file.getAbsolutePath());
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void onDisable() {
-    }
-    @Override
-    public void onEnable() {
-        ImageUtils.initImageUtils();
-        thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
-        logger = thisPlugin.getLogger();
-        thisPlugin.saveDefaultConfig();
-        config = thisPlugin.getConfig();
-        LangUtils.setLanguage(config.getString("language"));
-        Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
-        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
-        isEnabled = true;
     }
 
     public static Plugin thisPlugin() {
@@ -79,5 +60,22 @@ public class Main extends JavaPlugin {
 
     public static void setLogger(Logger logger) {
         Main.logger = logger;
+    }
+
+    @Override
+    public void onDisable() {
+    }
+
+    @Override
+    public void onEnable() {
+        ImageUtils.initImageUtils();
+        thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
+        logger = thisPlugin.getLogger();
+        thisPlugin.saveDefaultConfig();
+        config = thisPlugin.getConfig();
+        LangUtils.setLanguage(config.getString("language"));
+        Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
+        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
+        isEnabled = true;
     }
 }

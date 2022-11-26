@@ -1,6 +1,8 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.test;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
@@ -12,8 +14,7 @@ import org.bukkit.command.TabExecutor;
 
 import java.util.List;
 
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.pieceSize;
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.useOpenCL;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
 
 public class CommandListener implements TabExecutor {
     @Override
@@ -30,15 +31,32 @@ public class CommandListener implements TabExecutor {
                     Integer.parseInt(args[7])
             );
             screen.putScreen();
+            Core test = new test(args[8]);
+            test.create(screen);
+        }
+        if (args[0].equals("place2")) {
+            Screen screen = new Screen(
+                    new Location(
+                            Bukkit.getWorld(args[1]),
+                            Integer.parseInt(args[2]),
+                            Integer.parseInt(args[3]),
+                            Integer.parseInt(args[4])
+                    ), Screen.Facing.valueOf(args[5]),
+                    Integer.parseInt(args[6]),
+                    Integer.parseInt(args[7])
+            );
+            screen.putScreen();
+            Core test = new testMGUI();
+            test.create(screen);
         }
         if (args[0].equals("download")) {
             ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
             initialization.installCore();
         }
         if (args[0].equals("plat")) {
-            String[] plats= GPUDither.getPlatforms();
-            for(int i=0;i<plats.length;i++){
-                Bukkit.broadcastMessage("Find device: " + i+" "+plats[i]);
+            String[] plats = GPUDither.getPlatforms();
+            for (int i = 0; i < plats.length; i++) {
+                Bukkit.broadcastMessage("Find device: " + i + " " + plats[i]);
             }
         }
         if (args[0].equals("init")) {
@@ -46,7 +64,7 @@ public class CommandListener implements TabExecutor {
             Bukkit.broadcastMessage("Init: " + GPUDither.init(Integer.parseInt(args[1]), p, p.length));
         }
         if (args[0].equals("switch")) {
-            useOpenCL = !useOpenCL;
+            setUseOpenCL(!isUseOpenCL());
         }
         if (args[0].equals("size")) {
             pieceSize = Integer.parseInt(args[1]);

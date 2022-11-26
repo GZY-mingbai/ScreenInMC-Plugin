@@ -30,7 +30,7 @@ public class ChromiumCoreInitialization implements BrowserCoreInitialization {
                 String systemName;
                 String systemArch;
                 if (systemType.length() == 0) {
-                    Utils.Pair<String,String> systemNameAndArch = Utils.getSystem();
+                    Utils.Pair<String, String> systemNameAndArch = Utils.getSystem();
                     systemName = systemNameAndArch.getKey();
                     systemArch = systemNameAndArch.getValue();
                 } else {

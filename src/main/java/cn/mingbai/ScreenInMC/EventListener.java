@@ -37,6 +37,7 @@ public class EventListener implements Listener {
         }
         Player player = e.getPlayer();
         Location playerLocation = player.getLocation();
+        nextScreen:
         for (Screen i : Screen.getAllScreens()) {
             Location screenLocation = i.getLocation().clone();
             if (screenLocation.getWorld().equals(playerLocation.getWorld()) && screenLocation.distance(playerLocation) <= 32) {
@@ -72,7 +73,7 @@ public class EventListener implements Listener {
                 Vector v4 = player.getEyeLocation().toVector();
                 double d = (v2.clone().subtract(v4).dot(v1)) / (v3.dot(v1));
                 if (d < 0) {
-                    return;
+                    continue nextScreen;
                 }
                 Vector v5 = v3.clone().normalize().multiply(d).add(v4);
                 Location clickedLocation = v5.toLocation(playerLocation.getWorld());
@@ -91,7 +92,7 @@ public class EventListener implements Listener {
                         if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
                                 clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenHeight
                         ) {
-                            return;
+                            continue nextScreen;
                         }
                         mouseX = clickedLocationX - screenLocationX;
                         mouseY = clickedLocationZ - screenLocationZ;
@@ -102,7 +103,7 @@ public class EventListener implements Listener {
                         if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
                                 clickedLocationZ < screenLocationZ - screenHeight || clickedLocationZ > screenLocationZ
                         ) {
-                            return;
+                            continue nextScreen;
                         }
                         mouseX = clickedLocationX - screenLocationX;
                         mouseY = screenLocationZ - clickedLocationZ;
@@ -113,7 +114,7 @@ public class EventListener implements Listener {
                         if (clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY ||
                                 clickedLocationZ < screenLocationZ - screenWidth || clickedLocationZ > screenLocationZ
                         ) {
-                            return;
+                            continue nextScreen;
                         }
                         mouseX = screenLocationZ - clickedLocationZ;
                         mouseY = screenLocationY - clickedLocationY;
@@ -123,7 +124,7 @@ public class EventListener implements Listener {
                         if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
                                 clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY
                         ) {
-                            return;
+                            continue nextScreen;
                         }
                         mouseX = clickedLocationX - screenLocationX;
                         mouseY = screenLocationY - clickedLocationY;
@@ -134,7 +135,7 @@ public class EventListener implements Listener {
                         if (clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY ||
                                 clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenWidth
                         ) {
-                            return;
+                            continue nextScreen;
                         }
                         mouseX = clickedLocationZ - screenLocationZ;
                         mouseY = screenLocationY - clickedLocationY;
@@ -146,15 +147,16 @@ public class EventListener implements Listener {
                         if (clickedLocationX < screenLocationX - screenWidth || clickedLocationX > screenLocationX ||
                                 clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY
                         ) {
-                            return;
+                            continue nextScreen;
                         }
                         mouseX = screenLocationX - clickedLocationX;
                         mouseY = screenLocationY - clickedLocationY;
                         break;
                     default:
-                        return;
+                        continue nextScreen;
                 }
                 i.getCore().onMouseClick((int) (mouseX * 128), (int) (mouseY * 128));
+                return;
             }
         }
     }

@@ -1,7 +1,5 @@
 package cn.mingbai.ScreenInMC.Screen;
 
-import cn.mingbai.ScreenInMC.BuiltInGUIs.test;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.testAwt;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
@@ -28,38 +26,21 @@ import java.util.Collections;
 import java.util.List;
 
 public class Screen {
-    private static List<Screen> allScreens = Collections.synchronizedList(new ArrayList<>());
-    private int displayDistance = 32;
-    private Location location;
-    private Facing facing;
-    private int height;
-    private int width;
+    private static final List<Screen> allScreens = Collections.synchronizedList(new ArrayList<>());
+    private final int displayDistance = 32;
+    private final Location location;
+    private final Facing facing;
+    private final int height;
+    private final int width;
     private boolean placed = false;
     private ScreenPiece[][] screenPieces;
+    private Core core;
 
-    public enum Facing {
-        DOWN,
-        UP,
-        NORTH,
-        SOUTH,
-        WEST,
-        EAST
-    }
-
-    public Location getLocation() {
-        return location;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public Facing getFacing() {
-        return facing;
+    public Screen(Location location, Facing facing, int width, int height) {
+        this.location = location;
+        this.facing = facing;
+        this.height = height;
+        this.width = width;
     }
 
     public static List<Screen> getAllScreens() {
@@ -84,11 +65,20 @@ public class Screen {
         return null;
     }
 
-    public Screen(Location location, Facing facing, int width, int height) {
-        this.location = location;
-        this.facing = facing;
-        this.height = height;
-        this.width = width;
+    public Location getLocation() {
+        return location;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public Facing getFacing() {
+        return facing;
     }
 
     public void sendPutScreenPacket(Player player) {
@@ -106,7 +96,7 @@ public class Screen {
                     int entityID = piece.getEntityId();
                     ClientboundAddEntityPacket packet1 = new ClientboundAddEntityPacket(
                             entityID, piece.getUUID(),
-                            (double) loc.getX(), (double) loc.getY(), (double) loc.getZ(),
+                            loc.getX(), loc.getY(), loc.getZ(),
                             pitchYaw.getKey(), pitchYaw.getValue(), EntityType.ITEM_FRAME,
                             facing.ordinal(), new Vec3(0, 0, 0), 0
                     );
@@ -192,21 +182,18 @@ public class Screen {
                 sendPutScreenPacket(player);
 //                sendView(player,testg);
             }
-            Core test = new test();
-            test.create(this);
+
         } else {
             throw new RuntimeException("This Screen has been placed.");
         }
     }
 
-    private Core core;
+    public Core getCore() {
+        return core;
+    }
 
     public void setCore(Core core) {
         this.core = core;
-    }
-
-    public Core getCore() {
-        return core;
     }
 
     public void sendView(byte[] colors) {
@@ -236,5 +223,14 @@ public class Screen {
                 spc.send(packet);
             }
         }
+    }
+
+    public enum Facing {
+        DOWN,
+        UP,
+        NORTH,
+        SOUTH,
+        WEST,
+        EAST
     }
 }

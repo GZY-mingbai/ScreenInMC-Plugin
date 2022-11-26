@@ -7,9 +7,9 @@ import java.util.UUID;
 
 public class ScreenPiece {
     private static int nowId = 6000000;
-    private Location location;
-    private int id;
-    private UUID uuid;
+    private final Location location;
+    private final int id;
+    private final UUID uuid;
 
     public ScreenPiece(Location location) {
         this.location = location;

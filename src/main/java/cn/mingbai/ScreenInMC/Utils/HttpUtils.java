@@ -14,10 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 public class HttpUtils {
-    public class GithubReleasesObject {
-        public String tag_name;
-    }
-
     public static String getString(String url, String proxyUrlString) {
         try {
             URLConnection urlConnection;
@@ -40,38 +36,6 @@ public class HttpUtils {
             throw (RuntimeException) e;
         }
         return "";
-    }
-
-    public static class CallbackByteChannel implements ReadableByteChannel {
-        private long size;
-        private ReadableByteChannel channel;
-        private long sizeRead;
-        private Function<Utils.Pair<Long, Long>, Void> callback;
-
-        CallbackByteChannel(ReadableByteChannel channel, long size,
-                            Function<Utils.Pair<Long, Long>, Void> function) {
-            this.size = size;
-            this.channel = channel;
-            this.callback = function;
-        }
-
-        public void close() throws IOException {
-            channel.close();
-        }
-
-        public boolean isOpen() {
-            return channel.isOpen();
-        }
-
-        public int read(ByteBuffer buffer) throws IOException {
-            int n;
-            double progress;
-            if ((n = channel.read(buffer)) > 0) {
-                sizeRead += n;
-                callback.apply(new Utils.Pair<Long, Long>(size, sizeRead));
-            }
-            return n;
-        }
     }
 
     public static long downloadFile(String url, String path, String proxyUrlString, Function<Utils.Pair<Long, Long>, Void> callback) {
@@ -114,5 +78,41 @@ public class HttpUtils {
             throw (RuntimeException) e;
         }
         return 0;
+    }
+
+    public static class CallbackByteChannel implements ReadableByteChannel {
+        private final long size;
+        private final ReadableByteChannel channel;
+        private long sizeRead;
+        private final Function<Utils.Pair<Long, Long>, Void> callback;
+
+        CallbackByteChannel(ReadableByteChannel channel, long size,
+                            Function<Utils.Pair<Long, Long>, Void> function) {
+            this.size = size;
+            this.channel = channel;
+            this.callback = function;
+        }
+
+        public void close() throws IOException {
+            channel.close();
+        }
+
+        public boolean isOpen() {
+            return channel.isOpen();
+        }
+
+        public int read(ByteBuffer buffer) throws IOException {
+            int n;
+            double progress;
+            if ((n = channel.read(buffer)) > 0) {
+                sizeRead += n;
+                callback.apply(new Utils.Pair<Long, Long>(size, sizeRead));
+            }
+            return n;
+        }
+    }
+
+    public class GithubReleasesObject {
+        public String tag_name;
     }
 }

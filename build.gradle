@@ -21,8 +21,9 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
     compileOnly 'org.spigotmc:spigot:1.19.2-R0.1-SNAPSHOT:remapped-mojang'
-    implementation 'org.jocl:jocl:2.0.4'
-
+}
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }
 task remappingJar{
     doLast {
@@ -48,7 +49,7 @@ jar {
 }
 jar.from {
     configurations.compileClasspath.findAll {
-        it.name.contains('jocl')
+//        it.name.contains('jocl')
     }.collect {
         zipTree it
     }
