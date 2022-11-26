@@ -3,6 +3,10 @@
 * 在Minecraft中呈现任何你喜欢的图片/视频！
 * Provide a video display in your world. 
 
+![Example](http://zw.mingbaitalk.cn/pic/example.png)
+![Example](http://zw.mingbaitalk.cn/pic/gera.jpg)
+
+
 Using MIT License.
 
 Details:https://b23.tv/M7Y6xsb
