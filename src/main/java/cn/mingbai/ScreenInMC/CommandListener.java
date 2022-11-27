@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.test;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
+import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
@@ -17,6 +18,7 @@ import java.util.List;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
 
 public class CommandListener implements TabExecutor {
+    Core test;
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args[0].equals("place")) {
@@ -46,7 +48,7 @@ public class CommandListener implements TabExecutor {
                     Integer.parseInt(args[7])
             );
             screen.putScreen();
-            Core test = new testMGUI();
+            test = new testMGUI();
             test.create(screen);
         }
         if (args[0].equals("download")) {
@@ -68,6 +70,9 @@ public class CommandListener implements TabExecutor {
         }
         if (args[0].equals("size")) {
             pieceSize = Integer.parseInt(args[1]);
+        }
+        if(args[0].equals("crash")){
+            ((MGUICore)test).crash();
         }
         return true;
     }

@@ -72,14 +72,29 @@ public class MRenderer {
         }
     }
 
-    public void drawTextCenter(String text, int width, int height) {
+    public void drawTextWithAscent(String text, int x, int y) {
         if (mControl.isVisibleActually()) {
             setClip();
-            LineMetrics metrics = graphics.getFont().getLineMetrics(text, frc);
-            Rectangle2D rectangle = graphics.getFont().getStringBounds(text, frc);
-            int left = (int) ((width - rectangle.getWidth()) / 2);
-            int top = (int) ((int) ((height - rectangle.getHeight()) / 2) + metrics.getAscent());
-            graphics.drawString(text, (int) (mControl.getAbsoluteLeft() + left), (int) (mControl.getAbsoluteTop() + top));
+            graphics.drawString(text, (int) (mControl.getAbsoluteLeft() + x), (int) (mControl.getAbsoluteTop() + y));
         }
+    }
+    public void drawImage(Image image,int x,int y) {
+        if (mControl.isVisibleActually()) {
+            setClip();
+            graphics.drawImage(image,(int) (mControl.getAbsoluteLeft() + x), (int) (mControl.getAbsoluteTop() + y),null);
+        }
+    }
+    public void drawImage(Image image,int x,int y,int width,int height) {
+        if (mControl.isVisibleActually()) {
+            setClip();
+            graphics.drawImage(image,(int) (mControl.getAbsoluteLeft() + x), (int) (mControl.getAbsoluteTop() + y),width,height,null);
+        }
+    }
+    public Font getFont(){
+        return graphics.getFont();
+    }
+
+    public FontRenderContext getFontRenderContext() {
+        return frc;
     }
 }

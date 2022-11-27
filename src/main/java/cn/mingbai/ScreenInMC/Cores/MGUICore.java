@@ -13,6 +13,13 @@ public abstract class MGUICore extends Core {
     public void onCreate() {
         container = new MContainer(screen);
         onCreate(container);
+        container.load();
+    }
+    public void crash(){
+        container.crash();
+    }
+    public void stop(){
+        container.unload();
     }
 
     @Override

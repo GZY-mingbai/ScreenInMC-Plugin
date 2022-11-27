@@ -1,6 +1,4 @@
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.testAwt;
-import cn.mingbai.ScreenInMC.Cores.AWTCore;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;

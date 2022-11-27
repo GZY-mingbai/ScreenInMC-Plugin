@@ -40,7 +40,7 @@ public class EventListener implements Listener {
         nextScreen:
         for (Screen i : Screen.getAllScreens()) {
             Location screenLocation = i.getLocation().clone();
-            if (screenLocation.getWorld().equals(playerLocation.getWorld()) && screenLocation.distance(playerLocation) <= 32) {
+            if (screenLocation.getWorld().equals(playerLocation.getWorld()) && screenLocation.distance(playerLocation) <= 128) {
                 Vector v1;
                 switch (i.getFacing()) {
                     case UP:

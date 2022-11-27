@@ -1,5 +1,7 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.Cores.MGUICore;
+import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -64,6 +66,12 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        for(Screen i:Screen.getAllScreens()){
+            if(i.getCore() instanceof MGUICore){
+                MGUICore core = (MGUICore) i.getCore();
+                core.stop();
+            }
+        }
     }
 
     @Override

@@ -49,6 +49,8 @@ jar {
 }
 jar.from {
     configurations.compileClasspath.findAll {
+        System.out.println(it.name)
+        it.name.contains("hutool")
 //        it.name.contains('jocl')
     }.collect {
         zipTree it

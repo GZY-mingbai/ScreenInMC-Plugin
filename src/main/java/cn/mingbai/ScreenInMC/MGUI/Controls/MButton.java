@@ -7,6 +7,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
 
+import static cn.mingbai.ScreenInMC.MGUI.MContainer.minClickInterval;
+
 public class MButton extends MTextBlock {
     private boolean pressed = false;
     private BukkitRunnable pressedRunnable;
@@ -36,7 +38,7 @@ public class MButton extends MTextBlock {
                 @Override
                 public void run() {
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(minClickInterval);
                         pressed = false;
                         reRender();
                     } catch (Exception e) {
@@ -48,11 +50,11 @@ public class MButton extends MTextBlock {
     }
 
     @Override
-    public void onRender(MRenderer MRenderer) {
-        super.onRender(MRenderer);
+    public void onRender(MRenderer mRenderer) {
+        super.onRender(mRenderer);
         if (pressed) {
-            MRenderer.setPaint(pressedPaint);
-            MRenderer.drawRect(0, 0, (int) getWidth(), (int) getHeight(), true);
+            mRenderer.setPaint(pressedPaint);
+            mRenderer.drawRect(0, 0, (int) getWidth(), (int) getHeight(), true);
         }
     }
 }

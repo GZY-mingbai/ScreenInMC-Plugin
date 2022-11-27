@@ -1,6 +1,7 @@
 package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Core;
+import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;

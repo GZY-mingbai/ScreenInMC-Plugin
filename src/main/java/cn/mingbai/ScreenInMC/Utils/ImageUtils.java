@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageUtils {
-    public static int pieceSize = 128;
+    public static int pieceSize = 4;
     private static Color[] palette;
     private static int[] palette_;
     private static boolean useOpenCL = true;

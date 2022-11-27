@@ -1,5 +1,7 @@
 package cn.mingbai.ScreenInMC.MGUI;
 
+import org.bukkit.scheduler.BukkitRunnable;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +26,7 @@ public class MControl {
         return borderPaint;
     }
 
-    public void setBorderPaint(Paint borderPaint) {
+    public synchronized void setBorderPaint(Paint borderPaint) {
         this.borderPaint = borderPaint;
         reRender();
     }
@@ -43,7 +45,7 @@ public class MControl {
         return borderStroke;
     }
 
-    public void setBorderStroke(Stroke borderStroke) {
+    public synchronized void setBorderStroke(Stroke borderStroke) {
         this.borderStroke = borderStroke;
         reRender();
     }
@@ -52,7 +54,7 @@ public class MControl {
         return background;
     }
 
-    public void setBackground(Paint background) {
+    public synchronized void setBackground(Paint background) {
         this.background = background;
         reRender();
     }
@@ -64,7 +66,7 @@ public class MControl {
         return horizontalAlignment;
     }
 
-    public void setHorizontalAlignment(Alignment.HorizontalAlignment horizontalAlignment) {
+    public synchronized void setHorizontalAlignment(Alignment.HorizontalAlignment horizontalAlignment) {
         this.horizontalAlignment = horizontalAlignment;
         onResize();
     }
@@ -73,12 +75,15 @@ public class MControl {
         return verticalAlignment;
     }
 
-    public void setVerticalAlignment(Alignment.VerticalAlignment verticalAlignment) {
+    public synchronized void setVerticalAlignment(Alignment.VerticalAlignment verticalAlignment) {
         this.verticalAlignment = verticalAlignment;
         onResize();
     }
-
     public void onResize() {
+        onResize(true);
+    }
+
+    private void onResize(boolean render) {
         double parentWidth;
         if (parentMControl == null) {
             parentWidth = 0;
@@ -121,14 +126,22 @@ public class MControl {
                 this.height = parentHeight;
                 break;
         }
-        reRender();
+        for(MControl i:getChildControls()){
+            if(i.getVerticalAlignment()!= Alignment.VerticalAlignment.None ||
+                    i.getHorizontalAlignment()!= Alignment.HorizontalAlignment.None){
+                i.onResize(false);
+            }
+        }
+        if(render){
+            reRender();
+        }
     }
 
     public double getWidth() {
         return width;
     }
 
-    public void setWidth(double width) {
+    public synchronized void setWidth(double width) {
         if (horizontalAlignment != Alignment.HorizontalAlignment.Stretch) {
             this.width = width;
             onResize();
@@ -141,7 +154,7 @@ public class MControl {
         return height;
     }
 
-    public void setHeight(double height) {
+    public synchronized void setHeight(double height) {
         if (verticalAlignment != Alignment.VerticalAlignment.Stretch) {
             this.height = height;
             onResize();
@@ -154,7 +167,7 @@ public class MControl {
         return top;
     }
 
-    public void setTop(double top) {
+    public synchronized void setTop(double top) {
         if (verticalAlignment == Alignment.VerticalAlignment.None) {
             this.top = top;
             onResize();
@@ -171,7 +184,7 @@ public class MControl {
         return left;
     }
 
-    public void setLeft(double left) {
+    public synchronized void setLeft(double left) {
         if (horizontalAlignment == Alignment.HorizontalAlignment.None) {
             this.left = left;
             onResize();
@@ -212,7 +225,7 @@ public class MControl {
         return visible;
     }
 
-    public void setVisible(boolean visible) {
+    public synchronized void setVisible(boolean visible) {
         this.visible = visible;
         reRender();
     }
@@ -233,26 +246,37 @@ public class MControl {
         return clipToBounds;
     }
 
-    public void setClipToBounds(boolean clipToBounds) {
+    public synchronized void setClipToBounds(boolean clipToBounds) {
         this.clipToBounds = clipToBounds;
         reRender();
     }
 
     public void addChildControl(MControl mControl) {
-        if (mControl.parentMControl == null) {
+        if (mControl.parentMControl == null && !mControl.loaded) {
             childMControls.add(mControl);
             mControl.parentMControl = this;
-            mControl.onResize();
+            mControl.loaded=true;
+            try {
+                mControl.onLoad();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         } else {
             throw new RuntimeException("This control have had parent.");
         }
     }
 
-    public void removeChildControl(MControl MControl) {
+    public synchronized void removeChildControl(MControl mControl) {
         for (int i = 0; i < childMControls.size(); i++) {
             MControl child = childMControls.get(i);
-            if (MControl == child) {
+            if (mControl == child) {
                 child.parentMControl = null;
+                childMControls.get(i).loaded=false;
+                try {
+                    childMControls.get(i).onUnload();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 childMControls.remove(i);
                 i--;
             }
@@ -260,28 +284,80 @@ public class MControl {
         reRender();
     }
 
-    public void removeChildControlAt(int i) {
+    public synchronized void removeChildControlAt(int i) {
         if (i >= childMControls.size()) {
             throw new RuntimeException("Wrong index.");
         }
         removeChildControl(childMControls.get(i));
     }
 
-    public void onRender(MRenderer MRenderer) {
-        MRenderer.setPaint(background);
-        MRenderer.drawRect(0, 0, (int) width, (int) height, true);
-        MRenderer.setPaint(borderPaint);
-        MRenderer.setStroke(borderStroke);
-        MRenderer.drawRect(0, 0, (int) width, (int) height, false);
+    public void onRender(MRenderer mRenderer) {
+        renderBackground(mRenderer);
+        renderChildren(mRenderer);
+    }
+    protected synchronized void renderBackground(MRenderer mRenderer){
+        mRenderer.setPaint(background);
+        mRenderer.drawRect(0, 0, (int) width, (int) height, true);
+        mRenderer.setPaint(borderPaint);
+        mRenderer.setStroke(borderStroke);
+        mRenderer.drawRect(0, 0, (int) width, (int) height, false);
+    }
+    private List<Runnable> renderTasks = Collections.synchronizedList(new ArrayList<>());
+
+    public List<Runnable> getRenderTasks() {
+        List<Runnable> result = new ArrayList<>();
+        for (Runnable i : renderTasks) {
+            result.add(i);
+        }
+        return result;
+    }
+    public synchronized void removeRenderTask(Runnable runnable){
+        for (int i = 0; i < renderTasks.size(); i++) {
+            if(runnable==renderTasks.get(i)){
+                renderTasks.remove(i);
+                i--;
+            }
+        }
+    }
+    public synchronized void removeRenderTaskAt(int i){
+        if (i >= renderTasks.size()) {
+            throw new RuntimeException("Wrong index.");
+        }
+        removeRenderTask(renderTasks.get(i));
+    }
+    public synchronized List<Runnable> getAllRenderTasks() {
+        List<Runnable> result = new ArrayList<>();
+        result.addAll(getRenderTasks());
+        List<MControl> children = getAllChildMControls();
+        for (MControl i : children) {
+            result.addAll(i.getRenderTasks());
+        }
+        return result;
+    }
+    public synchronized void addRenderTask(Runnable runnable){
+        renderTasks.add(runnable);
+    }
+    protected synchronized void renderChildren(MRenderer mRenderer){
         for (MControl i : childMControls) {
             if (i.visible) {
-                MRenderer newMRenderer = ((MRenderer) MRenderer.clone());
+                MRenderer newMRenderer = ((MRenderer) mRenderer.clone());
                 newMRenderer.setControl(i);
                 i.onRender(newMRenderer);
             }
         }
     }
+    protected boolean loaded=false;
 
+    public boolean isLoaded() {
+        return loaded;
+    }
+
+    public void onLoad(){
+        onResize();
+    }
+    public void onUnload(){
+
+    }
     public void reRender() {
         if (parentMControl != null) {
             parentMControl.reRender();

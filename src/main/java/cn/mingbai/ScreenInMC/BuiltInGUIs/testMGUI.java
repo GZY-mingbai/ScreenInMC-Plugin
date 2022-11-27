@@ -3,55 +3,76 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.ClickType;
-import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
-import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
+import cn.mingbai.ScreenInMC.MGUI.Controls.*;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
+import org.bukkit.Bukkit;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.net.URL;
 
 import static java.awt.Font.PLAIN;
 
 public class testMGUI extends MGUICore {
-    int i = 0;
-    MTextBlock textBlock_;
-
+    //    int i = 0;
+    Thread thread;
+    long time;
     @Override
     public void onCreate(MContainer container) {
-        container.setBackground(new Color(255, 255, 255));
-        MButton button = new MButton1("HelloWorld");
-        button.setHeight(128);
-        button.setWidth(256);
-        button.setClipToBounds(false);
-        button.setBackground(new Color(0, 103, 192));
-        button.setForeground(new Color(255, 255, 255));
-        button.setFont(new Font("微软雅黑", PLAIN, 20));
-        button.setHorizontalAlignment(Alignment.HorizontalAlignment.Center);
-        button.setVerticalAlignment(Alignment.VerticalAlignment.Center);
-        container.addChildControl(button);
-        textBlock_ = new MTextBlock("你按了0次按钮awa");
-        textBlock_.setClipToBounds(false);
-        textBlock_.setLeft(384);
-        textBlock_.setTop(32);
-        textBlock_.setFont(new Font("微软雅黑", PLAIN, 20));
-        getContainer().addChildControl(textBlock_);
-    }
+        container.setBackground(new Color(255,255,255));
+        MTextBlock mTextBlock = new MTextBlock1("114514 FPS");
+        mTextBlock.setTextHorizontalAlignment(Alignment.HorizontalAlignment.Left);
+        mTextBlock.setTextVerticalAlignment(Alignment.VerticalAlignment.Top);
+        mTextBlock.setLeft(0);
+        mTextBlock.setTop(0);
+        mTextBlock.setHeight(128);
+        mTextBlock.setWidth(256);
+        mTextBlock.setClipToBounds(false);
+        mTextBlock.setFont(new Font("微软雅黑", PLAIN, 64));
+        time = System.currentTimeMillis();
+        mTextBlock.addRenderTask(new Runnable() {
+            @Override
+            public void run() {
+                thread = new Thread(()->{
+                    try {
+                        synchronized (container.getRenderLock()) {
+                            container.getRenderLock().wait();
+                        }
+                        long newTime = System.currentTimeMillis();
+                        mTextBlock.setText((1f/(((float)(newTime-time))/1000f))+" FPS");
+                        time = System.currentTimeMillis();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                thread.start();
+            }
+        });
+        try{
+            MGIFImage gif = new MGIFImage(new BufferedInputStream(new URL("http://tva3.sinaimg.cn/large/ceeb653ejw1fb0pt1djukg208106444n.gif").openStream()));
+            gif.setHeight(256);
+            gif.setWidth(256);
+            gif.setScaleMode(Image.SCALE_FAST);
+            gif.setHorizontalAlignment(Alignment.HorizontalAlignment.Right);
+            gif.setVerticalAlignment(Alignment.VerticalAlignment.Top);
+            getContainer().addChildControl(gif);
 
-    public class MButton1 extends MButton {
-        public MButton1(String text) {
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        getContainer().addChildControl(mTextBlock);
+
+    }
+    public class MTextBlock1 extends MTextBlock{
+        public MTextBlock1(String text){
             super(text);
         }
-
         @Override
-        public void onClick(int x, int y, ClickType type) {
-            super.onClick(x, y, type);
-            MTextBlock textBlock = new MTextBlock("你按了" + (i + 1) + "次按钮awa");
-            textBlock.setClipToBounds(false);
-            textBlock.setLeft(128);
-            textBlock.setTop(32 + i * 32);
-            textBlock.setFont(new Font("微软雅黑", PLAIN, 20));
-            getContainer().addChildControl(textBlock);
-            textBlock_.setText("你按了" + (i + 1) + "次按钮awa");
-            i++;
+        public void onUnload() {
+            super.onUnload();
+            thread.interrupt();
         }
     }
 }

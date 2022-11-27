@@ -1,6 +1,7 @@
 package cn.mingbai.ScreenInMC.Utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -14,5 +15,13 @@ public class IOUtils {
         }
         bos.close();
         return bos.toByteArray();
+    }
+    public static void close(Closeable closeable) {
+        if (null != closeable) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+            }
+        }
     }
 }
