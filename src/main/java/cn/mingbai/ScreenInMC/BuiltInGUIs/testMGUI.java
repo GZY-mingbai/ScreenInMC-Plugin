@@ -65,6 +65,12 @@ public class testMGUI extends MGUICore {
         getContainer().addChildControl(mTextBlock);
 
     }
+
+    @Override
+    public void onTextInput(String text) {
+
+    }
+
     public class MTextBlock1 extends MTextBlock{
         public MTextBlock1(String text){
             super(text);

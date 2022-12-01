@@ -4,6 +4,8 @@ import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import com.sshtools.javardp.client.Rdesktop;
+import com.sshtools.javardp.layers.Rdp;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -16,42 +18,45 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.imageToMapColors;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.initImageUtils;
 
 public class test {
-    public static enum Brightness {
-        LOW(0, 180),
-        NORMAL(1, 220),
-        HIGH(2, 255),
-        LOWEST(3, 135);
-
-        private static final Brightness[] VALUES;
-        public final int id;
-        public final int brightness;
-
-        private Brightness(int id, int brightness) {
-            this.id = id;
-            this.brightness = brightness;
-        }
-
-        static Brightness get(int id) {
-            return VALUES[id];
-        }
-
-        static {
-            VALUES = new Brightness[]{LOW, NORMAL, HIGH, LOWEST};
-        }
-    }
+//    public static enum Brightness {
+//        LOW(0, 180),
+//        NORMAL(1, 220),
+//        HIGH(2, 255),
+//        LOWEST(3, 135);
+//
+//        private static final Brightness[] VALUES;
+//        public final int id;
+//        public final int brightness;
+//
+//        private Brightness(int id, int brightness) {
+//            this.id = id;
+//            this.brightness = brightness;
+//        }
+//
+//        static Brightness get(int id) {
+//            return VALUES[id];
+//        }
+//
+//        static {
+//            VALUES = new Brightness[]{LOW, NORMAL, HIGH, LOWEST};
+//        }
+//    }
     public static void main(String[] args) throws Exception{
-        Robot robot = new Robot();
-        int width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-        int height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-        long time =System.currentTimeMillis();
-        robot.createScreenCapture(new Rectangle(width, height));
-        System.out.println((System.currentTimeMillis()-time)+"");
+        Rdesktop.main(new String[]{"192.168.105.128"});
+//        net.propero.rdp.Rdesktop.main(new String[]{"-g","800x600","192.168.105.131"});
+//        Robot robot = new Robot();
+//        int width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+//        int height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+//        long time =System.currentTimeMillis();
+//        robot.createScreenCapture(new Rectangle(width, height));
+//        System.out.println((System.currentTimeMillis()-time)+"");
 //        Utils.Pair<String,String> typeArch = Utils.getSystem();
 //        String prefix="screen-in-mc-"+typeArch.getKey()+"-"+typeArch.getValue();
 //        String suffix = Utils.getLibraryPrefix(typeArch.getKey());

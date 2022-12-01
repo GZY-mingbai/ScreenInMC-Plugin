@@ -74,6 +74,9 @@ public class CommandListener implements TabExecutor {
         if(args[0].equals("crash")){
             ((MGUICore)test).crash();
         }
+        if(args[0].equals("kb")){
+            Screen.getAllScreens().get(Integer.parseInt(args[1])).getCore().onTextInput(args[2]);
+        }
         return true;
     }
 

@@ -58,4 +58,9 @@ public class test extends Core {
             }
         }.runTaskAsynchronously(Main.thisPlugin());
     }
+
+    @Override
+    public void onTextInput(String text) {
+
+    }
 }

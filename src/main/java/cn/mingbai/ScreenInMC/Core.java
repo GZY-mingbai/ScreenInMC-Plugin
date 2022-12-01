@@ -14,4 +14,5 @@ public abstract class Core {
     public abstract void onCreate();
 
     public abstract void onMouseClick(int x, int y);
+    public abstract void onTextInput(String text);
 }
