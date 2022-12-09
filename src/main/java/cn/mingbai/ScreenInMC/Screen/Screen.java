@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -202,6 +203,11 @@ public class Screen {
             sendView(player, colors);
         }
     }
+    public void sendView(byte[] colors,int x,int y,int w,int h) {
+        for (Player player : location.getWorld().getPlayers()) {
+            sendView(player, colors,x,y,w,h);
+        }
+    }
 
     public void sendView(Player player, byte[] colors) {
         if (!location.getWorld().equals(player.getWorld())) {
@@ -221,6 +227,99 @@ public class Screen {
                 }
                 MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0, 0, 128, 128, result);
                 ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
+                spc.send(packet);
+            }
+        }
+    }
+    public void sendView(Player player,byte[] colors,int x,int y,int w,int h){
+        if (!location.getWorld().equals(player.getWorld())) {
+            return;
+        }
+        if (location.distance(player.getLocation()) > displayDistance) {
+            return;
+        }
+        ServerPlayer sp = ((CraftPlayer) player).getHandle();
+        ServerPlayerConnection spc = sp.connection;
+        if(w*h!=colors.length){
+            return;
+        }
+        int a = x/128;
+        int b = y/128;
+        int c = x%128;
+        int d = y%128;
+        int e,f;
+        if(w+c<128){
+            e=w;
+        }else{
+            e=128-c;
+        }
+        if(h+d<128){
+            f=h;
+        }else{
+            f=128-d;
+        }
+        byte[] r1 = new byte[e*f];
+        for(int i=0;i<f;i++){
+            System.arraycopy(colors, i * w, r1, i * e, e);
+        }
+        MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(c, d, e, f, r1);
+        ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[a][b].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
+        spc.send(packet);
+        int k = (c+w)/128+1;
+        int l = (d+h)/128+1;
+        for(int i=0;i<l;i++){
+            for(int j=0;j<k;j++){
+                if(i==0&&j==0){
+                    continue;
+                }
+                int m,n,o,p,q,s;
+                if(j==0){
+                    m=c;
+                }else{
+                    m=0;
+                }
+                if(i==0){
+                    n=d;
+                }else{
+                    n=0;
+                }
+                if(j==k-1){
+                    o=w-e-(k-2)*128;
+                } else if (j==0) {
+                    o=128-m;
+                } else {
+                    o=128;
+                }
+                if(i==l-1){
+                    p=h-f-(l-2)*128;
+                } else if (i==0) {
+                    p=128-n;
+                } else {
+                    p=128;
+                }
+                if(j==0){
+                    q=0;
+                }else{
+                    q=e+(j-1)*128;
+                }
+                if(i==0){
+                    s=0;
+                }else{
+                    s=f+(i-1)*128;
+                }
+                byte[] r2 = new byte[o*p];
+                if(r2.length==0){
+                    continue;
+                }
+//                for(int aaa=0;aaa<r2.length;aaa++){
+//                    r2[aaa]=16;
+//                }
+                for(int r=0;r<p;r++){
+                    System.arraycopy(colors, (r+s) * w+q, r2, r * o, o);
+                }
+                mapPatch = new MapItemSavedData.MapPatch(m, n, o, p, r2);
+                Bukkit.broadcastMessage((a+j)+" "+(b+i)+" "+m+" "+n+" "+o+" "+p);
+                packet = new ClientboundMapItemDataPacket(screenPieces[a+j][b+i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
                 spc.send(packet);
             }
         }

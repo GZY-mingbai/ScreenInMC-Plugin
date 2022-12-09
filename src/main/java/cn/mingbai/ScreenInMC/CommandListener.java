@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.test;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.test2;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
@@ -13,6 +14,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
@@ -50,6 +56,22 @@ public class CommandListener implements TabExecutor {
             screen.putScreen();
             test = new testMGUI();
             test.create(screen);
+        }
+        if (args[0].equals("place3")) {
+            Screen screen = new Screen(
+                    new Location(
+                            Bukkit.getWorld(args[1]),
+                            Integer.parseInt(args[2]),
+                            Integer.parseInt(args[3]),
+                            Integer.parseInt(args[4])
+                    ), Screen.Facing.valueOf(args[5]),
+                    Integer.parseInt(args[6]),
+                    Integer.parseInt(args[7])
+            );
+            screen.putScreen();
+            test = new test2();
+            test.create(screen);
+
         }
         if (args[0].equals("download")) {
             ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
