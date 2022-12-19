@@ -2,14 +2,10 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
-import cn.mingbai.ScreenInMC.MGUI.ClickType;
 import cn.mingbai.ScreenInMC.MGUI.Controls.*;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
-import org.bukkit.Bukkit;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.net.URL;
 

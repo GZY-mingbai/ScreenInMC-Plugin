@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,7 +30,7 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
-        Utils.MouseClickType type;
+        Utils.MouseClickType type = Utils.MouseClickType.LEFT;
         if (e.getAction().equals(Action.LEFT_CLICK_AIR) || e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             type = Utils.MouseClickType.LEFT;
         } else if (e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
@@ -40,7 +41,7 @@ public class EventListener implements Listener {
         nextScreen:
         for (Screen i : Screen.getAllScreens()) {
             Location screenLocation = i.getLocation().clone();
-            if (screenLocation.getWorld().equals(playerLocation.getWorld()) && screenLocation.distance(playerLocation) <= 128) {
+            if (screenLocation.getWorld().equals(playerLocation.getWorld()) && screenLocation.distance(playerLocation) <= 1024) {
                 Vector v1;
                 switch (i.getFacing()) {
                     case UP:
@@ -155,8 +156,10 @@ public class EventListener implements Listener {
                     default:
                         continue nextScreen;
                 }
-                i.getCore().onMouseClick((int) (mouseX * 128), (int) (mouseY * 128));
+                i.getCore().onMouseClick((int) (mouseX * 128), (int) (mouseY * 128),type);
                 return;
+            }else {
+                Bukkit.broadcastMessage("Too far: "+screenLocation.distance(playerLocation));
             }
         }
     }

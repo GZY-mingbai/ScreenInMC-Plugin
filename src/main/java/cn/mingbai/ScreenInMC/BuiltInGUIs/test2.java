@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -33,19 +34,16 @@ public class test2 extends Core {
             }
         }
     }
-    private boolean first = true;
     private int fx;
     private int fy;
     @Override
-    public void onMouseClick(int x, int y) {
-        if(first){
+    public void onMouseClick(int x, int y, Utils.MouseClickType type) {
+        if(type.equals(Utils.MouseClickType.LEFT)){
             fx = x;
             fy = y;
-            first=false;
         }else{
             if(x>fx&&y>fy){
                 draw(fx,fy,x-fx,y-fy);
-                first=true;
             }
         }
 

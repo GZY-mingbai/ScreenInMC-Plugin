@@ -1,6 +1,7 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.Utils;
 
 public abstract class Core {
     protected Screen screen;
@@ -13,6 +14,6 @@ public abstract class Core {
 
     public abstract void onCreate();
 
-    public abstract void onMouseClick(int x, int y);
+    public abstract void onMouseClick(int x, int y, Utils.MouseClickType type);
     public abstract void onTextInput(String text);
 }

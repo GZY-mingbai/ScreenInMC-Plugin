@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.Cores;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.MGUI.ClickType;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
+import cn.mingbai.ScreenInMC.Utils.Utils;
 
 public abstract class MGUICore extends Core {
     MContainer container;
@@ -23,7 +24,7 @@ public abstract class MGUICore extends Core {
     }
 
     @Override
-    public void onMouseClick(int x, int y) {
+    public void onMouseClick(int x, int y, Utils.MouseClickType type) {
         container.clickAt(x, y, ClickType.Left);
     }
 

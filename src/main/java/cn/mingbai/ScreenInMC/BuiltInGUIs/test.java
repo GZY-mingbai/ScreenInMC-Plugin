@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -40,7 +41,7 @@ public class test extends Core {
     }
 
     @Override
-    public void onMouseClick(int x, int y) {
+    public void onMouseClick(int x, int y, Utils.MouseClickType type) {
         new BukkitRunnable() {
             @Override
             public void run() {

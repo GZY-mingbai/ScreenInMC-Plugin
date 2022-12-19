@@ -283,17 +283,25 @@ public class Screen {
                 }else{
                     n=0;
                 }
-                if(j==k-1){
+                if(j==0){
+                    if(k==1){
+                        o=w;
+                    }else{
+                        o=128-m;
+                    }
+                } else if (j==k-1) {
                     o=w-e-(k-2)*128;
-                } else if (j==0) {
-                    o=128-m;
                 } else {
                     o=128;
                 }
-                if(i==l-1){
+                if(i==0){
+                    if(l==1){
+                        p=h;
+                    }else{
+                        p=128-n;
+                    }
+                } else if (i==l-1) {
                     p=h-f-(l-2)*128;
-                } else if (i==0) {
-                    p=128-n;
                 } else {
                     p=128;
                 }
