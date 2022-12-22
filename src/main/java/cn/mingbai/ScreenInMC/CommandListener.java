@@ -1,6 +1,7 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClient;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.test;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.test2;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
@@ -72,6 +73,21 @@ public class CommandListener implements TabExecutor {
             test = new test2();
             test.create(screen);
 
+        }
+        if (args[0].equals("place4")) {
+            Screen screen = new Screen(
+                    new Location(
+                            Bukkit.getWorld(args[1]),
+                            Integer.parseInt(args[2]),
+                            Integer.parseInt(args[3]),
+                            Integer.parseInt(args[4])
+                    ), Screen.Facing.valueOf(args[5]),
+                    Integer.parseInt(args[6]),
+                    Integer.parseInt(args[7])
+            );
+            screen.putScreen();
+            test = new VNCClient();
+            test.create(screen);
         }
         if (args[0].equals("download")) {
             ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();

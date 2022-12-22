@@ -28,6 +28,11 @@ public abstract class MGUICore extends Core {
         container.clickAt(x, y, ClickType.Left);
     }
 
+    @Override
+    public void onTextInput(String text) {
+        container.inputText(text);
+    }
+
     public MContainer getContainer() {
         return container;
     }

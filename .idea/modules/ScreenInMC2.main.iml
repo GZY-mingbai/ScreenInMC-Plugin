@@ -3,21 +3,6 @@
   <component name="FacetManager">
     <facet type="minecraft" name="Minecraft">
       <configuration>
-        <userChosenTypes>
-          <map>
-            <entry key="ARCHITECTURY" value="false" />
-            <entry key="FORGE" value="false" />
-            <entry key="FABRIC" value="false" />
-            <entry key="SPONGE" value="false" />
-            <entry key="BUNGEECORD" value="false" />
-            <entry key="WATERFALL" value="false" />
-            <entry key="VELOCITY" value="false" />
-            <entry key="LITELOADER" value="false" />
-            <entry key="MIXIN" value="false" />
-            <entry key="MCP" value="false" />
-            <entry key="ADVENTURE" value="false" />
-          </map>
-        </userChosenTypes>
         <autoDetectTypes>
           <platformType>SPIGOT</platformType>
           <platformType>MCP</platformType>

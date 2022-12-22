@@ -5,10 +5,15 @@ import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import javax.naming.ldap.Control;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MContainer extends MControl {
     BufferedImage image;
@@ -28,6 +33,7 @@ public class MContainer extends MControl {
     public void load(){
         this.loaded=true;
         onLoad();
+        addReRender(new Rectangle2D.Double(0,0,getWidth(),getHeight()));
     }
     public void unload(){
         onUnload();
@@ -120,7 +126,20 @@ public class MContainer extends MControl {
                 createImage();
                 reRender();
             }
-            screen.sendView(ImageUtils.imageToMapColors(image));
+            for(int i=0;i<reRenderRectangles.size();i++){
+                int x = (int) reRenderRectangles.get(i).x;
+                int y = (int) reRenderRectangles.get(i).y;
+                int w = (int) reRenderRectangles.get(i).width;
+                int h = (int) reRenderRectangles.get(i).height;
+                try {
+                    if(loaded) {
+                        screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            reRenderRectangles.clear();
             synchronized (renderLock){
                 renderLock.notifyAll();
             }
@@ -135,6 +154,7 @@ public class MContainer extends MControl {
         }
     }
     private BukkitRunnable renderThread;
+    protected MControl activeControl;
 
     private void createImage() {
         if (graphics != null) {
@@ -148,6 +168,14 @@ public class MContainer extends MControl {
         frc = graphics.getFontRenderContext();
     }
 
+    @Override
+    public void onTextInput(String text) {
+        super.onTextInput(text);
+        if(activeControl!=null){
+            activeControl.onTextInput(text);
+        }
+    }
+
     public Screen getScreen() {
         return screen;
     }
@@ -159,17 +187,37 @@ public class MContainer extends MControl {
     public void reRender() {
         rerender = true;
     }
-
+    List<Rectangle2D.Double> reRenderRectangles = Collections.synchronizedList(new ArrayList<>());
+    public void addReRender(Rectangle2D.Double rect){
+        if(rect.width==0||rect.height==0){
+            return;
+        }
+        reRenderRectangles.add((Rectangle2D.Double) rect.clone());
+    }
+    public void addReRender(Rectangle2D.Double[] rect){
+        for(Rectangle2D.Double i:rect){
+            if(i.width==0||i.height==0){
+                continue;
+            }
+            reRenderRectangles.add((Rectangle2D.Double) i.clone());
+        }
+    }
+    public void inputText(String text){
+        onTextInput(text);
+    }
     public void clickAt(int x, int y, ClickType type) {
         try {
             if (canClick && (System.currentTimeMillis() - clickTime) >= minClickInterval) {
                 canClick = false;
                 clickTime = System.currentTimeMillis();
-                for (MControl i : getAllChildMControls()) {
+                List<MControl> controls = getAllChildMControls();
+                Collections.reverse(controls);
+                for (MControl i : controls) {
                     double left = i.getAbsoluteLeft();
                     double top = i.getAbsoluteTop();
                     if (i.isVisible() && left < x && (left + i.getWidth()) > x && top < y && (top + i.getHeight()) > y) {
                         i.onClick((int) (x - left), (int) (y - top), type);
+                        break;
                     }
                 }
             }

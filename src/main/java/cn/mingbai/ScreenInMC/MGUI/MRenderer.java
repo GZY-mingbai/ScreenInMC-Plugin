@@ -27,11 +27,7 @@ public class MRenderer {
     }
 
     private void setClip() {
-        if (mControl.isClipToBounds()) {
-            graphics.setClip((int) mControl.getAbsoluteLeft(), (int) mControl.getAbsoluteTop(), (int) mControl.getWidth(), (int) mControl.getHeight());
-        } else {
-            graphics.setClip((int) mContainer.getAbsoluteLeft(), (int) mContainer.getAbsoluteTop(), (int) mContainer.getWidth(), (int) mContainer.getHeight());
-        }
+        graphics.setClip((int) mControl.getAbsoluteLeft(), (int) mControl.getAbsoluteTop(), (int) mControl.getWidth(), (int) mControl.getHeight());
     }
 
     public void drawPixel(int x, int y) {

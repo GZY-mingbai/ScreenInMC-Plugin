@@ -1,9 +1,13 @@
 package cn.mingbai.ScreenInMC.MGUI;
 
+import org.bukkit.Bukkit;
+
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class MControl {
     private MControl parentMControl;
@@ -12,7 +16,6 @@ public class MControl {
     private double width = 0;
     private double height = 0;
     private boolean visible = true;
-    private boolean clipToBounds = true;
     private Paint background = new Color(0, 0, 0, 0);
     private Paint borderPaint = new Color(0, 0, 0, 0);
     private Stroke borderStroke = new BasicStroke(2);
@@ -57,7 +60,26 @@ public class MControl {
         reRender();
     }
 
-    public void onClick(int x, int y, ClickType type) {
+    public synchronized void onClick(int x, int y, ClickType type) {
+        MContainer container = getMContainer();
+        if(container!=null){
+            if(container.activeControl==this){
+                return;
+            }
+            if(container.activeControl!=null){
+                container.activeControl.active=false;
+                container.activeControl.onPassive();
+            }
+            container.activeControl = this;
+            active=true;
+            Bukkit.broadcastMessage(active+" "+isActive());
+            onActive();
+        }
+    }
+    private boolean active;
+    public void onActive(){
+    }
+    public void onPassive(){
     }
 
     public Alignment.HorizontalAlignment getHorizontalAlignment() {
@@ -81,6 +103,17 @@ public class MControl {
         onResize(true);
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    private void addNowSize(){
+        MContainer container = getMContainer();
+        if(container!=null){
+            container.addReRender(new Rectangle2D.Double(getAbsoluteLeft(),getAbsoluteTop(),getWidth(),getHeight()));
+        }
+    }
+
     private void onResize(boolean render) {
         double parentWidth;
         if (parentMControl == null) {
@@ -90,15 +123,19 @@ public class MControl {
         }
         switch (horizontalAlignment) {
             case Left:
+                addNowSize();
                 this.left = 0;
                 break;
             case Right:
+                addNowSize();
                 this.left = parentWidth - getWidth();
                 break;
             case Center:
+                addNowSize();
                 this.left = (parentWidth - getWidth()) / 2;
                 break;
             case Stretch:
+                addNowSize();
                 this.left = 0;
                 this.width = parentWidth;
                 break;
@@ -111,15 +148,19 @@ public class MControl {
         }
         switch (verticalAlignment) {
             case Top:
+                addNowSize();
                 this.top = 0;
                 break;
             case Bottom:
+                addNowSize();
                 this.top = parentHeight - getHeight();
                 break;
             case Center:
+                addNowSize();
                 this.top = (parentHeight - getHeight()) / 2;
                 break;
             case Stretch:
+                addNowSize();
                 this.top = 0;
                 this.height = parentHeight;
                 break;
@@ -141,6 +182,7 @@ public class MControl {
 
     public synchronized void setWidth(double width) {
         if (horizontalAlignment != Alignment.HorizontalAlignment.Stretch) {
+            addNowSize();
             this.width = width;
             onResize();
         } else {
@@ -154,6 +196,7 @@ public class MControl {
 
     public synchronized void setHeight(double height) {
         if (verticalAlignment != Alignment.VerticalAlignment.Stretch) {
+            addNowSize();
             this.height = height;
             onResize();
         } else {
@@ -167,6 +210,7 @@ public class MControl {
 
     public synchronized void setTop(double top) {
         if (verticalAlignment == Alignment.VerticalAlignment.None) {
+            addNowSize();
             this.top = top;
             onResize();
         } else {
@@ -184,6 +228,7 @@ public class MControl {
 
     public synchronized void setLeft(double left) {
         if (horizontalAlignment == Alignment.HorizontalAlignment.None) {
+            addNowSize();
             this.left = left;
             onResize();
         } else {
@@ -238,15 +283,6 @@ public class MControl {
         } else {
             return visible;
         }
-    }
-
-    public boolean isClipToBounds() {
-        return clipToBounds;
-    }
-
-    public synchronized void setClipToBounds(boolean clipToBounds) {
-        this.clipToBounds = clipToBounds;
-        reRender();
     }
 
     public void addChildControl(MControl mControl) {
@@ -356,9 +392,23 @@ public class MControl {
     public void onUnload(){
 
     }
+    public void onTextInput(String text){}
+    public MContainer getMContainer(){
+        if(this instanceof MContainer){
+            return (MContainer) this;
+        }else{
+            if(parentMControl==null){
+                return null;
+            }
+            return parentMControl.getMContainer();
+        }
+    }
     public void reRender() {
-        if (parentMControl != null) {
-            parentMControl.reRender();
+        MContainer container = getMContainer();
+        if(container!=null) {
+            Bukkit.broadcastMessage("ReRender "+getAbsoluteLeft()+" "+getAbsoluteTop()+" "+getWidth()+" "+getHeight());
+            container.addReRender(new Rectangle2D.Double(getAbsoluteLeft(), getAbsoluteTop(), getWidth(), getHeight()));
+            container.reRender();
         }
     }
 }

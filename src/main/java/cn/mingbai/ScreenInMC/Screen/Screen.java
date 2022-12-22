@@ -326,7 +326,6 @@ public class Screen {
                     System.arraycopy(colors, (r+s) * w+q, r2, r * o, o);
                 }
                 mapPatch = new MapItemSavedData.MapPatch(m, n, o, p, r2);
-                Bukkit.broadcastMessage((a+j)+" "+(b+i)+" "+m+" "+n+" "+o+" "+p);
                 packet = new ClientboundMapItemDataPacket(screenPieces[a+j][b+i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
                 spc.send(packet);
             }

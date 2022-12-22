@@ -25,7 +25,6 @@ public class testMGUI extends MGUICore {
         mTextBlock.setTop(0);
         mTextBlock.setHeight(128);
         mTextBlock.setWidth(256);
-        mTextBlock.setClipToBounds(false);
         mTextBlock.setFont(new Font("微软雅黑", PLAIN, 64));
         time = System.currentTimeMillis();
         mTextBlock.addRenderTask(new Runnable() {

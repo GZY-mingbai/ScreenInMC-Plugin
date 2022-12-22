@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC.Utils;
 
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import net.minecraft.world.level.material.MaterialColor;
+import org.bukkit.Bukkit;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -44,13 +45,34 @@ public class ImageUtils {
             e.printStackTrace();
         }
     }
-
     public static byte[] imageToMapColorsWithGPU(Image image) {
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
+        int dh,dw;
+        if(height%pieceSize==0) {
+            dh = 0;
+        }else{
+            dh = pieceSize - height % pieceSize;
+        }
+        if(width%pieceSize==0) {
+            dw = 0;
+        }else{
+            dw = pieceSize-width%pieceSize;
+        }
+        int height_=height+dh;
+        int width_=width+dw;
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
-        return GPUDither.dither(data, width, height, pieceSize);
+        int[] newData = new int[width_*height_];
+        for(int i=0;i<height;i++){
+            System.arraycopy(data,i*width,newData,i*width_,width);
+        }
+        byte[] result = GPUDither.dither(newData, width_, height_, pieceSize);
+        byte[] newResult = new byte[width*height];
+        for(int i=0;i<height;i++){
+            System.arraycopy(result,i*width_,newResult,i*width,width);
+        }
+        return newResult;
     }
 
     public static boolean isUseOpenCL() {
@@ -104,14 +126,31 @@ public class ImageUtils {
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
+        int dh,dw;
+        if(height%pieceSize==0) {
+            dh = 0;
+        }else{
+            dh = pieceSize - height % pieceSize;
+        }
+        if(width%pieceSize==0) {
+            dw = 0;
+        }else{
+            dw = pieceSize-width%pieceSize;
+        }
+        int height_=height+dh;
+        int width_=width+dw;
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
+        int[] newData = new int[width_*height_];
+        for(int i=0;i<height;i++){
+            System.arraycopy(data,i*width,newData,i*width_,width);
+        }
         byte[] result = new byte[height * width];
         int i = 0;
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                Color current_color = new Color(data[i], true);
+                Color current_color = new Color(newData[i], true);
                 if (current_color.getAlpha() != 255) {
-                    data[i] = 0;
+                    newData[i] = 0;
                     i++;
                     continue;
                 }
@@ -120,22 +159,22 @@ public class ImageUtils {
                 int errorR = current_color.getRed() - co.getRed();
                 int errorG = current_color.getGreen() - co.getGreen();
                 int errorB = current_color.getBlue() - co.getBlue();
-                data[i] = co.getRGB();
+                newData[i] = co.getRGB();
                 int key = closest_match.getKey() + 4;
                 result[i] = (byte) ((key / 4) << 2 | (key % 4) & 3);
                 if (!(x == img.getWidth() - 1)) {
                     int t = i + 1;
-                    Color c = new Color(data[t], true);
+                    Color c = new Color(newData[t], true);
                     if (c.getAlpha() == 255) {
-                        data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.4375f)),
+                        newData[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.4375f)),
                                 colorClip((int) (c.getGreen() + errorG * 0.4375f)),
                                 colorClip((int) (c.getBlue() + errorB * 0.4375f)));
                     }
                     if (!(y == img.getHeight() - 1)) {
                         t = i + 1 + width;
-                        c = new Color(data[t], true);
+                        c = new Color(newData[t], true);
                         if (c.getAlpha() == 255) {
-                            data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.0625f)),
+                            newData[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.0625f)),
                                     colorClip((int) (c.getGreen() + errorG * 0.0625f)),
                                     colorClip((int) (c.getBlue() + errorB * 0.0625f)));
                         }
@@ -143,17 +182,17 @@ public class ImageUtils {
                 }
                 if (!(y == img.getHeight() - 1)) {
                     int t = i + width;
-                    Color c = new Color(data[t], true);
+                    Color c = new Color(newData[t], true);
                     if (c.getAlpha() == 255) {
-                        data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.1875f)),
+                        newData[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.1875f)),
                                 colorClip((int) (c.getGreen() + errorG * 0.1875f)),
                                 colorClip((int) (c.getBlue() + errorB * 0.1875f)));
                     }
                     if (!(x == 0)) {
                         t = i - 1 + width;
-                        c = new Color(data[t], true);
+                        c = new Color(newData[t], true);
                         if (c.getAlpha() == 255) {
-                            data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.3125f)),
+                            newData[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.3125f)),
                                     colorClip((int) (c.getGreen() + errorG * 0.3125f)),
                                     colorClip((int) (c.getBlue() + errorB * 0.3125f)));
                         }
@@ -162,7 +201,11 @@ public class ImageUtils {
                 i++;
             }
         }
-        return result;
+        byte[] newResult = new byte[width*height];
+        for(int j=0;j<height;j++){
+            System.arraycopy(result,j*width_,newResult,j*width,width);
+        }
+        return newResult;
     }
 
     public static BufferedImage imageToBufferedImage(Image img) {
