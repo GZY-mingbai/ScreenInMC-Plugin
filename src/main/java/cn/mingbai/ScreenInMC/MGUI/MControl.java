@@ -406,7 +406,6 @@ public class MControl {
     public void reRender() {
         MContainer container = getMContainer();
         if(container!=null) {
-            Bukkit.broadcastMessage("ReRender "+getAbsoluteLeft()+" "+getAbsoluteTop()+" "+getWidth()+" "+getHeight());
             container.addReRender(new Rectangle2D.Double(getAbsoluteLeft(), getAbsoluteTop(), getWidth(), getHeight()));
             container.reRender();
         }

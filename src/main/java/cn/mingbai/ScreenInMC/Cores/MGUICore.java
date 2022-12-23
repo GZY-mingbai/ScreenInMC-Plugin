@@ -8,6 +8,10 @@ import cn.mingbai.ScreenInMC.Utils.Utils;
 public abstract class MGUICore extends Core {
     MContainer container;
 
+    public MGUICore(String name) {
+        super(name);
+    }
+
     public abstract void onCreate(MContainer container);
 
     @Override
@@ -19,7 +23,9 @@ public abstract class MGUICore extends Core {
     public void crash(){
         container.crash();
     }
-    public void stop(){
+
+    @Override
+    public void onUnload() {
         container.unload();
     }
 

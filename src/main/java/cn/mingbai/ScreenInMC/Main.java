@@ -1,5 +1,7 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClient;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
@@ -69,13 +71,15 @@ public class Main extends JavaPlugin {
         for(Screen i:Screen.getAllScreens()){
             if(i.getCore() instanceof MGUICore){
                 MGUICore core = (MGUICore) i.getCore();
-                core.stop();
+                core.unload();
             }
         }
     }
 
     @Override
     public void onEnable() {
+        Core.addCore(new VNCClient());
+        Core.addCore(new testMGUI());
         ImageUtils.initImageUtils();
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();

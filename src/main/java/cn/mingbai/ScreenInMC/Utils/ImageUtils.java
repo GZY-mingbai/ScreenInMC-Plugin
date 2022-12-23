@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageUtils {
-    public static int pieceSize = 4;
+    private static int pieceSize = 4;
     private static Color[] palette;
     private static int[] palette_;
     private static boolean useOpenCL = true;
@@ -18,9 +18,19 @@ public class ImageUtils {
     public static int[] getPalette() {
         return palette_;
     }
+    private static String[] platforms;
+
+    public static String[] getPlatforms() {
+        return platforms.clone();
+    }
+
+    public static void setPieceSize(int pieceSize) {
+        ImageUtils.pieceSize = pieceSize;
+    }
 
     public static void initImageUtils() {
         try {
+            platforms = GPUDither.getPlatforms();
             List<Color> colors = new ArrayList<>();
             List<Integer> colors_ = new ArrayList<>();
             for (int i = 1; i < MaterialColor.MATERIAL_COLORS.length - 1; i++) {

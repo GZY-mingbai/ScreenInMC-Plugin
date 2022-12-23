@@ -45,8 +45,12 @@ public class Screen {
         this.width = width;
     }
 
-    public static List<Screen> getAllScreens() {
-        return allScreens;
+    public static Screen[] getAllScreens() {
+        Screen[] result = new Screen[allScreens.size()];
+        for(int i=0;i< allScreens.size();i++){
+            result[i]=allScreens.get(i);
+        }
+        return result;
     }
 
     public static Utils.Pair<Integer, Integer> getFacingPitchYaw(Facing facing) {

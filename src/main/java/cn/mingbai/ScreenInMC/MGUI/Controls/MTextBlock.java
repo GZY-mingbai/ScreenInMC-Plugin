@@ -9,7 +9,7 @@ import java.awt.font.LineMetrics;
 import java.awt.geom.Rectangle2D;
 
 public class MTextBlock extends MControl {
-    private String text = "";
+    protected String text = "";
     private Font font;
     private Paint foreground = new Color(0, 0, 0, 255);
     private Alignment.VerticalAlignment textVerticalAlignment= Alignment.VerticalAlignment.Center;

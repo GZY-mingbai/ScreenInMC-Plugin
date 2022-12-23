@@ -15,6 +15,11 @@ public class testMGUI extends MGUICore {
     //    int i = 0;
     Thread thread;
     long time;
+
+    public testMGUI() {
+        super("testMGUI");
+    }
+
     @Override
     public void onCreate(MContainer container) {
         container.setBackground(new Color(255,255,255));

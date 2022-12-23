@@ -78,7 +78,7 @@ public class MContainer extends MControl {
         reRender();
     }
     private Object renderLock = new Object();
-
+    private Object renderLock2 = new Object();
     public Object getRenderLock() {
         return renderLock;
     }
@@ -126,20 +126,22 @@ public class MContainer extends MControl {
                 createImage();
                 reRender();
             }
-            for(int i=0;i<reRenderRectangles.size();i++){
-                int x = (int) reRenderRectangles.get(i).x;
-                int y = (int) reRenderRectangles.get(i).y;
-                int w = (int) reRenderRectangles.get(i).width;
-                int h = (int) reRenderRectangles.get(i).height;
-                try {
-                    if(loaded) {
-                        screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+            synchronized (renderLock2) {
+                for (int i = 0; i < reRenderRectangles.size(); i++) {
+                    int x = (int) reRenderRectangles.get(i).x;
+                    int y = (int) reRenderRectangles.get(i).y;
+                    int w = (int) reRenderRectangles.get(i).width;
+                    int h = (int) reRenderRectangles.get(i).height;
+                    try {
+                        if (loaded) {
+                            screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                }catch (Exception e){
-                    e.printStackTrace();
                 }
+                reRenderRectangles.clear();
             }
-            reRenderRectangles.clear();
             synchronized (renderLock){
                 renderLock.notifyAll();
             }
@@ -188,18 +190,27 @@ public class MContainer extends MControl {
         rerender = true;
     }
     List<Rectangle2D.Double> reRenderRectangles = Collections.synchronizedList(new ArrayList<>());
-    public void addReRender(Rectangle2D.Double rect){
-        if(rect.width==0||rect.height==0){
-            return;
+    public void addReRender(Rectangle2D.Double rect) {
+        synchronized (renderLock2) {
+            for (Rectangle2D.Double i : reRenderRectangles) {
+                if (i.equals(rect)) {
+                    return;
+                }
+            }
+            if (rect.width == 0 || rect.height == 0) {
+                return;
+            }
+            reRenderRectangles.add((Rectangle2D.Double) rect.clone());
         }
-        reRenderRectangles.add((Rectangle2D.Double) rect.clone());
     }
     public void addReRender(Rectangle2D.Double[] rect){
-        for(Rectangle2D.Double i:rect){
-            if(i.width==0||i.height==0){
-                continue;
+        synchronized (renderLock2) {
+            for (Rectangle2D.Double i : rect) {
+                if (i.width == 0 || i.height == 0) {
+                    continue;
+                }
+                reRenderRectangles.add((Rectangle2D.Double) i.clone());
             }
-            reRenderRectangles.add((Rectangle2D.Double) i.clone());
         }
     }
     public void inputText(String text){
@@ -211,7 +222,6 @@ public class MContainer extends MControl {
                 canClick = false;
                 clickTime = System.currentTimeMillis();
                 List<MControl> controls = getAllChildMControls();
-                Collections.reverse(controls);
                 for (MControl i : controls) {
                     double left = i.getAbsoluteLeft();
                     double top = i.getAbsoluteTop();
