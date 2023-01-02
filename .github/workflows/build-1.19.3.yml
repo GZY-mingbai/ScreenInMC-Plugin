@@ -8,10 +8,10 @@
 name: Build ScreenInMC Plugin
 
 on:
-  # push:
-  #   branches: [ "master" ]
-  # pull_request:
-  #   branches: [ "master" ]
+   push:
+     branches: [ "master" ]
+   pull_request:
+     branches: [ "master" ]
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
         mkdir BuildTools
         cd BuildTools
         C:\msys64\usr\bin\wget.exe "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
-        java -jar BuildTools.jar --rev 1.19.2 --remapped
+        java -jar BuildTools.jar --rev 1.19.3 --remapped
         cd ..
     - name: Build with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
@@ -50,8 +50,8 @@ jobs:
       run: |
         mkdir build/libs/remapped/
         C:\msys64\usr\bin\wget.exe "https://repo.maven.apache.org/maven2/net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar" -O "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar"
-        java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.2-R0.1-SNAPSHOT\spigot-1.19.2-R0.1-SNAPSHOT-remapped-mojang.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC.jar -o build\libs\ScreenInMC-obf.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.2-R0.1-SNAPSHOT\minecraft-server-1.19.2-R0.1-SNAPSHOT-maps-mojang.txt --reverse
-        java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.2-R0.1-SNAPSHOT\spigot-1.19.2-R0.1-SNAPSHOT-remapped-obf.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC-obf.jar -o build\libs\remapped\ScreenInMC.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.2-R0.1-SNAPSHOT\minecraft-server-1.19.2-R0.1-SNAPSHOT-maps-spigot.csrg
+        java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.3-R0.1-SNAPSHOT\spigot-1.19.3-R0.1-SNAPSHOT-remapped-mojang.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC.jar -o build\libs\ScreenInMC-obf.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.3-R0.1-SNAPSHOT\minecraft-server-1.19.3-R0.1-SNAPSHOT-maps-mojang.txt --reverse
+        java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.3-R0.1-SNAPSHOT\spigot-1.19.3-R0.1-SNAPSHOT-remapped-obf.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC-obf.jar -o build\libs\remapped\ScreenInMC.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.3-R0.1-SNAPSHOT\minecraft-server-1.19.3-R0.1-SNAPSHOT-maps-spigot.csrg
     - name: Upload Plugin Jar File
       uses: actions/upload-artifact@master
       with:
@@ -67,5 +67,5 @@ jobs:
 #     - name: Upload Spigot Jar File
 #       uses: actions/upload-artifact@master
 #       with:
-#         name: Spigot-1.19.2
+#         name: Spigot-1.19.3
 #         path: BuildTools/spigot-*.jar
