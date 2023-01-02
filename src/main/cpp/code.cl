@@ -83,8 +83,14 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
     int id = get_global_id(0);
     int width = settings[0];
     int pieceSize=settings[2];
-    int r = id*pieceSize/width*width/pieceSize*pieceSize*pieceSize+id%(width/pieceSize)*pieceSize;
     int colorCount = settings[1];
+    if (pieceSize == 1) {
+        RGBA rgba = intToRgba(colors[id]);
+        NearlyColorResult near = getNearlyColor(palette, colorCount, rgba);
+        result[id] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);
+        return;
+    }
+    int r = id*pieceSize/width*width/pieceSize*pieceSize*pieceSize+id%(width/pieceSize)*pieceSize;
     for (int y = 0; y < pieceSize; ++y) {
         for (int x = 0; x < pieceSize; ++x) {
             RGBA rgba = intToRgba(colors[r]);
