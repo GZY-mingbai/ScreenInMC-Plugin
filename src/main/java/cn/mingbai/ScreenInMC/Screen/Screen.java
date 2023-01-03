@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
@@ -20,7 +21,6 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -92,8 +92,6 @@ public class Screen {
             if (!location.getWorld().equals(player.getWorld())) {
                 return;
             }
-            ServerPlayer sp = ((CraftPlayer) player).getHandle();
-            ServerPlayerConnection spc = sp.connection;
             Utils.Pair<Integer, Integer> pitchYaw = getFacingPitchYaw(facing);
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
@@ -106,7 +104,7 @@ public class Screen {
                             pitchYaw.getKey(), pitchYaw.getValue(), EntityType.ITEM_FRAME,
                             facing.ordinal(), new Vec3(0, 0, 0), 0
                     );
-                    spc.send(packet1);
+                    CraftUtils.sendPacket(player,packet1);
                     ItemStack mapItem = new ItemStack(Items.FILLED_MAP);
                     mapItem.getOrCreateTag().putInt("map", entityID);
                     SynchedEntityData.DataItem dataItem = new SynchedEntityData.DataItem(new EntityDataAccessor<>(8, EntityDataSerializers.ITEM_STACK), mapItem);
@@ -117,7 +115,7 @@ public class Screen {
                     dataItemList.add(new SynchedEntityData.DataItem<>(new EntityDataAccessor<>(0, EntityDataSerializers.BYTE), (byte) 0x20));
                     SynchedEntityData.pack(dataItemList, byteBuf);
                     ClientboundSetEntityDataPacket packet2 = new ClientboundSetEntityDataPacket(byteBuf);
-                    spc.send(packet2);
+                    CraftUtils.sendPacket(player,packet2);
                 }
             }
         } else {
@@ -220,8 +218,6 @@ public class Screen {
         if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
-        ServerPlayer sp = ((CraftPlayer) player).getHandle();
-        ServerPlayerConnection spc = sp.connection;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 byte[] result = new byte[16384];
@@ -231,7 +227,7 @@ public class Screen {
                 }
                 MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0, 0, 128, 128, result);
                 ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
-                spc.send(packet);
+                CraftUtils.sendPacket(player,packet);
             }
         }
     }
@@ -242,8 +238,6 @@ public class Screen {
         if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
-        ServerPlayer sp = ((CraftPlayer) player).getHandle();
-        ServerPlayerConnection spc = sp.connection;
         if(w*h!=colors.length){
             return;
         }
@@ -268,7 +262,7 @@ public class Screen {
         }
         MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(c, d, e, f, r1);
         ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[a][b].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
-        spc.send(packet);
+        CraftUtils.sendPacket(player,packet);
         int k = (c+w)/128+1;
         int l = (d+h)/128+1;
         for(int i=0;i<l;i++){
@@ -331,7 +325,7 @@ public class Screen {
                 }
                 mapPatch = new MapItemSavedData.MapPatch(m, n, o, p, r2);
                 packet = new ClientboundMapItemDataPacket(screenPieces[a+j][b+i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
-                spc.send(packet);
+                CraftUtils.sendPacket(player,packet);
             }
         }
     }

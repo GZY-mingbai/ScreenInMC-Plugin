@@ -36,8 +36,6 @@ jobs:
         C:\msys64\usr\bin\wget.exe "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
         java -jar BuildTools.jar --rev 1.16.5 --remapped
         cd ..
-        C:\msys64\usr\bin\sed.exe -i 's/1.19.2/1.16.5/g' build.gradle
-        replaceAll.bat org.bukkit.craftbukkit.v1_19_R1 org.bukkit.craftbukkit.v1_16_R3
     - name: Build with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
