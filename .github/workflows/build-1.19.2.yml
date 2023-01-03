@@ -8,10 +8,10 @@
 name: Build ScreenInMC Plugin 1.19.2
 
 on:
-  # push:
-  #   branches: [ "master" ]
-  # pull_request:
-  #   branches: [ "master" ]
+   push:
+     branches: [ "master" ]
+   pull_request:
+     branches: [ "master" ]
   workflow_dispatch:
 
 permissions:
