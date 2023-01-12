@@ -4,7 +4,7 @@
 * Provide a video display in your world. 
 
 ![Example](http://zw.mingbaitalk.cn/pic/example.png)
-![Example](http://zw.mingbaitalk.cn/pic/gera.jpg)
+
 
 
 Using MIT License.
