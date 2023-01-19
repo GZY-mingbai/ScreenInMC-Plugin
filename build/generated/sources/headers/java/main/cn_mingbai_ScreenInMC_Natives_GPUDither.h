@@ -18,10 +18,10 @@ JNIEXPORT jobjectArray JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_getP
 /*
  * Class:     cn_mingbai_ScreenInMC_Natives_GPUDither
  * Method:    init
- * Signature: (I[II)Z
+ * Signature: (I[III)Z
  */
 JNIEXPORT jboolean JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_init
-  (JNIEnv *, jclass, jint, jintArray, jint);
+  (JNIEnv *, jclass, jint, jintArray, jint, jint);
 
 /*
  * Class:     cn_mingbai_ScreenInMC_Natives_GPUDither

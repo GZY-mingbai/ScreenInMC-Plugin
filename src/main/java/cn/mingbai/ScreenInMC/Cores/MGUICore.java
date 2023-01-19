@@ -7,16 +7,21 @@ import cn.mingbai.ScreenInMC.Utils.Utils;
 
 public abstract class MGUICore extends Core {
     MContainer container;
-
+    boolean useDelay;
     public MGUICore(String name) {
+        this(name,false);
+    }
+
+    public MGUICore(String name,boolean useDelay) {
         super(name);
+        this.useDelay = useDelay;
     }
 
     public abstract void onCreate(MContainer container);
 
     @Override
     public void onCreate() {
-        container = new MContainer(screen);
+        container = new MContainer(getScreen(),useDelay);
         onCreate(container);
         container.load();
     }

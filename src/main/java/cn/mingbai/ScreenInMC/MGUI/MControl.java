@@ -72,7 +72,6 @@ public class MControl {
             }
             container.activeControl = this;
             active=true;
-            Bukkit.broadcastMessage(active+" "+isActive());
             onActive();
         }
     }

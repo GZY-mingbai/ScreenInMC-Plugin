@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.MGUI;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.naming.ldap.Control;
@@ -23,8 +24,24 @@ public class MContainer extends MControl {
     private boolean canClick = true;
     private long clickTime = 0;
     public static final int minClickInterval = 100;
+    private boolean useDelay = false;
+    private ImageUtils.DelayConverter delayConverter = new ImageUtils.DelayConverter(new ImageUtils.DelayConverter.DelayOnReady() {
+        @Override
+        public void apply(ImageUtils.DelayConverter.DelayImage imageData) {
+            screen.sendView(imageData.getData());
+        }
+
+        @Override
+        public void apply(ImageUtils.DelayConverter.DelayImage imageData, int x, int y, int width, int height) {
+            screen.sendView(imageData.getData(),x,y,width,height);
+        }
+    });
 
     public MContainer(Screen screen) {
+        this(screen,false);
+    }
+    public MContainer(Screen screen,boolean useDelay) {
+        this.useDelay = useDelay;
         this.screen = screen;
         this.setWidth(screen.getWidth() * 128);
         this.setHeight(screen.getHeight() * 128);
@@ -104,6 +121,9 @@ public class MContainer extends MControl {
                 if(renderThread!=null){
                     renderThread.cancel();
                 }
+                if(useDelay){
+                    delayConverter.stop();
+                }
                 return;
             }
             if (reRenderCount > 10) {
@@ -134,7 +154,11 @@ public class MContainer extends MControl {
                     int h = (int) reRenderRectangles.get(i).height;
                     try {
                         if (loaded) {
-                            screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                            if(useDelay){
+                                delayConverter.addImage(new ImageUtils.DelayConverter.DelayImage(image.getSubimage(x, y, w, h), x, y, w, h));
+                            }else{
+                                screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -153,6 +177,9 @@ public class MContainer extends MControl {
         super.onUnload();
         if(renderThread!=null){
             renderThread.cancel();
+        }
+        if(useDelay){
+            delayConverter.stop();
         }
     }
     private BukkitRunnable renderThread;

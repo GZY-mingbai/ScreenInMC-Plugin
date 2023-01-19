@@ -9,7 +9,6 @@ public class MInput extends MTextBlock{
     @Override
     public void onRender(MRenderer mRenderer) {
         mRenderer.setStroke(new BasicStroke(1));
-        Bukkit.broadcastMessage(""+isActive());
         if(isActive()){
             mRenderer.setPaint(new Color(150,150,150));
         }else{

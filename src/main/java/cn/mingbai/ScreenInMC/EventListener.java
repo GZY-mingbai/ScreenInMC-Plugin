@@ -159,7 +159,6 @@ public class EventListener implements Listener {
                 i.getCore().onMouseClick((int) (mouseX * 128), (int) (mouseY * 128),type);
                 return;
             }else {
-                Bukkit.broadcastMessage("Too far: "+screenLocation.distance(playerLocation));
             }
         }
     }

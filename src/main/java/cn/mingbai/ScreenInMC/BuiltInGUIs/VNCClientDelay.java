@@ -6,7 +6,6 @@ import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
 import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.shinyhut.vernacular.client.VernacularClient;
 import com.shinyhut.vernacular.client.VernacularConfig;
@@ -19,11 +18,9 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.function.Consumer;
 
-import static java.awt.Font.PLAIN;
-
-public class VNCClient extends MGUICore {
-    public VNCClient() {
-        super("VNCClient");
+public class VNCClientDelay extends MGUICore {
+    public VNCClientDelay() {
+        super("VNCClientDelay",true);
     }
 
     @Override
@@ -119,36 +116,7 @@ public class VNCClient extends MGUICore {
         container.addChildControl(passwordInput);
         container.addChildControl(connectButton);
         container.addChildControl(VNCControl);
-        MTextBlock mTextBlock = new MTextBlock1("0 FPS");
-        mTextBlock.setTextHorizontalAlignment(Alignment.HorizontalAlignment.Left);
-        mTextBlock.setTextVerticalAlignment(Alignment.VerticalAlignment.Top);
-        mTextBlock.setLeft(0);
-        mTextBlock.setTop(0);
-        mTextBlock.setHeight(128);
-        mTextBlock.setWidth(256);
-        mTextBlock.setForeground(new Color(255,0,0));
-        time = System.currentTimeMillis();
-        mTextBlock.addRenderTask(new Runnable() {
-            @Override
-            public void run() {
-                thread = new Thread(()->{
-                    try {
-                        synchronized (container.getRenderLock()) {
-                            container.getRenderLock().wait();
-                        }
-                        long newTime = System.currentTimeMillis();
-                        if(newTime-time>=20) {
-                            mTextBlock.setText(Math.round((1f / (((float) (newTime - time)) / 1000f))) + " FPS");
-                        }
-                        time = System.currentTimeMillis();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-                thread.start();
-            }
-        });
-        container.addChildControl(mTextBlock);
+
     }
     public void onError(Exception e){
         e.printStackTrace();
@@ -157,7 +125,6 @@ public class VNCClient extends MGUICore {
 
     }
     Thread thread;
-    long time;
     public class MTextBlock1 extends MTextBlock{
         public MTextBlock1(String text){
             super(text);

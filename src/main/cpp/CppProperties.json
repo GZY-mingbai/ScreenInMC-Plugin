@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "inheritEnvironments": [
+        "msvc_x86"
+      ],
+      "name": "x86-Debug",
+      "includePath": [
+        "C:\\Users\\27857\\.jdks\\corretto-17.0.4\\include",
+        "C:\\Users\\27857\\.jdks\\corretto-17.0.4\\include\\win32",
+        "E:\\Nvidia\\Sdk\\include\\",
+        "${env.INCLUDE}",
+        "${workspaceRoot}\\**"
+      ],
+      "defines": [
+        "WIN32",
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "intelliSenseMode": "windows-msvc-x86"
+    }
+  ]
+}

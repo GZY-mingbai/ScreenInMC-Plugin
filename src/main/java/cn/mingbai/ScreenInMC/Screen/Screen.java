@@ -232,6 +232,7 @@ public class Screen {
         }
     }
     public void sendView(Player player,byte[] colors,int x,int y,int w,int h){
+        long timeStart = System.currentTimeMillis();
         if (!location.getWorld().equals(player.getWorld())) {
             return;
         }
@@ -241,6 +242,7 @@ public class Screen {
         if(w*h!=colors.length){
             return;
         }
+        timeStart = System.currentTimeMillis();
         int a = x/128;
         int b = y/128;
         int c = x%128;

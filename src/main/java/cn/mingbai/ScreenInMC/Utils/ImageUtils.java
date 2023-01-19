@@ -1,16 +1,220 @@
 package cn.mingbai.ScreenInMC.Utils;
 
+import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
+import cn.mingbai.ScreenInMC.Screen.Screen;
 import net.minecraft.world.level.material.MaterialColor;
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ImageUtils {
+    public static class DelayConverter{
+        public static class DelayImage{
+            Image image;
+            byte[] data;
+            int x=-1;
+            int y=-1;
+            int width=-1;
+            int height=-1;
+            boolean processed = false;
+            BukkitRunnable runnable;
+            DelayConverter converter;
+            private void process(){
+                runnable = new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if(converter!=null) {
+                            synchronized (converter) {
+                                if (converter.globalProcessedCount == 0) {
+                                    converter.globalProcessStartTime = System.currentTimeMillis();
+                                }
+                            }
+                        }
+                        data = ImageUtils.imageToMapColors(image);
+                        if(converter!=null) {
+                            synchronized (converter) {
+                                if (converter.globalProcessedCount == maxDelayImages-1) {
+                                    converter.globalProcessEndTime = System.currentTimeMillis();
+                                }
+                                if(converter.globalProcessedCount<maxDelayImages) {
+                                    converter.globalProcessedCount++;
+                                }
+                            }
+                        }
+                        processed = true;
+                    }
+                };
+                runnable.runTaskAsynchronously(Main.thisPlugin());
+            }
+
+            public byte[] getData() {
+                return data;
+            }
+
+            public Image getImage() {
+                return image;
+            }
+            public DelayImage(Image image){
+                this.image = image;
+            }
+            public DelayImage(Image image,int x,int y,int width,int height){
+                this.image = image;
+                if(x<0||y<0||width<0||height<0){
+                    throw new RuntimeException("X,Y,Width,Height can't be non-positive number.");
+                }
+                this.x=x;
+                this.y=y;
+                this.width=width;
+                this.height=height;
+            }
+
+            public int getX() {
+                return x;
+            }
+
+            public int getY() {
+                return y;
+            }
+
+            public int getWidth() {
+                return width;
+            }
+
+            public int getHeight() {
+                return height;
+            }
+        }
+        public abstract static class DelayOnReady{
+            public abstract void apply(DelayImage imageData);
+            public abstract void apply(DelayImage imageData,int x,int y,int width,int height);
+
+
+        }
+
+        private DelayOnReady onReady = null;
+        private BukkitRunnable runnable = null;
+        private long lastImageTime = 0;
+
+        public DelayConverter(DelayOnReady onReady){
+            this.onReady = onReady;
+        }
+        private List<DelayImage> images = Collections.synchronizedList(new ArrayList<>());
+        private DelayImage lastImage;
+        private long globalProcessStartTime = 0;
+        private long globalProcessEndTime = 0;
+        private long globalProcessedCount = 0;
+        private int delay = 50;
+        public synchronized void addImage(DelayImage image){
+            image.converter=this;
+            if(System.currentTimeMillis()-lastImageTime<delay || images.size()>=maxDelayImages){
+                lastImage = image;
+                return;
+            }
+            synchronized (images){
+                images.add(image);
+                image.process();
+            }
+            if(runnable==null){
+                runnable=new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            while (!this.isCancelled()){
+                                synchronized(this) {
+                                    if (globalProcessedCount >= maxDelayImages) {
+                                        if(globalProcessEndTime!=0 && globalProcessStartTime != 0) {
+                                            double processTime = globalProcessEndTime - globalProcessStartTime;
+                                            int newDelay = (int) (processTime / ((double) maxDelayImages));
+                                            if (newDelay < 50) {
+                                                newDelay = 50;
+                                            }
+                                            Main.getPluginLogger().info("New delay: " + newDelay);
+                                            delay = newDelay;
+                                        }
+                                        globalProcessStartTime=0;
+                                        globalProcessEndTime=0;
+                                        globalProcessedCount=0;
+                                    }
+                                }
+                                int size;
+                                synchronized (images) {
+                                    size = images.size();
+                                }
+                                if(size>0){
+                                    DelayImage img;
+                                    synchronized (images){
+                                        img = images.get(0);
+                                    }
+                                    if(img.processed){
+                                        long timeStart = System.currentTimeMillis();
+                                        BukkitRunnable runnable1 = new BukkitRunnable() {
+                                            @Override
+                                            public void run() {
+                                                if(img.x==-1||img.y==-1||img.height==-1||img.width==-1) {
+                                                    onReady.apply(img);
+                                                }else{
+                                                    onReady.apply(img,img.x,img.y,img.width,img.height);
+                                                }
+                                            }
+                                        };
+                                        runnable1.runTask(Main.thisPlugin());
+                                        long leftTime = delay - (System.currentTimeMillis()-timeStart);
+                                        if(leftTime>0){
+                                            Thread.sleep(delay);
+                                        }
+                                        synchronized (images){
+                                            if(images.size()>0) {
+                                                images.remove(0);
+                                            }
+                                        }
+                                        continue;
+                                    }
+                                }else {
+                                    if(lastImage!=null){
+                                        images.add(lastImage);
+                                        lastImage.process();
+                                        lastImage = null;
+                                    }
+                                }
+                                Thread.sleep(delay*maxDelayImages);
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                runnable.runTaskAsynchronously(Main.thisPlugin());
+            }
+            lastImageTime = System.currentTimeMillis();
+        }
+        public void stop(){
+            if(runnable!=null) {
+                runnable.cancel();
+                runnable = null;
+            }
+            synchronized (images){
+                while (images.size()>0){
+                    DelayImage image = images.get(0);
+                    if(image.runnable!=null){
+                        image.runnable.cancel();
+                        image.runnable = null;
+                    }
+                    images.remove(0);
+                }
+            }
+        }
+    }
+
+
+
     private static int pieceSize = 4;
+    private static int maxDelayImages = 4;
     private static Color[] palette;
     private static int[] palette_;
     private static boolean useOpenCL = true;
@@ -24,8 +228,16 @@ public class ImageUtils {
         return platforms.clone();
     }
 
+    public static void setMaxDelayImages(int maxDelayImages) {
+        ImageUtils.maxDelayImages = maxDelayImages;
+    }
+
     public static void setPieceSize(int pieceSize) {
         ImageUtils.pieceSize = pieceSize;
+    }
+
+    public static int getPieceSize() {
+        return pieceSize;
     }
 
     public static void initImageUtils() {
@@ -56,6 +268,7 @@ public class ImageUtils {
         }
     }
     public static byte[] imageToMapColorsWithGPU(Image image) {
+        long timeStart = System.currentTimeMillis();
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
@@ -77,7 +290,10 @@ public class ImageUtils {
         for(int i=0;i<height;i++){
             System.arraycopy(data,i*width,newData,i*width_,width);
         }
+        timeStart = System.currentTimeMillis();
         byte[] result = GPUDither.dither(newData, width_, height_, pieceSize);
+        Main.getPluginLogger().info("OpenCL处理："+(System.currentTimeMillis()-timeStart));
+        timeStart = System.currentTimeMillis();
         byte[] newResult = new byte[width*height];
         for(int i=0;i<height;i++){
             System.arraycopy(result,i*width_,newResult,i*width,width);

@@ -75,7 +75,7 @@ public class CommandListener implements TabExecutor {
         }
         if (args[0].equalsIgnoreCase("initOpenCL")) {
             int[] p = getPalette();
-            if(GPUDither.init(Integer.parseInt(args[1]), p, p.length)){
+            if(GPUDither.init(Integer.parseInt(args[1]), p, p.length,getPieceSize())){
                 sender.sendMessage("Success");
             }else{
                 sender.sendMessage("Failed");
@@ -114,6 +114,11 @@ public class CommandListener implements TabExecutor {
                 sender.sendMessage("Success");
             }else{
                 sender.sendMessage("Failed");
+            }
+        }
+        if(args[0].equals("setMax")){
+            if(args.length==2){
+                setMaxDelayImages(Integer.parseInt(args[1]));
             }
         }
         sender.sendMessage("Success");

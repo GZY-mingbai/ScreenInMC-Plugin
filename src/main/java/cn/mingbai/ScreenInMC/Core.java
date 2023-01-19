@@ -34,7 +34,11 @@ public abstract class Core implements Cloneable{
     public static void removeCore(Core core){
         allCores.remove(core);
     }
-    protected Screen screen;
+    private Screen screen;
+
+    public Screen getScreen() {
+        return screen;
+    }
 
     public void create(Screen screen) {
         this.screen = screen;
