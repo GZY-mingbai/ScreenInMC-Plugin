@@ -124,7 +124,6 @@ public class VNCClientDelay extends MGUICore {
     public void onBell(){
 
     }
-    Thread thread;
     public class MTextBlock1 extends MTextBlock{
         public MTextBlock1(String text){
             super(text);
@@ -138,7 +137,6 @@ public class VNCClientDelay extends MGUICore {
         @Override
         public void onUnload() {
             super.onUnload();
-            thread.interrupt();
         }
     }
     private boolean isConnected =false;

@@ -25,6 +25,10 @@ public class MContainer extends MControl {
     private long clickTime = 0;
     public static final int minClickInterval = 100;
     private boolean useDelay = false;
+
+    //temp
+    private long stime = System.currentTimeMillis();
+    //temp
     private ImageUtils.DelayConverter delayConverter = new ImageUtils.DelayConverter(new ImageUtils.DelayConverter.DelayOnReady() {
         @Override
         public void apply(ImageUtils.DelayConverter.DelayImage imageData) {
@@ -34,6 +38,9 @@ public class MContainer extends MControl {
         @Override
         public void apply(ImageUtils.DelayConverter.DelayImage imageData, int x, int y, int width, int height) {
             screen.sendView(imageData.getData(),x,y,width,height);
+            long tm = System.currentTimeMillis()-stime;
+            Main.getPluginLogger().info("FPS: "+(1000d / ((double) tm)));
+            stime = System.currentTimeMillis();
         }
     });
 
@@ -153,11 +160,21 @@ public class MContainer extends MControl {
                     int w = (int) reRenderRectangles.get(i).width;
                     int h = (int) reRenderRectangles.get(i).height;
                     try {
-                        if (loaded) {
-                            if(useDelay){
-                                delayConverter.addImage(new ImageUtils.DelayConverter.DelayImage(image.getSubimage(x, y, w, h), x, y, w, h));
-                            }else{
-                                screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                        if(x==0&&y==0&&w==(int)getWidth()&&h==(int)getHeight()){
+                            if (loaded) {
+                                if(useDelay){
+                                    delayConverter.addImage(new ImageUtils.DelayConverter.DelayImage(image));
+                                }else{
+                                    screen.sendView(ImageUtils.imageToMapColors(image));
+                                }
+                            }
+                        }else{
+                            if (loaded) {
+                                if(useDelay){
+                                    delayConverter.addImage(new ImageUtils.DelayConverter.DelayImage(image.getSubimage(x, y, w, h), x, y, w, h));
+                                }else{
+                                    screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                                }
                             }
                         }
                     } catch (Exception e) {

@@ -74,3 +74,15 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
     int near = getNearlyColor(palette, colorCount, rgba);
     result[id] = (char)((near / 4) << 2 | (near % 4) & 3);
 }
+__kernel void scale(__global int* image1, __global int* image2, __global int* width) {
+    int id = get_global_id(0);
+    int w1 = width[0];
+    int w2 = width[1];
+    image2[id / w1 * w2 + id % w1] = image1[id];
+}
+__kernel void scale_(__global char* image1, __global char* image2, __global int* width) {
+    int id = get_global_id(0);
+    int w1 = width[0];
+    int w2 = width[1];
+    image2[id] = image1[id / w1 * w2 + id % w1];
+}

@@ -95,9 +95,9 @@ bool init(int size)
 {
     const char *code;
     if(size==1){
-        code = "typedef struct RGBA{\nint r;\nint g;\nint b;\nint a;\n}RGBA;\nRGBA intToRgba(int rgb) {\nRGBA rgba;\nrgba.r = (rgb >> 16) & 0xff;\nrgba.g = (rgb >>  8) & 0xff;\nrgba.b = (rgb  ) & 0xff;\nrgba.a = (rgb >> 24) & 0xff;\nreturn rgba;\n}\nint rgbToInt(int r,int g,int b) {\nif(r>255) {\nr=255;\n}\nif(g>255) {\ng=255;\n}\nif(b>255) {\nb=255;\n}\nif(r<0) {\nr=0;\n}\nif(g<0) {\ng=0;\n}\nif(b<0) {\nb=0;\n}\nreturn 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);\n}\nint colorDistance(int r1,int g1,int b1, int r2,int g2,int b2) {\nint rmean = (b1 + b2) / 2;\nint r = r1 - r2;\nint g = g1 - g2;\nint b = b1 - b2;\nreturn (int)(sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))));\n}\nint getNearlyColor(__global int *palette,int colorCount,RGBA rgb) {\nint c1=rgb.r;\nint c2=rgb.g;\nint c3=rgb.b;\nRGBA minColor= intToRgba(palette[0]);\nint m1 = minColor.r;\nint m2 = minColor.g;\nint m3 = minColor.b;\nint min = colorDistance(m1,m2,m3,c1,c2,c3);\nint minIndex = 0;\nfor (int i=1;i<colorCount;i++) {\nRGBA tempColor = intToRgba(palette[i]);\nint t1 = tempColor.r;\nint t2 = tempColor.g;\nint t3 = tempColor.b;\nint temp = colorDistance(t1,t2,t3,c1,c2,c3);\nif(temp<min) {\nmin = temp;\nminIndex = i;\nm1=t1;\nm2=t2;\nm3=t3;\n}\n}\nreturn minIndex+4;\n}\n__kernel void dither(__global int *colors,__global int *palette,__global int *settings,__global char *result) {\nint id = get_global_id(0);\nint width = settings[0];\nint colorCount = settings[1];\nRGBA rgba = intToRgba(colors[id]);\nint near = getNearlyColor(palette, colorCount, rgba);\nresult[id] = (char)((near / 4) << 2 | (near % 4) & 3);\n}";
+        code = "typedef struct RGBA{\nint r;\nint g;\nint b;\nint a;\n}RGBA;\nRGBA intToRgba(int rgb) {\nRGBA rgba;\nrgba.r = (rgb >> 16) & 0xff;\nrgba.g = (rgb >>  8) & 0xff;\nrgba.b = (rgb  ) & 0xff;\nrgba.a = (rgb >> 24) & 0xff;\nreturn rgba;\n}\nint rgbToInt(int r,int g,int b) {\nif(r>255) {\nr=255;\n}\nif(g>255) {\ng=255;\n}\nif(b>255) {\nb=255;\n}\nif(r<0) {\nr=0;\n}\nif(g<0) {\ng=0;\n}\nif(b<0) {\nb=0;\n}\nreturn 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);\n}\nint colorDistance(int r1,int g1,int b1, int r2,int g2,int b2) {\nint rmean = (b1 + b2) / 2;\nint r = r1 - r2;\nint g = g1 - g2;\nint b = b1 - b2;\nreturn (int)(sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))));\n}\nint getNearlyColor(__global int *palette,int colorCount,RGBA rgb) {\nint c1=rgb.r;\nint c2=rgb.g;\nint c3=rgb.b;\nRGBA minColor= intToRgba(palette[0]);\nint m1 = minColor.r;\nint m2 = minColor.g;\nint m3 = minColor.b;\nint min = colorDistance(m1,m2,m3,c1,c2,c3);\nint minIndex = 0;\nfor (int i=1;i<colorCount;i++) {\nRGBA tempColor = intToRgba(palette[i]);\nint t1 = tempColor.r;\nint t2 = tempColor.g;\nint t3 = tempColor.b;\nint temp = colorDistance(t1,t2,t3,c1,c2,c3);\nif(temp<min) {\nmin = temp;\nminIndex = i;\nm1=t1;\nm2=t2;\nm3=t3;\n}\n}\nreturn minIndex+4;\n}\n__kernel void dither(__global int *colors,__global int *palette,__global int *settings,__global char *result) {\nint id = get_global_id(0);\nint width = settings[0];\nint colorCount = settings[1];\nRGBA rgba = intToRgba(colors[id]);\nint near = getNearlyColor(palette, colorCount, rgba);\nresult[id] = (char)((near / 4) << 2 | (near % 4) & 3);\n}\n__kernel void scale(__global int* image1, __global int* image2, __global int* width) {\nint id = get_global_id(0);\nint w1 = width[0];\nint w2 = width[1];\nimage2[id / w1 * w2 + id % w1] = image1[id];\n}\n__kernel void scale_(__global char* image1, __global char* image2, __global int* width) {\nint id = get_global_id(0);\nint w1 = width[0];\nint w2 = width[1];\nimage2[id] = image1[id / w1 * w2 + id % w1];\n}";
     }else{
-        code = "typedef struct RGBA{\nint r;\nint g;\nint b;\nint a;\n}RGBA;\ntypedef struct NearlyColorResult{\nint index;\nint color;\nint r;\nint g;\nint b;\n}NearlyColorResult;\nRGBA intToRgba(int rgb) {\nRGBA rgba;\nrgba.r = (rgb >> 16) & 0xff;\nrgba.g = (rgb >>  8) & 0xff;\nrgba.b = (rgb  ) & 0xff;\nrgba.a = (rgb >> 24) & 0xff;\nreturn rgba;\n}\nint rgbToInt(int r,int g,int b) {\nif(r>255) {\nr=255;\n}\nif(g>255) {\ng=255;\n}\nif(b>255) {\nb=255;\n}\nif(r<0) {\nr=0;\n}\nif(g<0) {\ng=0;\n}\nif(b<0) {\nb=0;\n}\nreturn 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);\n}\nint colorDistance(int r1,int g1,int b1, int r2,int g2,int b2) {\nint rmean = (b1 + b2) / 2;\nint r = r1 - r2;\nint g = g1 - g2;\nint b = b1 - b2;\nreturn (int)(sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))));\n}\nNearlyColorResult getNearlyColor(__global int *palette,int colorCount,RGBA rgb) {\nint c1=rgb.r;\nint c2=rgb.g;\nint c3=rgb.b;\nRGBA minColor= intToRgba(palette[0]);\nint m1 = minColor.r;\nint m2 = minColor.g;\nint m3 = minColor.b;\nint min = colorDistance(m1,m2,m3,c1,c2,c3);\nint minIndex = 0;\nfor (int i=1;i<colorCount;i++) {\nRGBA tempColor = intToRgba(palette[i]);\nint t1 = tempColor.r;\nint t2 = tempColor.g;\nint t3 = tempColor.b;\nint temp = colorDistance(t1,t2,t3,c1,c2,c3);\nif(temp<min) {\nmin = temp;\nminIndex = i;\nm1=t1;\nm2=t2;\nm3=t3;\n}\n}\nNearlyColorResult result;\nresult.index=minIndex+4;\nresult.color=palette[minIndex];\nresult.r=c1-m1;\nresult.g=c2-m2;\nresult.b=c3-m3;\nreturn result;\n}\n__kernel void dither(__global int *colors,__global int *palette,__global int *settings,__global char *result) {\nint id = get_global_id(0);\nint width = settings[0];\nint pieceSize=settings[2];\nint colorCount = settings[1];\nif (pieceSize == 1) {\nRGBA rgba = intToRgba(colors[id]);\nNearlyColorResult near = getNearlyColor(palette, colorCount, rgba);\nresult[id] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);\nreturn;\n}\nint r = id*pieceSize/width*width/pieceSize*pieceSize*pieceSize+id%(width/pieceSize)*pieceSize;\nfor (int y = 0; y < pieceSize; ++y) {\nfor (int x = 0; x < pieceSize; ++x) {\nRGBA rgba = intToRgba(colors[r]);\nif(rgba.a==255) {\nNearlyColorResult near = getNearlyColor(palette,colorCount,rgba);\ncolors[r] = near.color;\nresult[r] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);\nif(x != pieceSize-1) {\nint index_ = r+1;\nRGBA rgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.4375,rgba_.g+near.g*0.4375,rgba_.b+near.b*0.4375);\n}\nif(y != pieceSize-1) {\nindex_ += width;\nrgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.0625,rgba_.g+near.g*0.0625,rgba_.b+near.b*0.0625);\n}\n}\n}\nif(y != pieceSize-1) {\nint index_ = r+width;\nRGBA rgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.1875,rgba_.g+near.g*0.1875,rgba_.b+near.b*0.1875);\n}\nif(x != 0) {\nindex_ -= 1;\nrgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.3125,rgba_.g+near.g*0.3125,rgba_.b+near.b*0.3125);\n}\n}\n}\n}else{\nresult[r]=0;\n}\nr++;\n}\nr+=width-pieceSize;\n}\n}";
+        code = "typedef struct RGBA{\nint r;\nint g;\nint b;\nint a;\n}RGBA;\ntypedef struct NearlyColorResult{\nint index;\nint color;\nint r;\nint g;\nint b;\n}NearlyColorResult;\nRGBA intToRgba(int rgb) {\nRGBA rgba;\nrgba.r = (rgb >> 16) & 0xff;\nrgba.g = (rgb >>  8) & 0xff;\nrgba.b = (rgb  ) & 0xff;\nrgba.a = (rgb >> 24) & 0xff;\nreturn rgba;\n}\nint rgbToInt(int r,int g,int b) {\nif(r>255) {\nr=255;\n}\nif(g>255) {\ng=255;\n}\nif(b>255) {\nb=255;\n}\nif(r<0) {\nr=0;\n}\nif(g<0) {\ng=0;\n}\nif(b<0) {\nb=0;\n}\nreturn 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);\n}\nint colorDistance(int r1,int g1,int b1, int r2,int g2,int b2) {\nint rmean = (b1 + b2) / 2;\nint r = r1 - r2;\nint g = g1 - g2;\nint b = b1 - b2;\nreturn (int)(sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))));\n}\nNearlyColorResult getNearlyColor(__global int *palette,int colorCount,RGBA rgb) {\nint c1=rgb.r;\nint c2=rgb.g;\nint c3=rgb.b;\nRGBA minColor= intToRgba(palette[0]);\nint m1 = minColor.r;\nint m2 = minColor.g;\nint m3 = minColor.b;\nint min = colorDistance(m1,m2,m3,c1,c2,c3);\nint minIndex = 0;\nfor (int i=1;i<colorCount;i++) {\nRGBA tempColor = intToRgba(palette[i]);\nint t1 = tempColor.r;\nint t2 = tempColor.g;\nint t3 = tempColor.b;\nint temp = colorDistance(t1,t2,t3,c1,c2,c3);\nif(temp<min) {\nmin = temp;\nminIndex = i;\nm1=t1;\nm2=t2;\nm3=t3;\n}\n}\nNearlyColorResult result;\nresult.index=minIndex+4;\nresult.color=palette[minIndex];\nresult.r=c1-m1;\nresult.g=c2-m2;\nresult.b=c3-m3;\nreturn result;\n}\n__kernel void dither(__global int *colors,__global int *palette,__global int *settings,__global char *result) {\nint id = get_global_id(0);\nint width = settings[0];\nint pieceSize=settings[2];\nint colorCount = settings[1];\nif (pieceSize == 1) {\nRGBA rgba = intToRgba(colors[id]);\nNearlyColorResult near = getNearlyColor(palette, colorCount, rgba);\nresult[id] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);\nreturn;\n}\nint r = id*pieceSize/width*width/pieceSize*pieceSize*pieceSize+id%(width/pieceSize)*pieceSize;\nfor (int y = 0; y < pieceSize; ++y) {\nfor (int x = 0; x < pieceSize; ++x) {\nRGBA rgba = intToRgba(colors[r]);\nif(rgba.a==255) {\nNearlyColorResult near = getNearlyColor(palette,colorCount,rgba);\ncolors[r] = near.color;\nresult[r] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);\nif(x != pieceSize-1) {\nint index_ = r+1;\nRGBA rgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.4375,rgba_.g+near.g*0.4375,rgba_.b+near.b*0.4375);\n}\nif(y != pieceSize-1) {\nindex_ += width;\nrgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.0625,rgba_.g+near.g*0.0625,rgba_.b+near.b*0.0625);\n}\n}\n}\nif(y != pieceSize-1) {\nint index_ = r+width;\nRGBA rgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.1875,rgba_.g+near.g*0.1875,rgba_.b+near.b*0.1875);\n}\nif(x != 0) {\nindex_ -= 1;\nrgba_ = intToRgba(colors[index_]);\nif(rgba_.a==255) {\ncolors[index_]=rgbToInt(rgba_.r+near.r*0.3125,rgba_.g+near.g*0.3125,rgba_.b+near.b*0.3125);\n}\n}\n}\n}else{\nresult[r]=0;\n}\nr++;\n}\nr+=width-pieceSize;\n}\n}\n__kernel void scale(__global int* image1, __global int* image2, __global int* width) {\nint id = get_global_id(0);\nint w1 = width[0];\nint w2 = width[1];\nimage2[id / w1 * w2 + id % w1] = image1[id];\n}\n__kernel void scale_(__global char* image1, __global char* image2, __global int* width) {\nint id = get_global_id(0);\nint w1 = width[0];\nint w2 = width[1];\nimage2[id] = image1[id / w1 * w2 + id % w1];\n}";
     }
     return init(code);
 }
@@ -176,6 +176,16 @@ bool init(const char *code)
     {
         return false;
     }
+    kernel_ = clCreateKernel(program, "scale", &error);
+    if (error != CL_SUCCESS)
+    {
+        return false;
+    }
+    kernel__ = clCreateKernel(program, "scale_", &error);
+    if (error != CL_SUCCESS)
+    {
+        return false;
+    }
     commandQueue = clCreateCommandQueueWithProperties(context, devices[0], 0, &error);
     if (error != CL_SUCCESS)
     {
@@ -185,12 +195,120 @@ bool init(const char *code)
     delete device;
     return true;
 }
-bool dither(int *image, const int width, const int height, char *result, int pieceSize)
+bool dither(int *image, int width, int height, char *result, int pieceSize)
 {
     if(usePlatform==-1){
         return ditherWithCPU(image,width,height,result);
     }
+    int dh, dw;
+    if (height % pieceSize == 0) {
+        dh = 0;
+    }
+    else {
+        dh = pieceSize - height % pieceSize;
+    }
+    if (width % pieceSize == 0) {
+        dw = 0;
+    }
+    else {
+        dw = pieceSize - width % pieceSize;
+    }
+    bool useNewImage = false;
+    int newSize1;
+    int newSize2;
+    int newWidth;
+    char* newResult = 0;
     cl_int error = 0;
+    if (dh != 0 || dw != 0) {
+        int width_ = width + dw;
+        newWidth = width_;
+        int height_ = height + dh;
+        int size1 = width * height;
+        newSize1 = size1;
+        int size2 = width_ * height_;
+        newSize2 = size2;
+        int len1 = size1 * sizeof(int);
+        int len2 = size2 * sizeof(int);
+        int len3 = sizeof(int)*2;
+        int* newImage = new int[size2];
+        newResult = new char[size2];
+        result = newResult;
+        int* w = new int[2] {width, width_};
+        cl_mem data1 = clCreateBuffer(context, CL_MEM_READ_WRITE, len1, 0, &error);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        cl_mem data2 = clCreateBuffer(context, CL_MEM_READ_WRITE, len2, 0, &error);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        cl_mem data3 = clCreateBuffer(context, CL_MEM_READ_WRITE, len3, 0, &error);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        clEnqueueWriteBuffer(commandQueue, data1, CL_TRUE, 0, len1, image, 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        clEnqueueWriteBuffer(commandQueue, data2, CL_TRUE, 0, len2, newImage, 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        clEnqueueWriteBuffer(commandQueue, data3, CL_TRUE, 0, len3, w, 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clSetKernelArg(kernel_, 0, sizeof(cl_mem), &data1);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clSetKernelArg(kernel_, 1, sizeof(cl_mem), &data2);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clSetKernelArg(kernel_, 2, sizeof(cl_mem), &data3);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        size_t global_work_size[] = { (size_t)(size1)};
+        size_t local_work_size[] = { 1 };
+        error = clEnqueueNDRangeKernel(commandQueue, kernel_, 1, 0, &global_work_size[0], &local_work_size[0], 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clFinish(commandQueue);
+        clEnqueueReadBuffer(commandQueue, data2, CL_TRUE, 0, len2, newImage, 0, 0, 0);
+        error = clReleaseMemObject(data1);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clReleaseMemObject(data2);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clReleaseMemObject(data3);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        useNewImage = true;
+        image = newImage;
+        width = width_;
+        height = height_;
+        delete[] w;
+    }
     int size = width * height;
     int len1 = size * sizeof(int);
     int len2 = paletteColorCount * sizeof(int);
@@ -286,6 +404,85 @@ bool dither(int *image, const int width, const int height, char *result, int pie
     if (error != CL_SUCCESS)
     {
         return false;
+    }
+    if (useNewImage) {
+        delete[] image;
+        int len1 = newSize2 * sizeof(char);
+        int len2 = newSize1 * sizeof(char);
+        int len3 = sizeof(int)*2;
+        int* w = new int[2] {width, newWidth};
+        result = new char[newSize1];
+        cl_mem data1 = clCreateBuffer(context, CL_MEM_READ_WRITE, len1, 0, &error);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        cl_mem data2 = clCreateBuffer(context, CL_MEM_READ_WRITE, len2, 0, &error);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        cl_mem data3 = clCreateBuffer(context, CL_MEM_READ_WRITE, len3, 0, &error);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        clEnqueueWriteBuffer(commandQueue, data1, CL_TRUE, 0, len1, newResult, 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        clEnqueueWriteBuffer(commandQueue, data2, CL_TRUE, 0, len2, result, 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        clEnqueueWriteBuffer(commandQueue, data3, CL_TRUE, 0, len3, w, 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clSetKernelArg(kernel__, 0, sizeof(cl_mem), &data1);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clSetKernelArg(kernel__, 1, sizeof(cl_mem), &data2);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clSetKernelArg(kernel__, 2, sizeof(cl_mem), &data3);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        size_t global_work_size[] = { (size_t)(newSize1)};
+        size_t local_work_size[] = { 1 };
+        error = clEnqueueNDRangeKernel(commandQueue, kernel__, 1, 0, &global_work_size[0], &local_work_size[0], 0, 0, 0);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clFinish(commandQueue);
+        clEnqueueReadBuffer(commandQueue, data2, CL_TRUE, 0, len2, result, 0, 0, 0);
+        error = clReleaseMemObject(data1);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clReleaseMemObject(data2);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        error = clReleaseMemObject(data3);
+        if (error != CL_SUCCESS)
+        {
+            return false;
+        }
+        delete[] w;
+        delete[] newResult;
     }
 }
 JNIEXPORT jboolean JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_unInit(JNIEnv *, jclass)

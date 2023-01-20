@@ -22,6 +22,8 @@ JNIEXPORT jboolean JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_unInit
 #endif
 static int usePlatform = 0;
 static cl_kernel kernel;
+static cl_kernel kernel_;
+static cl_kernel kernel__;
 static cl_command_queue commandQueue;
 static cl_context context;
 static cl_program program;

@@ -29,6 +29,7 @@ public abstract class MGUICore extends Core {
         container.crash();
     }
 
+
     @Override
     public void onUnload() {
         container.unload();
