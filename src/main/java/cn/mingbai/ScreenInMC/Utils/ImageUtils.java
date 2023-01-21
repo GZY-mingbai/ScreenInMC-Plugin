@@ -20,16 +20,16 @@ public class ImageUtils {
     public static class DelayConverter{
         public static class DelayImage{
             Image image;
+            int[] imageData;
             byte[] data;
             int x=-1;
             int y=-1;
             int width=-1;
             int height=-1;
+            int bWidth = -1;
+            int bHeight = -1;
             BukkitRunnable runnable;
-            DelayConverter converter;
-            boolean processing = false;
-            boolean processed = false;
-
+            byte processState = 0;
             public byte[] getData() {
                 return data;
             }
@@ -40,11 +40,20 @@ public class ImageUtils {
             public DelayImage(Image image){
                 this.image = image;
             }
+            public DelayImage(int[] image,int width,int height){
+                if(width<0||height<0){
+                    throw new RuntimeException("X,Y,Width,Height can't be non-positive number.");
+                }
+                this.imageData = image;
+                this.bWidth=width;
+                this.bHeight=height;
+            }
+
             public DelayImage(Image image,int x,int y,int width,int height){
-                this.image = image;
                 if(x<0||y<0||width<0||height<0){
                     throw new RuntimeException("X,Y,Width,Height can't be non-positive number.");
                 }
+                this.image = image;
                 this.x=x;
                 this.y=y;
                 this.width=width;
@@ -86,20 +95,13 @@ public class ImageUtils {
         private int delay = 50;
         private boolean unloaded = false;
         private void applyDelayImage(DelayImage img){
-            BukkitRunnable runnable = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if(img.x==-1||img.y==-1||img.height==-1||img.width==-1) {
-                        onReady.apply(img);
-                    }else{
-                        onReady.apply(img,img.x,img.y,img.width,img.height);
-                    }
-                }
-            };
-            runnable.runTask(Main.thisPlugin());
+            if(img.x==-1||img.y==-1||img.height==-1||img.width==-1) {
+                onReady.apply(img);
+            }else{
+                onReady.apply(img,img.x,img.y,img.width,img.height);
+            }
         }
         public synchronized void addImage(DelayImage image){
-            image.converter=this;
             synchronized (images){
                 lastImage = image;
                 if(System.currentTimeMillis()-lastImageTime<delay){
@@ -115,27 +117,54 @@ public class ImageUtils {
                             while (!this.isCancelled() && !unloaded){
                                 List<DelayImage> processImages = new ArrayList<>();
                                 synchronized (images) {
-                                    for (DelayImage img : images) {
-                                        if (!img.processed && !img.processing && processImages.size() < maxDelayImages) {
+                                    for (DelayImage img : images ) {
+                                        if (img.processState == 0 && processImages.size() < maxDelayImages) {
                                             processImages.add(img);
                                         }
                                     }
                                 }
                                 if(processImages.size()==maxDelayImages) {
-                                    for(DelayImage img:processImages){
-                                        img.processing=true;
+                                    synchronized (images) {
+                                        for (int i = 0; i < maxDelayImages; i++) {
+                                            processImages.get(i).processState = 1;
+                                        }
                                     }
                                         new BukkitRunnable() {
                                             @Override
-                                            public void run() {
+                                        public void run() {
                                                 long startTime = System.currentTimeMillis();
                                                 Thread[] threads = new Thread[maxDelayImages];
                                                 for (int i = 0; i < maxDelayImages; i++) {
-                                                    DelayImage img = processImages.get(i);
-                                                    threads[i] = new Thread(()->{
-                                                        img.data = imageToMapColors(img.image);
-                                                    });
-                                                    threads[i].start();
+                                                    synchronized (images) {
+                                                        DelayImage img = processImages.get(i);
+                                                        Image processImage;
+                                                        int[] processImageData;
+                                                        int bWidth;
+                                                        int bHeight;
+                                                        if(img.image==null){
+                                                            processImage = null;
+                                                            processImageData = image.imageData;
+                                                            bWidth = image.bWidth;
+                                                            bHeight = image.bHeight;
+                                                        }else{
+                                                            bHeight = -1;
+                                                            bWidth = -1;
+                                                            processImageData = null;
+                                                            processImage = img.image;
+                                                        }
+                                                        threads[i] = new Thread(() -> {
+                                                            byte[] data;
+                                                            if(processImage==null){
+                                                                data = imageToMapColors(processImageData,bWidth,bHeight);
+                                                            }else{
+                                                                data = imageToMapColors(processImage);
+                                                            }
+                                                            synchronized (images) {
+                                                                img.data = data;
+                                                            }
+                                                        });
+                                                        threads[i].start();
+                                                    }
                                                 }
                                                 for (int i = 0; i < maxDelayImages; i++) {
                                                     try {
@@ -143,57 +172,11 @@ public class ImageUtils {
                                                     } catch (Exception e) {
                                                     }
                                                 }
-                                                for (int i = 0; i < maxDelayImages; i++) {
-                                                    processImages.get(i).processed = true;
+                                                synchronized (images) {
+                                                    for (int i = 0; i < maxDelayImages; i++) {
+                                                        processImages.get(i).processState = 2;
+                                                    }
                                                 }
-
-
-//                                                int newImageWidth = 0;
-//                                                int newImageHeight = 0;
-//                                                for (int i = 0; i < maxDelayImages; i++) {
-//                                                    DelayImage img = processImages.get(i);
-//                                                    int width = img.getImage().getWidth(null);
-//                                                    if (width > newImageWidth) {
-//                                                        newImageWidth = width;
-//                                                    }
-//                                                    newImageHeight += img.getImage().getHeight(null);
-//                                                }
-//                                                int[] newImage = new int[newImageWidth * newImageHeight];
-//                                                int height = 0;
-//                                                for (int i = 0; i < maxDelayImages; i++) {
-//                                                    DelayImage img = processImages.get(i);
-//                                                    int w = img.getImage().getWidth(null);
-//                                                    int h = img.getImage().getHeight(null);
-//                                                    int[] data = imageToBufferedImage(img.getImage()).getRGB(0, 0, w, h, null, 0, w);
-//                                                    for (int ii = 0; ii < h; ii++) {
-//                                                        System.arraycopy(data, ii * w, newImage, height * newImageWidth + ii * w, w);
-//                                                    }
-//                                                    height += h;
-//                                                }
-//                                                BufferedImage newBufferedImage = new BufferedImage(newImageWidth, newImageHeight, BufferedImage.TYPE_INT_ARGB);
-//                                                newBufferedImage.setRGB(0, 0, newImageWidth, newImageHeight, newImage, 0, newImageWidth);
-////                                                try {
-////                                                    ImageIO.write(newBufferedImage,"png",new File("1.png"));
-////                                                } catch (IOException e) {
-////                                                    throw new RuntimeException(e);
-////                                                }
-//                                                Main.getPluginLogger().info("拼接"+(System.currentTimeMillis() - startTime));
-//                                                byte[] result = imageToMapColors(newBufferedImage);
-//                                                Main.getPluginLogger().info("转换"+(System.currentTimeMillis() - startTime));
-//                                                height = 0;
-//                                                for (int i = 0; i < maxDelayImages; i++) {
-//                                                    DelayImage img = processImages.get(i);
-//                                                    int w = img.getImage().getWidth(null);
-//                                                    int h = img.getImage().getHeight(null);
-//                                                    byte[] newData = new byte[w * h];
-//                                                    for (int ii = 0; ii < h; ii++) {
-//                                                        System.arraycopy(result, height * newImageWidth + ii * w, newData, ii * w, w);
-//                                                    }
-//                                                    height += h;
-//                                                    img.data = newData;
-//                                                    img.processed = true;
-//                                                }
-//                                                Main.getPluginLogger().info("分解"+(System.currentTimeMillis() - startTime));
                                                 double processTime = System.currentTimeMillis() - startTime;
                                                 int newDelay = (int) (processTime / ((double) maxDelayImages));
                                                 if (newDelay < 50) {
@@ -210,33 +193,37 @@ public class ImageUtils {
                                 int waitingImages = 0;
                                 synchronized (images) {
                                     for (DelayImage img : images) {
-                                        if (img.processed) {
+                                        if (img.processState==2) {
                                             processedImages++;
-                                        } else if (img.processing) {
+                                        } else if (img.processState==1) {
                                             processingImages++;
-                                        } else {
+                                        } else if (img.processState==0){
                                             waitingImages++;
                                         }
                                     }
                                 }
-                                Main.getPluginLogger().info(processedImages+" "+processingImages+" "+waitingImages);
+//                                Main.getPluginLogger().info(processedImages+" "+processingImages+" "+waitingImages);
 
                                 if(processedImages>0){
                                     DelayImage img;
+                                    short state;
                                     synchronized (images) {
                                         img = images.get(0);
+                                        state = img.processState;
                                     }
-                                    if(img.processed){
+                                    if(state==2){
                                         long timeStart = System.currentTimeMillis();
-                                        applyDelayImage(img);
-                                        long leftTime = delay - (System.currentTimeMillis()-timeStart);
-                                        if(leftTime>0){
-                                            Thread.sleep(leftTime);
+                                        synchronized (images) {
+                                            applyDelayImage(img);
                                         }
+                                        long leftTime = delay - (System.currentTimeMillis()-timeStart);
                                         synchronized (images){
                                             if(images.size()>0) {
                                                 images.remove(0);
                                             }
+                                        }
+                                        if(leftTime>0){
+                                            Thread.sleep(leftTime);
                                         }
                                         continue;
                                     }
@@ -336,33 +323,8 @@ public class ImageUtils {
             e.printStackTrace();
         }
     }
-    public static byte[] imageToMapColorsWithGPU(Image image) {
-        BufferedImage img = imageToBufferedImage(image);
-        int height = img.getHeight();
-        int width = img.getWidth();
-//        int dh,dw;
-//        if(height%pieceSize==0) {
-//            dh = 0;
-//        }else{
-//            dh = pieceSize - height % pieceSize;
-//        }
-//        if(width%pieceSize==0) {
-//            dw = 0;
-//        }else{
-//            dw = pieceSize-width%pieceSize;
-//        }
-//        int height_=height+dh;
-//        int width_=width+dw;
-        int[] data = img.getRGB(0, 0, width, height, null, 0, width);
-//        int[] newData = new int[width_*height_];
-//        for(int i=0;i<height;i++){
-//            System.arraycopy(data,i*width,newData,i*width_,width);
-//        }
+    public static byte[] imageToMapColorsWithGPU(int[] data,int width,int height) {
         byte[] result = GPUDither.dither(data, width, height, pieceSize);
-//        byte[] newResult = new byte[width*height];
-//        for(int i=0;i<height;i++){
-//            System.arraycopy(result,i*width_,newResult,i*width,width);
-//        }
         return result;
     }
 
@@ -409,15 +371,18 @@ public class ImageUtils {
     public static int rgbToInt(int r, int g, int b) {
         return 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);
     }
-
-    public static byte[] imageToMapColors(Image image) {
-        if (useOpenCL) {
-            return imageToMapColorsWithGPU(image);
-        }
+    public static byte[] imageToMapColors(Image image){
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
+        return imageToMapColors(data,width,height);
+    }
+
+    public static byte[] imageToMapColors(int[] data,int width,int height) {
+        if (useOpenCL) {
+            return imageToMapColorsWithGPU(data,width,height);
+        }
         byte[] result = new byte[height * width];
         int i = 0;
         for (int y = 0; y < height; ++y) {
@@ -436,7 +401,7 @@ public class ImageUtils {
                 data[i] = co.getRGB();
                 int key = closest_match.getKey() + 4;
                 result[i] = (byte) ((key / 4) << 2 | (key % 4) & 3);
-                if (!(x == img.getWidth() - 1)) {
+                if (!(x == width - 1)) {
                     int t = i + 1;
                     Color c = new Color(data[t], true);
                     if (c.getAlpha() == 255) {
@@ -444,7 +409,7 @@ public class ImageUtils {
                                 colorClip((int) (c.getGreen() + errorG * 0.4375f)),
                                 colorClip((int) (c.getBlue() + errorB * 0.4375f)));
                     }
-                    if (!(y == img.getHeight() - 1)) {
+                    if (!(y == height - 1)) {
                         t = i + 1 + width;
                         c = new Color(data[t], true);
                         if (c.getAlpha() == 255) {
@@ -454,7 +419,7 @@ public class ImageUtils {
                         }
                     }
                 }
-                if (!(y == img.getHeight() - 1)) {
+                if (!(y == height - 1)) {
                     int t = i + width;
                     Color c = new Color(data[t], true);
                     if (c.getAlpha() == 255) {

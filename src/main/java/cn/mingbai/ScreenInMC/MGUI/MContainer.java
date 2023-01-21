@@ -33,14 +33,15 @@ public class MContainer extends MControl {
         @Override
         public void apply(ImageUtils.DelayConverter.DelayImage imageData) {
             screen.sendView(imageData.getData());
+            long tm = System.currentTimeMillis()-stime;
+            Main.getPluginLogger().info("FPS: "+(1000d / ((double) tm)));
+            stime = System.currentTimeMillis();
         }
 
         @Override
         public void apply(ImageUtils.DelayConverter.DelayImage imageData, int x, int y, int width, int height) {
             screen.sendView(imageData.getData(),x,y,width,height);
-            long tm = System.currentTimeMillis()-stime;
-            Main.getPluginLogger().info("FPS: "+(1000d / ((double) tm)));
-            stime = System.currentTimeMillis();
+
         }
     });
 
