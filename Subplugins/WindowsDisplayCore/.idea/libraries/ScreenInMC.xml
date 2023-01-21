@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="ScreenInMC">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../build/libs/remapped/ScreenInMC.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

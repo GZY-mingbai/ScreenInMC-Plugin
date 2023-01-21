@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="WindowsDisplayCore">
+    <output-path>$PROJECT_DIR$/out/artifacts/WindowsDisplayCore</output-path>
+    <root id="archive" name="WindowsDisplayCore.jar">
+      <element id="module-output" name="WindowsDisplayCore" />
+    </root>
+  </artifact>
+</component>
