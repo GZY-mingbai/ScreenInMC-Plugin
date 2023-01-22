@@ -24,32 +24,9 @@ public class MContainer extends MControl {
     private boolean canClick = true;
     private long clickTime = 0;
     public static final int minClickInterval = 100;
-    private boolean useDelay = false;
 
-    //temp
-    private long stime = System.currentTimeMillis();
-    //temp
-    private ImageUtils.DelayConverter delayConverter = new ImageUtils.DelayConverter(new ImageUtils.DelayConverter.DelayOnReady() {
-        @Override
-        public void apply(ImageUtils.DelayConverter.DelayImage imageData) {
-            screen.sendView(imageData.getData());
-            long tm = System.currentTimeMillis()-stime;
-            Main.getPluginLogger().info("FPS: "+(1000d / ((double) tm)));
-            stime = System.currentTimeMillis();
-        }
-
-        @Override
-        public void apply(ImageUtils.DelayConverter.DelayImage imageData, int x, int y, int width, int height) {
-            screen.sendView(imageData.getData(),x,y,width,height);
-
-        }
-    });
 
     public MContainer(Screen screen) {
-        this(screen,false);
-    }
-    public MContainer(Screen screen,boolean useDelay) {
-        this.useDelay = useDelay;
         this.screen = screen;
         this.setWidth(screen.getWidth() * 128);
         this.setHeight(screen.getHeight() * 128);
@@ -129,9 +106,6 @@ public class MContainer extends MControl {
                 if(renderThread!=null){
                     renderThread.cancel();
                 }
-                if(useDelay){
-                    delayConverter.stop();
-                }
                 return;
             }
             if (reRenderCount > 10) {
@@ -163,19 +137,11 @@ public class MContainer extends MControl {
                     try {
                         if(x==0&&y==0&&w==(int)getWidth()&&h==(int)getHeight()){
                             if (loaded) {
-                                if(useDelay){
-                                    delayConverter.addImage(new ImageUtils.DelayConverter.DelayImage(image));
-                                }else{
-                                    screen.sendView(ImageUtils.imageToMapColors(image));
-                                }
+                                screen.sendView(ImageUtils.imageToMapColors(image));
                             }
                         }else{
                             if (loaded) {
-                                if(useDelay){
-                                    delayConverter.addImage(new ImageUtils.DelayConverter.DelayImage(image.getSubimage(x, y, w, h), x, y, w, h));
-                                }else{
-                                    screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
-                                }
+                                screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
                             }
                         }
                     } catch (Exception e) {
@@ -196,13 +162,10 @@ public class MContainer extends MControl {
         if(renderThread!=null){
             renderThread.cancel();
         }
-        if(useDelay){
-            delayConverter.stop();
-        }
     }
     private BukkitRunnable renderThread;
     protected MControl activeControl;
-
+        public final String[] defaultFonts = {"PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei","SimSun"};
     private void createImage() {
         if (graphics != null) {
             try {
@@ -212,7 +175,23 @@ public class MContainer extends MControl {
         }
         image = new BufferedImage((int) this.getWidth(), (int) this.getHeight(), BufferedImage.TYPE_INT_ARGB);
         graphics = (Graphics2D) image.getGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         frc = graphics.getFontRenderContext();
+        Font font = null;
+            for(String i:defaultFonts){
+                font = Font.getFont(i);
+                if(font!=null){
+                    break;
+                }
+            }
+        if(font == null) {
+            font = graphics.getFont();
+        }
+        if(font!=null){
+            Font newFont = new Font(font.getFontName(),font.getStyle(),16);
+            graphics.setFont(newFont);
+        }
     }
 
     @Override

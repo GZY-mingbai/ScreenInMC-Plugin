@@ -67,6 +67,46 @@ public class MTextBlock extends MControl {
         this.text = text;
         reRender();
     }
+    private int paddingLeft=0;
+    private int paddingRight=0;
+    private int paddingTop=0;
+    private int paddingBottom=0;
+
+    public synchronized void setPaddingLeft(int paddingLeft) {
+        this.paddingLeft = paddingLeft;
+        reRender();
+    }
+
+    public synchronized void setPaddingBottom(int paddingBottom) {
+        this.paddingBottom = paddingBottom;
+        reRender();
+    }
+
+    public synchronized void setPaddingTop(int paddingTop) {
+        this.paddingTop = paddingTop;
+        reRender();
+    }
+
+    public synchronized void setPaddingRight(int paddingRight) {
+        this.paddingRight = paddingRight;
+        reRender();
+    }
+
+    public int getPaddingBottom() {
+        return paddingBottom;
+    }
+
+    public int getPaddingLeft() {
+        return paddingLeft;
+    }
+
+    public int getPaddingRight() {
+        return paddingRight;
+    }
+
+    public int getPaddingTop() {
+        return paddingTop;
+    }
 
     @Override
     public void onRender(MRenderer mRenderer) {
@@ -79,10 +119,10 @@ public class MTextBlock extends MControl {
         int top=0;
         switch (textHorizontalAlignment){
             case Left:
-                left=0;
+                left=paddingLeft;
                 break;
             case Right:
-                left= (int) (getWidth() - rectangle.getWidth());
+                left= (int) (getWidth() - rectangle.getWidth()-paddingRight);
                 break;
             case Center:
             case Stretch:
@@ -92,10 +132,10 @@ public class MTextBlock extends MControl {
         }
         switch (textVerticalAlignment){
             case Top:
-                top= (int) metrics.getAscent();
+                top= (int) metrics.getAscent()+paddingTop;
                 break;
             case Bottom:
-                top= (int) (getHeight() - rectangle.getHeight()+ metrics.getAscent());
+                top= (int) (getHeight() - rectangle.getHeight()+ metrics.getAscent()-paddingBottom);
                 break;
             case Center:
             case Stretch:

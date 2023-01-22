@@ -328,13 +328,49 @@ public class MControl {
         renderBackground(mRenderer);
         renderChildren(mRenderer);
     }
-    protected synchronized void renderBackground(MRenderer mRenderer){
-        mRenderer.setPaint(background);
-        mRenderer.drawRect(0, 0, (int) width, (int) height, true);
-        mRenderer.setPaint(borderPaint);
-        mRenderer.setStroke(borderStroke);
-        mRenderer.drawRect(0, 0, (int) width, (int) height, false);
+    protected synchronized void renderBackground(MRenderer mRenderer) {
+        if (roundWidth == 0 && roundHeight == 0) {
+            mRenderer.setPaint(background);
+            mRenderer.drawRect(0, 0, (int) width, (int) height, true);
+            mRenderer.setPaint(borderPaint);
+            mRenderer.setStroke(borderStroke);
+            mRenderer.drawRect(0, 0, (int) width, (int) height, false);
+        }else{
+            int rw = roundWidth;
+            int rh = roundHeight;
+            if(rh==ROUND_AUTO||rw==ROUND_AUTO){
+                rh = (int) height;
+                rw = (int) height;
+            }
+            mRenderer.setPaint(background);
+            mRenderer.drawRoundRect(0, 0, (int) width, (int) height, rw,rh,true);
+            mRenderer.setPaint(borderPaint);
+            mRenderer.setStroke(borderStroke);
+            mRenderer.drawRoundRect(0, 0, (int) width, (int) height, rw,rh, false);
+        }
     }
+    private int roundWidth = 0;
+    private int roundHeight = 0;
+
+    public int getRoundHeight() {
+        return roundHeight;
+    }
+
+    public int getRoundWidth() {
+        return roundWidth;
+    }
+
+    public synchronized void setRoundHeight(int roundHeight) {
+        this.roundHeight = roundHeight;
+        reRender();
+    }
+    public static final int ROUND_AUTO = -1;
+
+    public synchronized void setRoundWidth(int roundWidth) {
+        this.roundWidth = roundWidth;
+        reRender();
+    }
+
     private List<Runnable> renderTasks = Collections.synchronizedList(new ArrayList<>());
 
     public List<Runnable> getRenderTasks() {

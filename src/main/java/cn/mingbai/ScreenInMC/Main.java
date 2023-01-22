@@ -1,9 +1,6 @@
 package cn.mingbai.ScreenInMC;
 
-import cn.mingbai.ScreenInMC.BuiltInGUIs.ImageViewer;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClient;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClientDelay;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.*;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
@@ -83,7 +80,7 @@ public class Main extends JavaPlugin {
         Core.addCore(new ImageViewer());
         Core.addCore(new VNCClient());
         Core.addCore(new testMGUI());
-        Core.addCore(new VNCClientDelay());
+        Core.addCore(new speedTest());
         ImageUtils.initImageUtils();
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();

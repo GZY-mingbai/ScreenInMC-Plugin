@@ -64,7 +64,7 @@ public class VNCClient extends MGUICore {
         };
         VNCControl.setHeight(container.getHeight());
         VNCControl.setWidth(container.getWidth());
-        MInput IPInput = new MInput(){
+        MInput IPInput = new MInput("地址"){
             @Override
             public void onActive() {
                 super.onActive();
@@ -79,7 +79,8 @@ public class VNCClient extends MGUICore {
         };
         IPInput.setHeight(64);
         IPInput.setWidth(256);
-        MInput passwordInput = new MInput(){
+        IPInput.setPaddingLeft(32);
+        MInput passwordInput = new MInput("密码"){
             @Override
             public void onRender(MRenderer mRenderer) {
                 if(!isConnected){
@@ -90,7 +91,8 @@ public class VNCClient extends MGUICore {
         passwordInput.setHeight(64);
         passwordInput.setWidth(256);
         passwordInput.setTop(64);
-        MButton connectButton = new MButton("链接"){
+        passwordInput.setPaddingLeft(32);
+        MButton connectButton = new MButton("连接"){
             @Override
             public void onClick(int x, int y, ClickType type) {
                 super.onClick(x, y, type);
@@ -110,8 +112,6 @@ public class VNCClient extends MGUICore {
                 }
             }
         };
-        connectButton.setForeground(new Color(255,255,255));
-        connectButton.setBackground(new Color(100,100,100));
         connectButton.setHeight(64);
         connectButton.setWidth(128);
         connectButton.setTop(128);

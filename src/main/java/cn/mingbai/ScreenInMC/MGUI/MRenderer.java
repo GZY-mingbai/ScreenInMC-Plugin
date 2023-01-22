@@ -37,6 +37,16 @@ public class MRenderer {
         }
     }
 
+    public void drawRoundRect(int x, int y, int width, int height,int roundWidth,int roundHeight, boolean fill) {
+        if (mControl.isVisibleActually()) {
+            setClip();
+            if (fill) {
+                graphics.fillRoundRect((int) (mControl.getAbsoluteLeft() + x), (int) (mControl.getAbsoluteTop() + y), width, height,roundWidth,roundHeight);
+            } else {
+                graphics.drawRoundRect((int) (mControl.getAbsoluteLeft() + x), (int) (mControl.getAbsoluteTop() + y), width, height,roundWidth,roundHeight);
+            }
+        }
+    }
     public void drawRect(int x, int y, int width, int height, boolean fill) {
         if (mControl.isVisibleActually()) {
             setClip();

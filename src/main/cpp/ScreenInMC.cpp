@@ -39,6 +39,7 @@ JNIEXPORT jbyteArray JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_dither
     dither((int *)image_, width, height, (char *)result_, pieceSize);
     jbyteArray result = env->NewByteArray(size);
     env->SetByteArrayRegion(result, 0, size, result_);
+    delete[] result_;
     env->ReleaseIntArrayElements(image, image_, 0);
     return result;
 }

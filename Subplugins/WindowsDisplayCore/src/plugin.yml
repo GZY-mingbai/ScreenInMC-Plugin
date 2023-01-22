@@ -1,6 +1,0 @@
-name: WindowsDisplayCore
-main: cn.mingbai.WindowsDisplayCore.Main
-version: 1.0
-api-version: 1.19
-authors: [GZY_mingbai]
-depend: [ScreenInMC]
