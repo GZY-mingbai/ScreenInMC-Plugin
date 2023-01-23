@@ -1,13 +1,10 @@
 package cn.mingbai.ScreenInMC.MGUI;
 
-import org.bukkit.Bukkit;
-
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class MControl {
     private MControl parentMControl;
@@ -34,9 +31,8 @@ public class MControl {
 
     public List<MControl> getAllChildMControls() {
         List<MControl> result = new ArrayList<>();
-        List<MControl> children = getChildControls();
-        result.addAll(children);
-        for (MControl i : children) {
+        result.addAll(childMControls);
+        for (MControl i : childMControls) {
             result.addAll(i.getAllChildMControls());
         }
         return result;
@@ -441,7 +437,20 @@ public class MControl {
     public void reRender() {
         MContainer container = getMContainer();
         if(container!=null) {
-            container.addReRender(new Rectangle2D.Double(getAbsoluteLeft(), getAbsoluteTop(), getWidth(), getHeight()));
+            double left = getAbsoluteLeft();
+            double top = getAbsoluteTop();
+            if(left<0){
+                left=0;
+            }
+            if(top<0){
+                top=0;
+            }
+            double width = getWidth();
+            double height = getHeight();
+            if(width<=0||height<=0){
+                return;
+            }
+            container.addReRender(new Rectangle2D.Double(left, top, width, height));
             container.reRender();
         }
     }

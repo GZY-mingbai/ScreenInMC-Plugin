@@ -3,10 +3,8 @@ package cn.mingbai.ScreenInMC.MGUI;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import javax.naming.ldap.Control;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
@@ -87,6 +85,7 @@ public class MContainer extends MControl {
 
     private synchronized void render(){
         if (rerender) {
+
             if (graphics == null) {
                 return;
             }
@@ -134,6 +133,15 @@ public class MContainer extends MControl {
                     int y = (int) reRenderRectangles.get(i).y;
                     int w = (int) reRenderRectangles.get(i).width;
                     int h = (int) reRenderRectangles.get(i).height;
+                    if(x<0){
+                        x=0;
+                    }
+                    if(y<0){
+                        y=0;
+                    }
+                    if(w<=0 || h<=0){
+                        continue;
+                    }
                     try {
                         if(x==0&&y==0&&w==(int)getWidth()&&h==(int)getHeight()){
                             if (loaded) {
@@ -159,6 +167,7 @@ public class MContainer extends MControl {
     @Override
     public void onUnload(){
         super.onUnload();
+        loaded = false;
         if(renderThread!=null){
             renderThread.cancel();
         }
@@ -251,7 +260,6 @@ public class MContainer extends MControl {
                     double top = i.getAbsoluteTop();
                     if (i.isVisible() && left < x && (left + i.getWidth()) > x && top < y && (top + i.getHeight()) > y) {
                         i.onClick((int) (x - left), (int) (y - top), type);
-                        break;
                     }
                 }
             }

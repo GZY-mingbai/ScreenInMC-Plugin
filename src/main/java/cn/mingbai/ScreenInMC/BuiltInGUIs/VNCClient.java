@@ -4,28 +4,35 @@ import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
-import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import com.google.gson.internal.LinkedTreeMap;
 import com.shinyhut.vernacular.client.VernacularClient;
 import com.shinyhut.vernacular.client.VernacularConfig;
 import com.shinyhut.vernacular.client.exceptions.VncException;
 import com.shinyhut.vernacular.client.rendering.ColorDepth;
-import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.function.Consumer;
-
-import static java.awt.Font.PLAIN;
 
 public class VNCClient extends MGUICore {
     public VNCClient() {
         super("VNCClient");
     }
 
+    public static class VNCClientStoredData{
+        public String IP;
+        public String password;
+        public VNCClientStoredData(String IP,String password){
+            this.IP=IP;
+            this.password=password;
+        }
+    }
     @Override
     public void onUnload() {
         super.onUnload();
@@ -33,37 +40,11 @@ public class VNCClient extends MGUICore {
             client.stop();
         }
     }
-    private MControl VNCControl;
+//    private MControl VNCControl; }
     @Override
     public void onCreate(MContainer container) {
-        container.setBackground(new Color(255,255,255));
-        VNCControl = new MControl(){
-            @Override
-            public void reRender() {
-                MContainer container = getMContainer();
-                if(container!=null&&nowImage!=null) {
-                    int width = nowImage.getWidth(null);
-                    int height = nowImage.getHeight(null);
-                    if(width>container.getWidth()){
-                        width= (int) container.getWidth();
-                    }
-                    if(height>container.getHeight()){
-                        height= (int) container.getHeight();
-                    }
-                    container.addReRender(new Rectangle2D.Double(0,0,width,height));
-                    container.reRender();
-                }
-            }
 
-            @Override
-            public void onRender(MRenderer mRenderer) {
-                if(isConnected&&nowImage!=null){
-                    mRenderer.drawImage(nowImage,0,0);
-                }
-            }
-        };
-        VNCControl.setHeight(container.getHeight());
-        VNCControl.setWidth(container.getWidth());
+        container.setBackground(new Color(255,255,255));
         MInput IPInput = new MInput("地址"){
             @Override
             public void onActive() {
@@ -90,7 +71,7 @@ public class VNCClient extends MGUICore {
         };
         passwordInput.setHeight(64);
         passwordInput.setWidth(256);
-        passwordInput.setTop(64);
+        passwordInput.setTop(72);
         passwordInput.setPaddingLeft(32);
         MButton connectButton = new MButton("连接"){
             @Override
@@ -100,6 +81,7 @@ public class VNCClient extends MGUICore {
 
                     @Override
                     public void run() {
+                        setStoredData(new VNCClientStoredData(IPInput.getText(),Base64.getEncoder().encodeToString(passwordInput.getText().getBytes(StandardCharsets.UTF_8))));
                         connectServer(IPInput.getText(),passwordInput.getText());
                     }
                 };
@@ -114,41 +96,26 @@ public class VNCClient extends MGUICore {
         };
         connectButton.setHeight(64);
         connectButton.setWidth(128);
-        connectButton.setTop(128);
-        container.addChildControl(IPInput);
-        container.addChildControl(passwordInput);
-        container.addChildControl(connectButton);
-        container.addChildControl(VNCControl);
-        MTextBlock mTextBlock = new MTextBlock1("0 FPS");
-        mTextBlock.setTextHorizontalAlignment(Alignment.HorizontalAlignment.Left);
-        mTextBlock.setTextVerticalAlignment(Alignment.VerticalAlignment.Top);
-        mTextBlock.setLeft(0);
-        mTextBlock.setTop(0);
-        mTextBlock.setHeight(128);
-        mTextBlock.setWidth(256);
-        mTextBlock.setForeground(new Color(255,0,0));
-        time = System.currentTimeMillis();
-        mTextBlock.addRenderTask(new Runnable() {
-            @Override
-            public void run() {
-                thread = new Thread(()->{
-                    try {
-                        synchronized (container.getRenderLock()) {
-                            container.getRenderLock().wait();
-                        }
-                        long newTime = System.currentTimeMillis();
-                        if(newTime-time>=20) {
-                            mTextBlock.setText(Math.round((1f / (((float) (newTime - time)) / 1000f))) + " FPS");
-                        }
-                        time = System.currentTimeMillis();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-                thread.start();
+        connectButton.setTop(144);
+        connectButton.setHorizontalAlignment(Alignment.HorizontalAlignment.Center);
+
+        MControl control = new MControl();
+        control.addChildControl(IPInput);
+        control.addChildControl(passwordInput);
+        control.addChildControl(connectButton);
+        control.setWidth(256);
+        control.setHeight(208);
+        control.setVerticalAlignment(Alignment.VerticalAlignment.Center);
+        control.setHorizontalAlignment(Alignment.HorizontalAlignment.Center);
+        container.addChildControl(control);
+        if(getStoredData()!=null){
+            try{
+                LinkedTreeMap data = (LinkedTreeMap) getStoredData();
+                connectServer((String) data.get("IP"),new String(Base64.getDecoder().decode((String) data.get("password")),StandardCharsets.UTF_8));
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        });
-        container.addChildControl(mTextBlock);
+        }
     }
     public void onError(Exception e){
         e.printStackTrace();
@@ -156,27 +123,9 @@ public class VNCClient extends MGUICore {
     public void onBell(){
 
     }
-    Thread thread;
-    long time;
-    public class MTextBlock1 extends MTextBlock{
-        public MTextBlock1(String text){
-            super(text);
-        }
-
-        @Override
-        public synchronized void setText(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public void onUnload() {
-            super.onUnload();
-            thread.interrupt();
-        }
-    }
     private boolean isConnected =false;
     private VernacularClient client;
-    private Image nowImage;
+    private boolean sending = false;
 
     public void connectServer(String ip, String passwd){
         try {
@@ -198,22 +147,74 @@ public class VNCClient extends MGUICore {
             config.setBellListener(v -> onBell());
             config.setUseLocalMousePointer(false);
             config.setScreenUpdateListener(image -> {
-                if(VNCControl!=null) {
-                    nowImage=image;
-                    VNCControl.reRender();
+                synchronized (this) {
+                    if (!sending) {
+                        nowImage = image;
+                        update = true;
+                    }
                 }
             });
             String[] ipPort = ip.split(":");
-            if(ipPort.length==1){
+             if(ipPort.length==1){
                 client.start(ipPort[0],5900);
             }else{
                 client.start(ipPort[0],Integer.parseInt(ipPort[1]));
             }
             isConnected=true;
+            runnable = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    while (getContainer().isLoaded() && isConnected){
+                        long timeStart = System.currentTimeMillis();
+                        boolean send;
+                        synchronized (this){
+                            send = directMode && nowImage!=null && update;
+                        }
+                        if(send){
+                            synchronized (this){
+                                sending=true;
+                            }
+                            int w = nowImage.getWidth(null);
+                            int h = nowImage.getHeight(null);
+                            boolean subImage = false;
+                            if(w> getContainer().getWidth()){
+                                w = (int) getContainer().getWidth();
+                                subImage = true;
+                            }
+                            if(h> getContainer().getHeight()){
+                                h = (int) getContainer().getHeight();
+                                subImage = true;
+                            }
+                            Image image = nowImage;
+                            if(subImage){
+                                image = ImageUtils.imageToBufferedImage(image).getSubimage(0,0,w,h);
+                            }
+                            getScreen().sendView(ImageUtils.imageToMapColors(image),0,0,w,h);
+                            synchronized (this){
+                                sending=false;
+                                update = false;
+                            }
+                        }
+                        int time = (int) (50 - (System.currentTimeMillis() - timeStart));
+                        if(time>0){
+                            try {
+                                Thread.sleep(time);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+            };
+            runnable.runTaskAsynchronously(Main.thisPlugin());
         }catch (Exception e){
             onError(e);
         }
     }
+    boolean directMode = true;
+    Image nowImage = null;
+    BukkitRunnable runnable;
+    boolean update = false;
 
     @Override
     public void onMouseClick(int x, int y, Utils.MouseClickType type) {

@@ -1,19 +1,11 @@
 package cn.mingbai.ScreenInMC.Utils;
 
-import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
-import cn.mingbai.ScreenInMC.Screen.Screen;
 import net.minecraft.world.level.material.MaterialColor;
-import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ImageUtils {

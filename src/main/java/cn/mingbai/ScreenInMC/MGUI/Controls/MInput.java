@@ -2,7 +2,6 @@ package cn.mingbai.ScreenInMC.MGUI.Controls;
 
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.MRenderer;
-import org.bukkit.Bukkit;
 
 import java.awt.*;
 import java.awt.font.LineMetrics;

@@ -1,7 +1,6 @@
 package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Core;
-import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
@@ -12,8 +11,6 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -21,13 +18,26 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static cn.mingbai.ScreenInMC.Core.getCoreFromData;
+
 public class Screen {
+    public static class ScreenData{
+        public String world;
+        public int x=0;
+        public int y=0;
+        public int z=0;
+        public Facing facing=Facing.UP;
+        public int width=1;
+        public int height=1;
+        public Core.CoreData core=null;
+    }
     private static final List<Screen> allScreens = Collections.synchronizedList(new ArrayList<>());
     private final int displayDistance = 32;
     private final Location location;
@@ -38,11 +48,34 @@ public class Screen {
     private ScreenPiece[][] screenPieces;
     private Core core;
 
+    public ScreenData getScreenData(){
+        ScreenData screenData = new ScreenData();
+        screenData.world=location.getWorld().getName();
+        screenData.x=location.getBlockX();
+        screenData.y=location.getBlockY();
+        screenData.z=location.getBlockZ();
+        screenData.facing=this.facing;
+        screenData.width = this.width;
+        screenData.height = this.height;
+        if(core!=null){
+            screenData.core=core.getCoreData();
+        }
+        return screenData;
+    }
     public Screen(Location location, Facing facing, int width, int height) {
         this.location = location;
         this.facing = facing;
         this.height = height;
         this.width = width;
+    }
+    public Screen(ScreenData data) {
+        this.location = new Location(Bukkit.getWorld(data.world), data.x, data.y, data.z);
+        this.facing = data.facing;
+        this.height = data.height;
+        this.width = data.width;
+        if (data.core != null) {
+            this.core = getCoreFromData(data.core);
+        }
     }
 
     public static Screen[] getAllScreens() {
@@ -186,6 +219,7 @@ public class Screen {
                 sendPutScreenPacket(player);
 //                sendView(player,testg);
             }
+            core.create(this);
 
         } else {
             throw new RuntimeException("This Screen has been placed.");

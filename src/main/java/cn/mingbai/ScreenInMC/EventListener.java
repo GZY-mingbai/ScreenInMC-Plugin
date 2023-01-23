@@ -2,7 +2,6 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

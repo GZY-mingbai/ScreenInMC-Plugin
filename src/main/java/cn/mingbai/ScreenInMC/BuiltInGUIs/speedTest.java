@@ -1,24 +1,14 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
-import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MGIFImage;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
-import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
-import cn.mingbai.ScreenInMC.Utils.Utils;
-import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Optional;
 
 public class speedTest extends MGUICore {
 

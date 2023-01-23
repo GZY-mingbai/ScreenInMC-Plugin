@@ -3,7 +3,6 @@ package cn.mingbai.ScreenInMC.MGUI;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
-import java.awt.geom.Rectangle2D;
 
 public class MRenderer {
     private MControl mControl;

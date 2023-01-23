@@ -2,9 +2,7 @@ package cn.mingbai.ScreenInMC.MGUI.Controls;
 
 import cn.mingbai.ScreenInMC.MGUI.MControl;
 import cn.mingbai.ScreenInMC.MGUI.MRenderer;
-import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.GIFUtils;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

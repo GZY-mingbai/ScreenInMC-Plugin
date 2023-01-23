@@ -1,12 +1,9 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClient;
-import cn.mingbai.ScreenInMC.BuiltInGUIs.testMGUI;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -15,11 +12,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,8 +49,8 @@ public class CommandListener implements TabExecutor {
                         Integer.parseInt(args[6]),
                         Integer.parseInt(args[7])
                 );
+                screen.setCore(core);
                 screen.putScreen();
-                core.create(screen);
             }catch (Exception e){
                 e.printStackTrace();
             }

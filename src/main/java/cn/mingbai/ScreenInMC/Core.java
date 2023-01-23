@@ -8,8 +8,27 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class Core implements Cloneable{
+    public static class CoreData {
+        public String coreClassName;
+        public Object data;
+    }
+    public CoreData getCoreData(){
+        CoreData data = new CoreData();
+        data.coreClassName = this.getClass().getName();
+        data.data=storedData;
+        return data;
+    }
     private static final List<Core> allCores = Collections.synchronizedList(new ArrayList<>());
     private String coreName;
+    private Object storedData;
+
+    public Object getStoredData() {
+        return storedData;
+    }
+
+    public void setStoredData(Object storedData) {
+        this.storedData = storedData;
+    }
 
     public String getCoreName() {
         return coreName;
@@ -56,6 +75,20 @@ public abstract class Core implements Cloneable{
 
     public abstract void onMouseClick(int x, int y, Utils.MouseClickType type);
     public abstract void onTextInput(String text);
+    public static Core getCoreFromData(CoreData data){
+        for(Core i:allCores){
+            if(i.getClass().getName().equals(data.coreClassName)){
+                try {
+                    Core core = (Core) i.clone();
+                    core.storedData = data.data;
+                    return core;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        throw new RuntimeException("Wrong data.");
+    }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
