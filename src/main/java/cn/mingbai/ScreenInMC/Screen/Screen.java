@@ -5,8 +5,10 @@ import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -205,25 +207,36 @@ public class Screen {
             }
             placed = true;
             allScreens.add(this);
-//            byte[] testg = new byte[width*height*128*128];
-//            for(int i=0;i<testg.length;i++)
-//            {
-//                try{
-//                    testg[i]= (byte) i;
-//                }catch (Exception e){
-//                    break;
-//                }
-//            }
-
             for (Player player : location.getWorld().getPlayers()) {
                 sendPutScreenPacket(player);
-//                sendView(player,testg);
             }
             core.create(this);
 
         } else {
             throw new RuntimeException("This Screen has been placed.");
         }
+    }
+    public void disableScreen(){
+        placed=false;
+        core.unload();
+        List<Integer> ids = new ArrayList<>();
+        for(int i=0;i<screenPieces.length;i++){
+            for(int j=0;j<screenPieces[i].length;j++){
+                ids.add(screenPieces[i][j].getEntityId());
+            }
+        }
+        int[] array = new int[ids.size()];
+        for(int i=0;i<array.length;i++){
+            array[i] = ids.get(i);
+        }
+        ClientboundRemoveEntitiesPacket packet = new ClientboundRemoveEntitiesPacket(array);
+        for (Player player : location.getWorld().getPlayers()) {
+            CraftUtils.sendPacket(player,packet);
+        }
+    }
+    public static void removeScreen(Screen screen){
+        screen.disableScreen();
+        allScreens.remove(screen);
     }
 
     public Core getCore() {
@@ -235,13 +248,19 @@ public class Screen {
     }
 
     public void sendView(byte[] colors) {
+        List<Packet> packets= getPackets(colors);
         for (Player player : location.getWorld().getPlayers()) {
-            sendView(player, colors);
+            for(Packet i:packets){
+                CraftUtils.sendPacket(player,i);
+            }
         }
     }
     public void sendView(byte[] colors,int x,int y,int w,int h) {
+        List<Packet> packets= getPackets(colors,x,y,w,h);
         for (Player player : location.getWorld().getPlayers()) {
-            sendView(player, colors,x,y,w,h);
+            for(Packet i:packets){
+                CraftUtils.sendPacket(player,i);
+            }
         }
     }
 
@@ -252,6 +271,12 @@ public class Screen {
         if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
+        for(Packet i:getPackets(colors)){
+            CraftUtils.sendPacket(player,i);
+        }
+    }
+    public List<Packet> getPackets(byte[] colors){
+        List<Packet> packets = new ArrayList<>();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 byte[] result = new byte[16384];
@@ -260,23 +285,13 @@ public class Screen {
                     System.arraycopy(colors, (p + i * width) * 128, result, i * 128, 128);
                 }
                 MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0, 0, 128, 128, result);
-                ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
-                CraftUtils.sendPacket(player,packet);
+                packets.add(new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
             }
         }
+        return packets;
     }
-    public void sendView(Player player,byte[] colors,int x,int y,int w,int h){
-        long timeStart = System.currentTimeMillis();
-        if (!location.getWorld().equals(player.getWorld())) {
-            return;
-        }
-        if (location.distance(player.getLocation()) > displayDistance) {
-            return;
-        }
-        if(w*h!=colors.length){
-            return;
-        }
-        timeStart = System.currentTimeMillis();
+    public List<Packet> getPackets(byte[] colors,int x,int y,int w,int h) {
+        List<Packet> packets = new ArrayList<>();
         int a = x/128;
         int b = y/128;
         int c = x%128;
@@ -297,8 +312,7 @@ public class Screen {
             System.arraycopy(colors, i * w, r1, i * e, e);
         }
         MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(c, d, e, f, r1);
-        ClientboundMapItemDataPacket packet = new ClientboundMapItemDataPacket(screenPieces[a][b].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
-        CraftUtils.sendPacket(player,packet);
+        packets.add(new ClientboundMapItemDataPacket(screenPieces[a][b].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
         int k = (c+w)/128+1;
         int l = (d+h)/128+1;
         for(int i=0;i<l;i++){
@@ -353,16 +367,27 @@ public class Screen {
                 if(r2.length==0){
                     continue;
                 }
-//                for(int aaa=0;aaa<r2.length;aaa++){
-//                    r2[aaa]=16;
-//                }
                 for(int r=0;r<p;r++){
                     System.arraycopy(colors, (r+s) * w+q, r2, r * o, o);
                 }
                 mapPatch = new MapItemSavedData.MapPatch(m, n, o, p, r2);
-                packet = new ClientboundMapItemDataPacket(screenPieces[a+j][b+i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch);
-                CraftUtils.sendPacket(player,packet);
+                packets.add(new ClientboundMapItemDataPacket(screenPieces[a+j][b+i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
             }
+        }
+        return packets;
+    }
+    public void sendView(Player player,byte[] colors,int x,int y,int w,int h){
+        if (!location.getWorld().equals(player.getWorld())) {
+            return;
+        }
+        if (location.distance(player.getLocation()) > displayDistance) {
+            return;
+        }
+        if(w*h!=colors.length){
+            return;
+        }
+        for(Packet i:getPackets(colors,x,y,w,h)){
+            CraftUtils.sendPacket(player,i);
         }
     }
 
@@ -372,6 +397,24 @@ public class Screen {
         NORTH,
         SOUTH,
         WEST,
-        EAST
+        EAST;
+        public Facing getOpposition(){
+            switch (this){
+                case UP:
+                    return DOWN;
+                case DOWN:
+                    return UP;
+                case EAST:
+                    return WEST;
+                case WEST:
+                    return EAST;
+                case NORTH:
+                    return SOUTH;
+                case SOUTH:
+                    return NORTH;
+            }
+            return null;
+        }
+
     }
 }

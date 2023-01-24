@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.ImageViewer;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClient;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.speedTest;
+import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
@@ -13,6 +14,7 @@ import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -84,6 +86,7 @@ public class Main extends JavaPlugin {
             }
         }
         saveScreens();
+        Item.onDisable();
     }
 
     @Override
@@ -130,7 +133,14 @@ public class Main extends JavaPlugin {
                 ImageUtils.setUseOpenCL(false);
             }
         }
+        int pieceSize = config.getInt("piece-size");
+        if(pieceSize==1||pieceSize==2||pieceSize==4||pieceSize==8||pieceSize==16){
+            setPieceSize(pieceSize);
+        }else{
+            config.set("piece-size",4);
+        }
         readScreens();
+        Item.onEnable();
         isEnabled = true;
     }
 
@@ -194,6 +204,9 @@ public class Main extends JavaPlugin {
        }catch (Exception e){
            e.printStackTrace();
        }
+    }
+    public static void sendMessage(Player player,String message){
+        player.sendMessage("§6[ScreenInMC] §f"+message);
     }
 
 }

@@ -1,10 +1,15 @@
 package cn.mingbai.ScreenInMC.Utils;
 
 
+import cn.mingbai.ScreenInMC.Screen.Screen;
+import org.bukkit.Location;
+import org.bukkit.util.Vector;
+
 import java.io.Serializable;
 import java.util.Objects;
 
-//From javafx.utils.Pair
+import static cn.mingbai.ScreenInMC.Screen.Screen.Facing.*;
+
 public class Utils {
     public static final byte[] intToByteArray(int value) {
         return new byte[]{
@@ -70,6 +75,7 @@ public class Utils {
         RIGHT
     }
 
+    //From javafx.utils.Pair
     public static class Pair<K, V> implements Serializable {
 
         /**
@@ -167,5 +173,146 @@ public class Utils {
             }
             return false;
         }
+    }
+    public static class ScreenClickResult{
+        private boolean clicked=false;
+        private double mouseX=-1;
+        private double mouseY=-1;
+        private ScreenClickResult(boolean clicked,double mouseX,double mouseY){
+            this.clicked = clicked;
+            this.mouseX=mouseX;
+            this.mouseY=mouseY;
+        }
+        private ScreenClickResult(){}
+
+        public double getMouseX() {
+            return mouseX;
+        }
+
+        public double getMouseY() {
+            return mouseY;
+        }
+
+        public boolean isClicked() {
+            return clicked;
+        }
+    }
+    public static ScreenClickResult getScreenClickAt(Location playerEyeLocation,Location screenLocation,Screen.Facing facing,int screenWidth,int screenHeight,int maxDistance){
+        if(!playerEyeLocation.getWorld().equals(screenLocation.getWorld()) || screenLocation.distance(playerEyeLocation)>maxDistance){
+            return new ScreenClickResult();
+        }
+        Vector v1;
+        switch (facing) {
+            case UP:
+                v1 = new Vector(0, 1, 0);
+                break;
+            case DOWN:
+                v1 = new Vector(0, -1, 0);
+                screenLocation.add(0, 1, 0);
+                break;
+            case EAST:
+                v1 = new Vector(1, 0, 0);
+                break;
+            case SOUTH:
+                v1 = new Vector(0, 0, 1);
+                break;
+            case WEST:
+                v1 = new Vector(-1, 0, 0);
+                screenLocation.add(1, 0, 0);
+                break;
+            case NORTH:
+                v1 = new Vector(0, 0, -1);
+                screenLocation.add(0, 0, 1);
+                break;
+            default:
+                v1 = new Vector(0, 0, 0);
+                break;
+        }
+        Vector v2 = screenLocation.toVector();
+        Vector v3 = playerEyeLocation.getDirection();
+        Vector v4 = playerEyeLocation.toVector();
+        double d = (v2.clone().subtract(v4).dot(v1)) / (v3.dot(v1));
+        if (d < 0) {
+            return new ScreenClickResult();
+        }
+        Vector v5 = v3.clone().normalize().multiply(d).add(v4);
+        Location clickedLocation = v5.toLocation(playerEyeLocation.getWorld());
+        double clickedLocationX = clickedLocation.getX();
+        double clickedLocationY = clickedLocation.getY();
+        double clickedLocationZ = clickedLocation.getZ();
+        double screenLocationX = screenLocation.getX();
+        double screenLocationY = screenLocation.getY();
+        double screenLocationZ = screenLocation.getZ();
+        double mouseX;
+        double mouseY;
+                switch (facing) {
+            case UP:
+                if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
+                        clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenHeight
+                ) {
+                    return new ScreenClickResult();
+                }
+                mouseX = clickedLocationX - screenLocationX;
+                mouseY = clickedLocationZ - screenLocationZ;
+                break;
+            case DOWN:
+                screenLocationZ++;
+                screenLocation.add(0, -1, 0);
+                if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
+                        clickedLocationZ < screenLocationZ - screenHeight || clickedLocationZ > screenLocationZ
+                ) {
+                    return new ScreenClickResult();
+                }
+                mouseX = clickedLocationX - screenLocationX;
+                mouseY = screenLocationZ - clickedLocationZ;
+                break;
+            case EAST:
+                screenLocationY++;
+                screenLocationZ++;
+                if (clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY ||
+                        clickedLocationZ < screenLocationZ - screenWidth || clickedLocationZ > screenLocationZ
+                ) {
+                    return new ScreenClickResult();
+                }
+                mouseX = screenLocationZ - clickedLocationZ;
+                mouseY = screenLocationY - clickedLocationY;
+                break;
+            case SOUTH:
+                screenLocationY++;
+                if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
+                        clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY
+                ) {
+                    return new ScreenClickResult();
+                }
+                mouseX = clickedLocationX - screenLocationX;
+                mouseY = screenLocationY - clickedLocationY;
+                break;
+            case WEST:
+                screenLocationY++;
+                screenLocation.add(-1, 0, 0);
+                if (clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY ||
+                        clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenWidth
+                ) {
+                    return new ScreenClickResult();
+                }
+                mouseX = clickedLocationZ - screenLocationZ;
+                mouseY = screenLocationY - clickedLocationY;
+                break;
+            case NORTH:
+                screenLocationX++;
+                screenLocationY++;
+                screenLocation.add(0, 0, -1);
+                if (clickedLocationX < screenLocationX - screenWidth || clickedLocationX > screenLocationX ||
+                        clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY
+                ) {
+                    return new ScreenClickResult();
+                }
+                mouseX = screenLocationX - clickedLocationX;
+                mouseY = screenLocationY - clickedLocationY;
+                break;
+            default:
+                return new ScreenClickResult();
+        }
+        return new ScreenClickResult(true,mouseX,mouseY);
     }
 }

@@ -1,6 +1,7 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
+import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
@@ -53,6 +54,19 @@ public class CommandListener implements TabExecutor {
                 screen.putScreen();
             }catch (Exception e){
                 e.printStackTrace();
+            }
+        }
+        if(args[0].equals("removeScreen")){
+            Screen[] allScreens = Screen.getAllScreens();
+            if(Integer.parseInt(args[1])<=allScreens.length){
+                if(args.length==2){
+                    Screen.removeScreen(allScreens[Integer.parseInt(args[1])]);
+                    sender.sendMessage("Success");
+                }else{
+                    sender.sendMessage("Failed");
+                }
+            }else{
+                sender.sendMessage("Failed");
             }
         }
         if (args[0].equals("download")) {
@@ -108,9 +122,9 @@ public class CommandListener implements TabExecutor {
                 sender.sendMessage("Failed");
             }
         }
-        if(args[0].equals("setMax")){
-            if(args.length==2){
-                setMaxDelayImages(Integer.parseInt(args[1]));
+        if(args[0].equals("controller")){
+            if(sender instanceof Player){
+                Item.giveItem(((Player) sender));
             }
         }
         sender.sendMessage("Success");
@@ -121,7 +135,7 @@ public class CommandListener implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (sender.isOp()) {
             if (args.length == 1) {
-                String[] sub1 = {"initOpenCL","setPieceSize","listDevices","putScreen","input"};
+                String[] sub1 = {"initOpenCL","setPieceSize","listDevices","putScreen","input","removeScreen","controller"};
                 return Arrays.stream(sub1).filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase())).collect(Collectors.toList());
             }
             List<String> sub2=new ArrayList<>();
@@ -140,6 +154,7 @@ public class CommandListener implements TabExecutor {
                         sub2.add("16");
                         break;
                     case "input":
+                    case "removeScreen":
                         for(int i=0;i<Screen.getAllScreens().length;i++){
                             sub2.add(Integer.toString(i));
                         }

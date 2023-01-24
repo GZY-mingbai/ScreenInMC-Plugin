@@ -10,7 +10,6 @@ import java.util.List;
 
 public class ImageUtils {
     private static int pieceSize = 4;
-    private static int maxDelayImages = 4;
     private static Color[] palette;
     private static int[] palette_;
     private static boolean useOpenCL = true;
@@ -24,9 +23,6 @@ public class ImageUtils {
         return platforms.clone();
     }
 
-    public static void setMaxDelayImages(int maxDelayImages) {
-        ImageUtils.maxDelayImages = maxDelayImages;
-    }
 
     public static void setPieceSize(int pieceSize) {
         ImageUtils.pieceSize = pieceSize;
