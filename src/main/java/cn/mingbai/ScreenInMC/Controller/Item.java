@@ -4,33 +4,34 @@ import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import com.google.common.xml.XmlEscapers;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.network.chat.Component;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.type.RedstoneWire;
+import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.IntConsumer;
-import java.util.stream.IntStream;
 
 import static org.bukkit.inventory.ItemFlag.*;
 
 public class Item {
     public static final int CONTROLLER = 1575771175;
-    public static final int PLACE_MODE = 0; //放置模式
+    public static final int SELECT_MODE = 0; //框选模式
+    public static final int PLACE_MODE = 1; //放置模式
+    public static final int EDIT_MODE = 2; //编辑模式
+    public static final int FINAL_MODE = 2;
     public static class ItemData{
-        public int nowMode = PLACE_MODE;
+        public int nowMode = SELECT_MODE;
         public String world = null;
         public Integer p1x=null,p1y=null,p1z=null;
         public Integer p2x=null,p2y=null,p2z=null;
@@ -61,7 +62,7 @@ public class Item {
                                         ItemData data = Main.getGson().fromJson(meta.getLocalizedName(), ItemData.class);
                                         BaseComponent extra = new TextComponent("");
                                         switch (data.nowMode){
-                                            case PLACE_MODE:
+                                            case SELECT_MODE:
                                                 Location eyeLoc = player.getEyeLocation();
                                                 Location closest;
                                                 if(data.world!=null&&data.p1x!=null&&data.p1y!=null&&data.p1z!=null){
@@ -81,8 +82,8 @@ public class Item {
                                                         world.spawnParticle(Particle.REDSTONE,(double) data.p2x,(double)data.p2y,(double)data.p2z,0,0,0,0,0, new Particle.DustOptions(RED,1));
                                                         Utils.Pair<Utils.Pair<Screen.Facing,Location>,Utils.Pair<Screen.Facing,Location>> locations = getScreenLocations(world,data.p1x,data.p1y,data.p1z,data.p2x, data.p2y, data.p2z);
                                                         if(data.w!=null&&data.h!=null){
-                                                            Utils.ScreenClickResult result1 = Utils.getScreenClickAt(player.getEyeLocation(),locations.getKey().getValue(),locations.getKey().getKey(),data.w,data.h,5);
-                                                            Utils.ScreenClickResult result2 = Utils.getScreenClickAt(player.getEyeLocation(),locations.getValue().getValue(),locations.getValue().getKey(),data.w,data.h,5);
+                                                            Utils.ScreenClickResult result1 = Utils.getScreenClickAt(player.getEyeLocation(),locations.getKey().getValue(),locations.getKey().getKey(),data.w,data.h,64);
+                                                            Utils.ScreenClickResult result2 = Utils.getScreenClickAt(player.getEyeLocation(),locations.getValue().getValue(),locations.getValue().getKey(),data.w,data.h,64);
                                                             if(result1.isClicked()||result2.isClicked()){
                                                                 spawnRectParticle(world,data.p1x,data.p1y,data.p1z,data.p2x, data.p2y, data.p2z,YELLOW);
                                                             }
@@ -159,8 +160,12 @@ public class Item {
     }
     public static String getModeName(int id){
         switch (id){
+            case SELECT_MODE:
+                return LangUtils.getText("controller-item-select-mode");
             case PLACE_MODE:
                 return LangUtils.getText("controller-item-place-mode");
+            case EDIT_MODE:
+                return LangUtils.getText("controller-item-edit-mode");
         }
         return LangUtils.getText("controller-item-unknown-mode");
     }
@@ -207,11 +212,38 @@ public class Item {
             }
         }
     }
+    public static void onPlayerSwitchMode(Player player,ItemStack item,boolean next){
+        try {
+            ItemMeta meta = item.getItemMeta();
+            ItemData data = Main.getGson().fromJson(meta.getLocalizedName(), ItemData.class);
+            if(next){
+               if(data.nowMode==FINAL_MODE){
+                   data.nowMode=0;
+               }else{
+                   data.nowMode++;
+               }
+            }else{
+                if(data.nowMode==0){
+                    data.nowMode=FINAL_MODE;
+                }else{
+                    data.nowMode--;
+                }
+            }
+            meta.setLocalizedName(Main.getGson().toJson(data));
+
+//            List<String> lore = new ArrayList<>();
+//            String[] lore1 = LangUtils.getText("controller-mode-info").split("\n");
+//            meta.setLore();
+            item.setItemMeta(meta);
+        }catch (Exception e){
+            player.getInventory().setItemInMainHand(null);
+        }
+    }
     public static void onPlayerClick(Player player, ItemStack item, Utils.MouseClickType type){
         try {
             ItemMeta meta = item.getItemMeta();
             ItemData data = Main.getGson().fromJson(meta.getLocalizedName(), ItemData.class);
-            if (data.nowMode==PLACE_MODE) {
+            if (data.nowMode== SELECT_MODE) {
                 if(type.equals(Utils.MouseClickType.LEFT)) {
                     Location eyeLoc = player.getEyeLocation();
                     Location closest = getClosestBlock(eyeLoc);

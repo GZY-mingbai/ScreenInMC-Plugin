@@ -17,6 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 import static cn.mingbai.ScreenInMC.Controller.Item.CONTROLLER;
+import static cn.mingbai.ScreenInMC.Controller.Item.onPlayerSwitchMode;
 
 public class EventListener implements Listener {
     @EventHandler
@@ -56,6 +57,30 @@ public class EventListener implements Listener {
             Utils.ScreenClickResult result = Utils.getScreenClickAt(player.getEyeLocation(),screenLocation,i.getFacing(),i.getWidth(),i.getHeight(),1024);
             if(result.isClicked()){
                 i.getCore().onMouseClick((int) (result.getMouseX() * 128), (int) (result.getMouseY() * 128),type);
+                return;
+            }
+        }
+    }
+    @EventHandler
+    public void onPlayerItemHeld(PlayerItemHeldEvent e){
+        if(e.getPreviousSlot()==e.getNewSlot()||!e.getPlayer().isSneaking()){
+            return;
+        }
+        ItemStack item = e.getPlayer().getInventory().getItem(e.getPreviousSlot());
+        if(item!=null&&item.hasItemMeta()){
+            ItemMeta meta = item.getItemMeta();
+            if(meta.hasCustomModelData()&&meta.getCustomModelData()==CONTROLLER){
+//                e.getPlayer().getInventory().setHeldItemSlot(e.getPreviousSlot());
+                if(e.getPreviousSlot()-e.getNewSlot()==-1){
+                    onPlayerSwitchMode(e.getPlayer(),item,true);
+                }else if(e.getPreviousSlot()-e.getNewSlot()==1){
+                    onPlayerSwitchMode(e.getPlayer(),item,false);
+                }else if(e.getPreviousSlot()==0&&e.getNewSlot()==8){
+                    onPlayerSwitchMode(e.getPlayer(),item,false);
+                }else if(e.getPreviousSlot()==8&&e.getNewSlot()==0){
+                    onPlayerSwitchMode(e.getPlayer(),item,true);
+                }
+                e.setCancelled(true);
                 return;
             }
         }
