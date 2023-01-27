@@ -8,6 +8,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.nbt.CompoundTag;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
@@ -230,7 +231,12 @@ public class Item {
                 }
             }
             meta.setLocalizedName(Main.getGson().toJson(data));
-
+            item.setItemMeta(meta);
+            net.minecraft.world.item.ItemStack stack = CraftItemStack.asNMSCopy(item);
+            CompoundTag displayTag = (CompoundTag) stack.getOrCreateTag().get("display");
+            CompoundTag newTag = new CompoundTag();
+            newTag.putString();
+            displayTag.put("lore",newTag);
 //            List<String> lore = new ArrayList<>();
 //            String[] lore1 = LangUtils.getText("controller-mode-info").split("\n");
 //            meta.setLore();
