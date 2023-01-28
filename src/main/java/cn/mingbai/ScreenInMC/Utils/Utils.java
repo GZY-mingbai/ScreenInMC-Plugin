@@ -5,6 +5,7 @@ import cn.mingbai.ScreenInMC.Screen.Screen;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -248,7 +249,8 @@ public class Utils {
                 switch (facing) {
             case UP:
                 if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
-                        clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenHeight
+                        clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenHeight||
+                        playerEyeLocation.getY()<screenLocationY
                 ) {
                     return new ScreenClickResult();
                 }
@@ -259,7 +261,8 @@ public class Utils {
                 screenLocationZ++;
                 screenLocation.add(0, -1, 0);
                 if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
-                        clickedLocationZ < screenLocationZ - screenHeight || clickedLocationZ > screenLocationZ
+                        clickedLocationZ < screenLocationZ - screenHeight || clickedLocationZ > screenLocationZ||
+                        playerEyeLocation.getY()>screenLocationY
                 ) {
                     return new ScreenClickResult();
                 }
@@ -270,7 +273,8 @@ public class Utils {
                 screenLocationY++;
                 screenLocationZ++;
                 if (clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY ||
-                        clickedLocationZ < screenLocationZ - screenWidth || clickedLocationZ > screenLocationZ
+                        clickedLocationZ < screenLocationZ - screenWidth || clickedLocationZ > screenLocationZ ||
+                        playerEyeLocation.getX()<screenLocationX
                 ) {
                     return new ScreenClickResult();
                 }
@@ -280,7 +284,8 @@ public class Utils {
             case SOUTH:
                 screenLocationY++;
                 if (clickedLocationX < screenLocationX || clickedLocationX > screenLocationX + screenWidth ||
-                        clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY
+                        clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY||
+                        playerEyeLocation.getZ()<screenLocationZ
                 ) {
                     return new ScreenClickResult();
                 }
@@ -291,7 +296,8 @@ public class Utils {
                 screenLocationY++;
                 screenLocation.add(-1, 0, 0);
                 if (clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY ||
-                        clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenWidth
+                        clickedLocationZ < screenLocationZ || clickedLocationZ > screenLocationZ + screenWidth||
+                        playerEyeLocation.getX()>screenLocationX
                 ) {
                     return new ScreenClickResult();
                 }
@@ -303,7 +309,8 @@ public class Utils {
                 screenLocationY++;
                 screenLocation.add(0, 0, -1);
                 if (clickedLocationX < screenLocationX - screenWidth || clickedLocationX > screenLocationX ||
-                        clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY
+                        clickedLocationY < screenLocationY - screenHeight || clickedLocationY > screenLocationY||
+                        playerEyeLocation.getZ()>screenLocationZ
                 ) {
                     return new ScreenClickResult();
                 }
@@ -315,4 +322,26 @@ public class Utils {
         }
         return new ScreenClickResult(true,mouseX,mouseY);
     }
+    public static void deleteDir(File file)
+    {
+        if(file.isFile())
+        {
+            file.delete();
+        }else
+        {
+            File[] files = file.listFiles();
+            if(files == null)
+            {
+                file.delete();
+            }else
+            {
+                for (int i = 0; i < files.length; i++)
+                {
+                    deleteDir(files[i]);
+                }
+                file.delete();
+            }
+        }
+    }
 }
+

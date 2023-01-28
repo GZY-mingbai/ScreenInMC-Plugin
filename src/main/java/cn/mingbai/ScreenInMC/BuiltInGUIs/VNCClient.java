@@ -6,6 +6,7 @@ import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.internal.LinkedTreeMap;
 import com.shinyhut.vernacular.client.VernacularClient;
@@ -45,7 +46,7 @@ public class VNCClient extends MGUICore {
     public void onCreate(MContainer container) {
 
         container.setBackground(new Color(255,255,255));
-        MInput IPInput = new MInput("地址"){
+        MInput IPInput = new MInput(LangUtils.getText("vnc-client-address")){
             @Override
             public void onActive() {
                 super.onActive();
@@ -61,7 +62,7 @@ public class VNCClient extends MGUICore {
         IPInput.setHeight(64);
         IPInput.setWidth(256);
         IPInput.setPaddingLeft(32);
-        MInput passwordInput = new MInput("密码"){
+        MInput passwordInput = new MInput(LangUtils.getText("vnc-client-password")){
             @Override
             public void onRender(MRenderer mRenderer) {
                 if(!isConnected){
@@ -73,7 +74,7 @@ public class VNCClient extends MGUICore {
         passwordInput.setWidth(256);
         passwordInput.setTop(72);
         passwordInput.setPaddingLeft(32);
-        MButton connectButton = new MButton("连接"){
+        MButton connectButton = new MButton(LangUtils.getText("vnc-client-connect")){
             @Override
             public void onClick(int x, int y, ClickType type) {
                 super.onClick(x, y, type);

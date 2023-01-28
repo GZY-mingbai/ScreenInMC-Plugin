@@ -72,14 +72,15 @@ public class EventListener implements Listener {
             if(meta.hasCustomModelData()&&meta.getCustomModelData()==CONTROLLER){
 //                e.getPlayer().getInventory().setHeldItemSlot(e.getPreviousSlot());
                 if(e.getPreviousSlot()-e.getNewSlot()==-1){
-                    onPlayerSwitchMode(e.getPlayer(),item,true);
+                    onPlayerSwitchMode(e.getPlayer(),item,true,e.getPreviousSlot());
                 }else if(e.getPreviousSlot()-e.getNewSlot()==1){
-                    onPlayerSwitchMode(e.getPlayer(),item,false);
+                    onPlayerSwitchMode(e.getPlayer(),item,false,e.getPreviousSlot());
                 }else if(e.getPreviousSlot()==0&&e.getNewSlot()==8){
-                    onPlayerSwitchMode(e.getPlayer(),item,false);
+                    onPlayerSwitchMode(e.getPlayer(),item,false,e.getPreviousSlot());
                 }else if(e.getPreviousSlot()==8&&e.getNewSlot()==0){
-                    onPlayerSwitchMode(e.getPlayer(),item,true);
+                    onPlayerSwitchMode(e.getPlayer(),item,true,e.getPreviousSlot());
                 }
+//                e.getPlayer().getInventory().setItem(e.getPreviousSlot(),item);
                 e.setCancelled(true);
                 return;
             }

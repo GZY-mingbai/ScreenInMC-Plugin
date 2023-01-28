@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.BuiltInGUIs.ImageViewer;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.VNCClient;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.Welcome;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.speedTest;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Cores.MGUICore;
@@ -26,6 +27,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
@@ -37,6 +39,11 @@ public class Main extends JavaPlugin {
     private static Logger logger;
     private static FileConfiguration config;
     private static Gson gson = new Gson();
+    private static Random random = new Random();
+
+    public static Random getRandom() {
+        return random;
+    }
 
     static {
         Utils.Pair<String, String> typeArch = Utils.getSystem();
@@ -91,6 +98,7 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        Core.addCore(new Welcome());
         Core.addCore(new ImageViewer());
         Core.addCore(new VNCClient());
         Core.addCore(new speedTest());

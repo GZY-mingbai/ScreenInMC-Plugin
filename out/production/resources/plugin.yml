@@ -1,5 +1,6 @@
 name: ScreenInMC
 version: 2.0
+api-version: 1.19
 description: "ScreenInMC 2.0 支持浏览器和远程桌面等"
 authors: [GZY_mingbai]
 website: "https://mb233.net/"

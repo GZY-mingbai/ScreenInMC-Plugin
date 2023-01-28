@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
@@ -30,6 +31,16 @@ import java.util.List;
 import static cn.mingbai.ScreenInMC.Core.getCoreFromData;
 
 public class Screen {
+    private static Utils.Pair<Integer,Integer> maxScreenSize = new Utils.Pair<>(50,50);
+
+    public static Utils.Pair<Integer, Integer> getMaxScreenSize() {
+        return maxScreenSize;
+    }
+
+    public static void setMaxScreenSize(int width,int height) {
+        Screen.maxScreenSize = new Utils.Pair<>(width,height);
+    }
+
     public static class ScreenData{
         public String world;
         public int x=0;
@@ -414,6 +425,23 @@ public class Screen {
                     return NORTH;
             }
             return null;
+        }
+        public String getFacingName(){
+            switch (this){
+                case UP:
+                    return LangUtils.getText("facing-up");
+                case DOWN:
+                    return LangUtils.getText("facing-down");
+                case EAST:
+                    return LangUtils.getText("facing-east");
+                case WEST:
+                    return LangUtils.getText("facing-west");
+                case NORTH:
+                    return LangUtils.getText("facing-north");
+                case SOUTH:
+                    return LangUtils.getText("facing-south");
+            }
+            return "";
         }
 
     }
