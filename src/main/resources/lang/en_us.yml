@@ -9,6 +9,7 @@ controller-item-place-mode: "Placement mode"
 controller-item-edit-mode: "Edit mode"
 controller-item-unknown-mode: "Unknown mode"
 controller-block-not-found: "No available block found"
+controller-selection-not-found: "No available region found"
 controller-set-point-start: "Display start point set (%%)"
 controller-point-start: "Start point (%%)"
 controller-points-different-worlds: "Start point and end point are not in the same world"
@@ -22,3 +23,18 @@ controller-select-mode-info: |-
   Use %right-click% to select the second corner
   The first corner and the second corner must be on the same plane
   Selection area cannot exceed %max-size%
+controller-place-mode-info: |-
+  First use the Selection mode to choose a region
+  Then in this mode, use %left-click% to click on the selected region
+  to place a screen
+controller-place-start: "Loading screen core"
+controller-place-success: "Screen placed at %location% Facing: %facing% Size: %size%"
+vnc-client-address: "Address"
+vnc-client-password: "Password"
+vnc-client-connect: "Connect"
+facing-up: "Up"
+facing-down: "Down"
+facing-east: "East"
+facing-south: "South"
+facing-west: "West"
+facing-north: "North"
