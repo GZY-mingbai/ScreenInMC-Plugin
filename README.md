@@ -1,6 +1,7 @@
 # ScreenInMC-Plugin
 ![ScreenInMC Logo(Temporary) By zhuWin](http://zw.mingbaitalk.cn/wp-content/uploads/2022/11/logolong.png)
 * 在Minecraft中呈现任何你喜欢的图片/视频！
+* 提供一个视频源，并支持网页浏览，远程桌面等用途
 * Provide a video display in your world. 
 
 ![Example](http://zw.mingbaitalk.cn/pic/example.png)
