@@ -47,6 +47,9 @@ remappingJar.dependsOn jar
 jar {
     baseName = 'ScreenInMC'
     version = ''
+    manifest {
+        attributes 'Main-Class': 'cn.mingbai.ScreenInMC.CLI'
+    }
 }
 jar.from {
     configurations.compileClasspath.findAll {

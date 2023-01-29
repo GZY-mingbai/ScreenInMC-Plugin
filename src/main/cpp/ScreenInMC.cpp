@@ -215,25 +215,24 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
         dw = pieceSize - width % pieceSize;
     }
     bool useNewImage = false;
-    int newSize1;
-    int newSize2;
-    int newWidth;
-    char* newResult = 0;
+    int oldSize;
+    int size;
+    int oldWidth;
+    char* result_ = result;
     cl_int error = 0;
     if (dh != 0 || dw != 0) {
         int width_ = width + dw;
-        newWidth = width_;
+        oldWidth = width;
         int height_ = height + dh;
         int size1 = width * height;
-        newSize1 = size1;
+        oldSize = size1;
         int size2 = width_ * height_;
-        newSize2 = size2;
+        size = size2;
         int len1 = size1 * sizeof(int);
         int len2 = size2 * sizeof(int);
         int len3 = sizeof(int)*2;
         int* newImage = new int[size2];
-        newResult = new char[size2];
-        result = newResult;
+        result = new char[size2];
         int* w = new int[2] {width, width_};
         cl_mem data1 = clCreateBuffer(context, CL_MEM_READ_WRITE, len1, 0, &error);
         if (error != CL_SUCCESS)
@@ -309,8 +308,9 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
         width = width_;
         height = height_;
         delete[] w;
+    }else{
+        size = width*height;
     }
-    int size = width * height;
     int len1 = size * sizeof(int);
     int len2 = paletteColorCount * sizeof(int);
     int len3 = 3 * sizeof(int);
@@ -408,11 +408,10 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
     }
     if (useNewImage) {
         delete[] image;
-        int len1 = newSize2 * sizeof(char);
-        int len2 = newSize1 * sizeof(char);
+        int len1 = size * sizeof(char);
+        int len2 = oldSize * sizeof(char);
         int len3 = sizeof(int)*2;
-        int* w = new int[2] {width, newWidth};
-        result = new char[newSize1];
+        int* w = new int[2] {oldWidth, width};
         cl_mem data1 = clCreateBuffer(context, CL_MEM_READ_WRITE, len1, 0, &error);
         if (error != CL_SUCCESS)
         {
@@ -428,12 +427,12 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
         {
             return false;
         }
-        clEnqueueWriteBuffer(commandQueue, data1, CL_TRUE, 0, len1, newResult, 0, 0, 0);
+        clEnqueueWriteBuffer(commandQueue, data1, CL_TRUE, 0, len1, result, 0, 0, 0);
         if (error != CL_SUCCESS)
         {
             return false;
         }
-        clEnqueueWriteBuffer(commandQueue, data2, CL_TRUE, 0, len2, result, 0, 0, 0);
+        clEnqueueWriteBuffer(commandQueue, data2, CL_TRUE, 0, len2, result_, 0, 0, 0);
         if (error != CL_SUCCESS)
         {
             return false;
@@ -458,7 +457,7 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
         {
             return false;
         }
-        size_t global_work_size[] = { (size_t)(newSize1)};
+        size_t global_work_size[] = { (size_t)(oldSize)};
         size_t local_work_size[] = { 1 };
         error = clEnqueueNDRangeKernel(commandQueue, kernel__, 1, 0, &global_work_size[0], &local_work_size[0], 0, 0, 0);
         if (error != CL_SUCCESS)
@@ -466,7 +465,7 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
             return false;
         }
         error = clFinish(commandQueue);
-        clEnqueueReadBuffer(commandQueue, data2, CL_TRUE, 0, len2, result, 0, 0, 0);
+        clEnqueueReadBuffer(commandQueue, data2, CL_TRUE, 0, len2, result_, 0, 0, 0);
         error = clReleaseMemObject(data1);
         if (error != CL_SUCCESS)
         {
@@ -483,7 +482,7 @@ bool dither(int *image, int width, int height, char *result, int pieceSize)
             return false;
         }
         delete[] w;
-        delete[] newResult;
+        delete[] result;
     }
 }
 JNIEXPORT jboolean JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_unInit(JNIEnv *, jclass)

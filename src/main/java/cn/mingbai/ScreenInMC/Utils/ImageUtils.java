@@ -5,6 +5,7 @@ import net.minecraft.world.level.material.MaterialColor;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class ImageUtils {
             e.printStackTrace();
         }
     }
-    public static byte[] imageToMapColorsWithGPU(int[] data,int width,int height) {
+    private static byte[] imageToMapColorsWithGPU(int[] data,int width,int height) {
         byte[] result = GPUDither.dither(data, width, height, pieceSize);
         return result;
     }
@@ -113,6 +114,23 @@ public class ImageUtils {
         int width = img.getWidth();
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
         return imageToMapColors(data,width,height);
+    }
+    public static Color getColor(int index){
+        if(index<0){
+            index+=256;
+        }
+        index-=4;
+        return palette[index];
+    }
+    public static int getColorInt(int index){
+        if(index<0){
+            index+=256;
+        }
+        index-=4;
+        if(index>=palette_.length||index<0){
+            return 0x00000000;
+        }
+        return palette_[index];
     }
 
     public static byte[] imageToMapColors(int[] data,int width,int height) {

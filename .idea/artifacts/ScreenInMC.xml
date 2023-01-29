@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="ScreenInMC">
-    <output-path>$PROJECT_DIR$/out/artifacts/ScreenInMC</output-path>
-    <root id="archive" name="ScreenInMC.jar">
-      <element id="module-output" name="ScreenInMC2.main" />
-      <element id="dir-copy" path="$PROJECT_DIR$/src/main/resources" />
-    </root>
-  </artifact>
-</component>
