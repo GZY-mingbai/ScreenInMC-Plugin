@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Welcome Page</title>
+    <!-- <meta name='viewport' content='width=device-width, initial-scale=1'> -->
+    <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
+    <!-- <script src='main.js'></script> -->
+    <style>
+        body{
+            height: 512px;
+            width: 512px;
+            position: relative;
+            margin: 0;
+            font-family: "Minecraft","Unifont";
+            outline: 1px solid black;
+            overflow: hidden;
+        }
+        #welcome{
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            left: 0;
+            top: 0;
+        }
+        #a,#b,#c{
+            margin: 0;
+            font-weight: normal;
+            position: absolute;
+        }
+        #a{
+            top: calc(512px/2 - 40px);
+            left: calc((512px - 128px)/2);
+        }
+        #b{
+            top: calc(512px/2 - 38px + 8px);
+            left: calc((512px - 110px)/2);
+            opacity: 0;
+            font-family: "Minecraft Ten";
+            transform: scale(1.2);
+            transform-origin: 0 50%;
+            color: rgb(31, 31, 46)
+        }
+        #c{
+            top: calc(245px + 4px);
+            left: 430px;
+            opacity: 0;
+        }
+        #cards{
+            perspective: 2000px;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            overflow: hidden;
+        }
+        .card{
+            background-color: rgb(232, 232, 232);
+            height: 300px;
+            width: 300px;
+            position: absolute;
+            border-radius: 16px;
+            left: 90px;
+            top: 512px;
+            transform: rotateX(90deg);
+            box-shadow: 0 32px 16px 16px rgba(0,0,0,0.1);
+            transform-style: preserve-3d;
+            padding: 16px;
+        }
+        .dither{
+            display:inline-block;
+            animation: dither 0.3s linear infinite;
+        }
+        @keyframes dither{
+            0%,100%{
+                transform: translateX(0);
+            }
+            33.3%{
+                transform: translateX(-0.5px);
+            }
+            66.7%{
+                transform: translateX(0.5px);
+            }
+        }
+        #img1,#img2,#img3,#img4,#img5{
+            transition: all 0.5s;
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        #img1,#img2,#img5{
+        }
+    </style>
+    <script>
+        function sleep(i){
+            return new Promise(function(r,e){
+                setTimeout(() => {
+                    r()
+                }, i);
+            })
+        }
+        window.onload = async function(){
+            var a = document.getElementById("a");
+            var b = document.getElementById("b");
+            var c1 = document.getElementById("c1");
+            var c2 = document.getElementById("c2");
+            var c3 = document.getElementById("c3");
+            var c4 = document.getElementById("c4");
+            var c5 = document.getElementById("c5");
+            var c6 = document.getElementById("c6");
+            var welcome = document.getElementById("welcome");
+            var isPlaying=false
+            async function play(){
+                if(isPlaying){
+                    return
+                }
+                //Start
+                isPlaying=true
+                a.style.left = (512 - 368)/2 +"px"
+                a.style.transition = "all 0.5s cubic-bezier(.1,.31,.39,.97)"
+                await sleep(300)
+                b.style.opacity = 1
+                b.style.top = (512/2 - 38)+"px"
+                b.style.transition = "all 0.5s cubic-bezier(.21,.79,.82,.94)"
+                await sleep(200)
+                c.style.opacity = 1
+                c.style.top = "245px"
+                c.style.transition = "all 0.5s cubic-bezier(.21,.79,.82,.94)"
+                await sleep(500)
+                a.style.transition = "all 0.5s cubic-bezier(.39,.6,.33,1.08)"
+                b.style.transition = "all 0.5s cubic-bezier(.39,.6,.33,1.08)"
+                c.style.transition = "all 0.5s cubic-bezier(.39,.6,.33,1.08)"
+                a.style.top = 512/2 - 40 - 160 +"px"
+                await sleep(10)
+                b.style.top = 512/2 - 38 - 160 +"px"
+                await sleep(10)
+                c.style.top = 245 - 160+"px"
+                await sleep(500)
+                await cardOut(c1)
+                await sleep(500)
+                await cardOut(c2)
+                // await sleep(500)
+                // await cardOut(c3)
+                // await sleep(500)
+                // await cardOut(c4)
+                // await sleep(500)
+                // await cardOut(c5)
+                // await sleep(500)
+                // await cardOut(c6)
+            }
+            var loadedCards = []
+            async function cardOut(c){
+                c.style.transition =   "all 0.5s cubic-bezier(.39,.6,.33,1.08),"+
+                                        "transform 0.75s cubic-bezier(.49,.12,.87,.87),"+
+                                        "box-shadow 0.75s cubic-bezier(.49,.12,.87,.87)"
+                c.style.transform = "translateY(0) translateX(0) rotateX(0)"
+                c.style.boxShadow = "0 0 8px 4px rgba(0,0,0,0.1)"
+                await sleep(300)
+                c.style.top = "160px"
+                for(var i=0;i<loadedCards.length;i++){
+                    loadedCards[i].style.transition = "transform 0.3s cubic-bezier(.18,.73,1,.99),"+
+                                                "box-shadow 0.3s cubic-bezier(.18,.73,1,.99)"
+                    loadedCards[i].style.transform = "rotateX(0) translateY("+(-8-16*(loadedCards.length-i))+"px) translateZ("+(-150-150*(loadedCards.length-i))+"px)"
+                    loadedCards[i].style.boxShadow = "0 0 "+(8/(loadedCards.length-i+1))+"px "+(4/(loadedCards.length-i+1))+"px rgba(0,0,0,0.1)"
+                }
+                if(c.id=="c1"){
+                    await sleep(200)
+                    var img1 = document.getElementById("img2");
+                    var img2 = document.getElementById("img1");
+                    var img3 = document.getElementById("img4");
+                    var img4 = document.getElementById("img3");
+                    var img5 = document.getElementById("img5");
+                    img1.style.transform = "translateY(0)"
+                    img1.style.opacity="1"
+                    await sleep(50)
+                    img2.style.transform = "translateY(0)"
+                    img2.style.opacity="1"
+                    await sleep(450-50-200);
+                    await sleep(50)
+                    img3.style.transform = "translateY(0)"
+                    img3.style.opacity="1"
+                    await sleep(50)
+                    img4.style.transform = "translateY(0)"
+                    img4.style.opacity="1"
+                    await sleep(50)
+                    img5.style.transform = "translateY(0)"
+                    img5.style.opacity="1"
+                }else{
+                    await sleep(450)
+                }
+                loadedCards.push(c)
+                c.style.transition = "all 10s ease-in"
+                var d = 20
+                for(var i=0;i<5;i++){
+                c.style.transform = "rotateX(0) translateX("+
+                (Math.random()>0.5 ? d+Math.random()*d : -d-Math.random()*d)
+                +"px) translateY("+
+                (Math.random()>0.5 ? d+Math.random()*d : -d-Math.random()*d)
+                +"px)"
+                    await sleep(1000)
+                }
+                c.style.transform = "rotateX(0)"
+                await sleep(1000)
+                c.style.animation = ""                
+
+            }
+            window.onclick = async function(){
+                await play()
+            }
+            await sleep(10000)
+            await play()
+        }
+    </script>
+</head>
+<body>
+    <div id="welcome">
+        <h1 id="a">欢迎使用</h1>
+        <h1 id="b">ScreenInMC</h1>
+        <h5 id="c">2.0</h5>
+    </div>
+    <div id="cards">
+        <div class="card" id="c1">
+            ScreenInMC 2.0 采用<span style="filter: blur(0.5px);" class="dither">抖色</span>算法<br>
+            <span style="font-size: 15px;">可在<span style="text-shadow:0 0 4px black;"><span style="color: #FF0000;">有</span><span style="color: #FF8800;">限</span><span style="color: #FFFF00;">的</span><span style="color: #00FF00;">色</span><span style="color: #00FFFF;">彩</span><span style="color: #0000FF;">空</span><span style="color: #FF00FF;">间</span></span>内呈现出
+            <span>
+                <span style="transform: translateY(1px);position: absolute;text-shadow:0 0 4px rgba(0,0,0,0.5)">更丰富的颜色</span>
+                <span style="transform: translateY(1px);position: absolute;background: linear-gradient(to right, #FF0000,#FF8800, #FFFF00,#00FF00,#00FFFF,#0000FF,#FF00FF);-webkit-background-clip: text;-webkit-text-fill-color: transparent;">更丰富的颜色</span><br>
+                <img id="img2" src="2.png" style="left:32px;top:70px;height: 100px; width: 100px;position: absolute;">
+                <img id="img1" src="1.png" style="right:32px;top:70px;height: 100px; width: 100px;position: absolute;">
+                <img id="img4" src="4.png" style="left:32px;top:70px;height: 165.625px; width: 100px;position: absolute;">
+                <img id="img3" src="3.png" style="right:32px;top:70px;height: 165.625px; width: 100px;position: absolute;">
+                <img id="img5" src="5.png" style="left:142px;top:100px;height: 36px; width: 48px;position: absolute;">
+
+            </span>
+        </span><br>
+        </div>
+        <div class="card" id="c2">
+            迎
+        </div>
+        <div class="card" id="c3">
+            使
+        </div>
+        <div class="card" id="c4">
+            用
+        </div>
+        <div class="card" id="c5">
+            用
+        </div>
+        <div class="card" id="c6">
+            用
+        </div>
+
+    </div>
+</body>
+</html>

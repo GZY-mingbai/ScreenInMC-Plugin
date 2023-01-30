@@ -10,9 +10,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.nio.channels.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -38,6 +41,7 @@ public class VideoProcessor {
         public float getProcess() {
             return process;
         }
+        private GenerateProcess(){}
 
         Thread thread;
     }
@@ -48,6 +52,9 @@ public class VideoProcessor {
         private int width;
         private int height;
         private int size;
+        private boolean loop;
+        private Function<Void, InputStream> reopenStream;
+        private DitheredVideo(){}
 
         public void close() {
             try {
@@ -55,13 +62,33 @@ public class VideoProcessor {
             } catch (Exception e) {
             }
         }
-
+        private void reopen(){
+            if(reopenStream==null){
+                try {
+                    stream.reset();
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }else{
+                close();
+                this.stream = reopenStream.apply(null);
+            }
+            try {
+                stream.skip(10);
+            }catch (Exception e){
+                throw new RuntimeException(e);
+            }
+        }
         public synchronized byte[] readAFrame() {
             try {
                 if (useGzip) {
                     byte[] bytes = new byte[4];
                     int length = stream.read(bytes);
                     if (length != 4) {
+                        if(loop){
+                            reopen();
+                            return readAFrame();
+                        }
                         close();
                         return new byte[0];
                     }
@@ -96,6 +123,10 @@ public class VideoProcessor {
                     byte[] frame = new byte[size];
                     int length = stream.read(frame);
                     if (length != size) {
+                        if(loop){
+                            reopen();
+                            return readAFrame();
+                        }
                         close();
                         return new byte[0];
                     }
@@ -273,14 +304,62 @@ public class VideoProcessor {
         }
         return generateProcess;
     }
-    public static DitheredVideo readDitheredVideo(File file) {
-        try {
-            return readDitheredVideo(new FileInputStream(file));
-        } catch (FileNotFoundException e) {
+    public static DitheredVideo readDitheredVideo(String path,boolean loop){
+        try{
+            URL url=null;
+            try{
+                url = new URL(path);
+            }catch (Exception e){
+            }
+            if(url!=null){
+                return readDitheredVideo(url,loop);
+            }else{
+                return readDitheredVideo(new File(path),loop);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
-    public static DitheredVideo readDitheredVideo(InputStream inputStream) {
+    public static DitheredVideo readDitheredVideo(File file,boolean loop){
+        try{
+            DitheredVideo video = readDitheredVideo(new FileInputStream(file),loop);
+            video.reopenStream = new Function<Void, InputStream>() {
+                @Override
+                public InputStream apply(Void unused) {
+                    try {
+                        return new FileInputStream(file);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+            return video;
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+    public static DitheredVideo readDitheredVideo(URL url, boolean loop){
+        try{
+            DitheredVideo video = readDitheredVideo(url.openStream(),loop);
+            video.reopenStream = new Function<Void, InputStream>() {
+                @Override
+                public InputStream apply(Void unused) {
+                    try {
+                        return url.openStream();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+            return video;
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+    public static DitheredVideo readDitheredVideo(InputStream inputStream,boolean loop) {
         try {
             byte[] bytes = new byte[10];
             inputStream.read(bytes);
@@ -294,6 +373,7 @@ public class VideoProcessor {
                 video.width = ((bytes[6] & 0xFF) << 8) | (bytes[7] & 0xFF);
                 video.height = ((bytes[8] & 0xFF) << 8) | (bytes[9] & 0xFF);
                 video.size = video.width * video.height;
+                video.loop=loop;
                 return video;
             } else {
                 throw new Exception("File is not .smv");

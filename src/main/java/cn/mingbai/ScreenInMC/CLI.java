@@ -192,7 +192,9 @@ public class CLI {
         boolean watch = false;
         boolean gzip = false;
         boolean ffmpegArg = false;
-        InputStream watchStream=null;
+        boolean loop = false;
+        int border = 0;
+        String watchPath="";
         List<String> ffmpegArgs=new ArrayList<>();
         if(args[0].startsWith("-")){
             for (int i = 0; i < args.length; i++) {
@@ -250,11 +252,7 @@ public class CLI {
                         throw new RuntimeException("参数错误");
                     } else {
                         watch = true;
-                        if(args[i+1].startsWith("http")){
-                            watchStream = new URL(args[i+1]).openStream();
-                        }else{
-                            watchStream = new FileInputStream(args[i+1]);
-                        }
+                        watchPath = args[i+1];
                     }
 
                 }
@@ -273,30 +271,36 @@ public class CLI {
                     System.out.println("ScreenInMC 预处理器");
                     System.out.println();
                     System.out.println("处理视频 Processor [-v 视频文件] [-o 输出文件(.smv)] ([-f ffmpeg路径] [-t 临时目录] [-d 使用设备] [-p 分块大小] [-g(使用GZip压缩)] [-a ffmpeg额外参数(放在最后)])");
-                    System.out.println("播放已处理视频 Processor [-w 视频文件/链接(.smv)]");
+                    System.out.println("播放已处理视频 Processor [-w 视频文件/链接(.smv)] ([-x(循环播放)] [-b 边框大小])");
                     System.out.println("列出可用设备 Processor -l");
                     return;
+                }
+                if(args[i].equals("-x")){
+                    loop=true;
+                }
+                if(args[i].equals("-b")){
+                    if (i == args.length - 1) {
+                        throw new RuntimeException("参数错误");
+                    } else {
+                        border = Integer.parseInt(args[i + 1]);
+                    }
                 }
                 if(args[i].equals("-a")){
                     ffmpegArg=true;
                 }
             }
         }else {
-            String path = String.join(" ",args);
+            watchPath = String.join(" ",args);
             watch = true;
-            if(path.startsWith("http")){
-                watchStream = new URL(path).openStream();
-            }else{
-                watchStream = new FileInputStream(path);
-            }
         }
 
         if (!watch&&(videoFile == null || !videoFile.exists())) {
             throw new RuntimeException("没有-v参数或文件不存在");
         }
         if (watch) {
-            VideoProcessor.DitheredVideo video = VideoProcessor.readDitheredVideo(watchStream);
+            VideoProcessor.DitheredVideo video = VideoProcessor.readDitheredVideo(watchPath,loop);
             BufferedImage nowImage = new BufferedImage(video.getWidth(), video.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            int finalBorder = border;
             JFrame frame = new JFrame() {
                 @Override
                 public void update(Graphics g) {
@@ -305,13 +309,23 @@ public class CLI {
 
                 @Override
                 public void paint(Graphics g) {
+                    Insets insets = this.getInsets();
                     synchronized (nowImage){
-                        g.drawImage(nowImage, 0, 0, this);
+                            g.drawImage(nowImage, insets.left+ finalBorder, insets.top+ finalBorder, this);
                     }
                 }
             };
             frame.setResizable(false);
-            frame.setSize(video.getWidth(), video.getHeight());
+            Insets insets = frame.getInsets();
+            int ww = video.getWidth()+insets.left+insets.right+border*2;
+            int wh = video.getHeight()+insets.top+insets.bottom+border*2;
+            if(ww<128){
+                ww=128;
+            }
+            if(wh<128){
+                wh=128;
+            }
+            frame.setSize(ww, wh);
             frame.setVisible(true);
             while (true) {
                 long time = System.currentTimeMillis();

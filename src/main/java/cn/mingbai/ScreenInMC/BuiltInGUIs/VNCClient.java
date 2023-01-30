@@ -100,7 +100,7 @@ public class VNCClient extends MGUICore {
         connectButton.setTop(144);
         connectButton.setHorizontalAlignment(Alignment.HorizontalAlignment.Center);
 
-        MControl control = new MControl();
+        control = new MControl();
         control.addChildControl(IPInput);
         control.addChildControl(passwordInput);
         control.addChildControl(connectButton);
@@ -118,6 +118,7 @@ public class VNCClient extends MGUICore {
             }
         }
     }
+    private MControl control=null;
     public void onError(Exception e){
         e.printStackTrace();
     }
@@ -130,6 +131,9 @@ public class VNCClient extends MGUICore {
 
     public void connectServer(String ip, String passwd){
         try {
+            if(control!=null){
+                control.setVisible(false);
+            }
             if(client!=null){
                 client.stop();
             }
@@ -201,15 +205,34 @@ public class VNCClient extends MGUICore {
                             try {
                                 Thread.sleep(time);
                             } catch (InterruptedException e) {
+                                if(control!=null){
+                                    directMode=false;
+                                    isConnected = false;
+                                    update=true;
+                                    control.setVisible(true);
+                                }
                                 throw new RuntimeException(e);
                             }
                         }
                     }
+                    if(control!=null){
+                        directMode=false;
+                        isConnected = false;
+                        update=true;
+                        control.setVisible(true);
+                    }
                 }
+
             };
             runnable.runTaskAsynchronously(Main.thisPlugin());
         }catch (Exception e){
             onError(e);
+            if(control!=null){
+                directMode=false;
+                isConnected = false;
+                update=true;
+                control.setVisible(true);
+            }
         }
     }
     boolean directMode = true;
