@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset='utf-8'>
     <title>Welcome Page</title>
@@ -7,32 +8,42 @@
     <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
     <!-- <script src='main.js'></script> -->
     <style>
-        body{
+        span {
+            display: inline-block;
+        }
+
+        body {
             height: 512px;
             width: 512px;
             position: relative;
             margin: 0;
-            font-family: "Minecraft","Unifont";
+            font-family: "Minecraft", "Unifont";
             outline: 1px solid black;
             overflow: hidden;
         }
-        #welcome{
+
+        #welcome {
             position: absolute;
             height: 100%;
             width: 100%;
             left: 0;
             top: 0;
         }
-        #a,#b,#c{
+
+        #a,
+        #b,
+        #c {
             margin: 0;
             font-weight: normal;
             position: absolute;
         }
-        #a{
+
+        #a {
             top: calc(512px/2 - 40px);
             left: calc((512px - 128px)/2);
         }
-        #b{
+
+        #b {
             top: calc(512px/2 - 38px + 8px);
             left: calc((512px - 110px)/2);
             opacity: 0;
@@ -41,19 +52,22 @@
             transform-origin: 0 50%;
             color: rgb(31, 31, 46)
         }
-        #c{
+
+        #c {
             top: calc(245px + 4px);
             left: 430px;
             opacity: 0;
         }
-        #cards{
+
+        #cards {
             perspective: 2000px;
             height: 100%;
             width: 100%;
             position: absolute;
             overflow: hidden;
         }
-        .card{
+
+        .card {
             background-color: rgb(232, 232, 232);
             height: 300px;
             width: 300px;
@@ -62,42 +76,85 @@
             left: 90px;
             top: 512px;
             transform: rotateX(90deg);
-            box-shadow: 0 32px 16px 16px rgba(0,0,0,0.1);
+            box-shadow: 0 32px 16px 16px rgba(0, 0, 0, 0.1);
             transform-style: preserve-3d;
             padding: 16px;
         }
-        .dither{
-            display:inline-block;
+
+        .dither {
             animation: dither 0.3s linear infinite;
         }
-        @keyframes dither{
-            0%,100%{
+
+        @keyframes dither {
+
+            0%,
+            100% {
                 transform: translateX(0);
             }
-            33.3%{
+
+            33.3% {
                 transform: translateX(-0.5px);
             }
-            66.7%{
+
+            66.7% {
                 transform: translateX(0.5px);
             }
         }
-        #img1,#img2,#img3,#img4,#img5{
+
+        #img1,
+        #img2,
+        #img3,
+        #img4,
+        #img5 {
             transition: all 0.5s;
             opacity: 0;
             transform: translateY(16px);
         }
-        #img1,#img2,#img5{
+        #sq1,#sq2,#sq3,#sq4,#sq5{
+            position: relative;
+            left: 100px;
+            opacity: 0;
+            transition: all 0.5s;
+        }
+        #sp5{
+            left: 50px;
+        }
+        .minput{
+            background-color: #f1f3f4;
+            outline: 2px #8f8f8f solid;
+            border-radius: 64px;
+            transition: all 0.5s;
+        }
+        .mbutton{
+            background-color: #646464;
+            border-radius: 64px;
+            outline: 2px #00000028 solid;
+            transition: all 0.5s;
+            text-align: center;color: #FFFFFF;
+        }
+        #sq11{
+            position: absolute;
+            height: 48px;
+            width: 48px;
+            background-color: #1e1e1e7a;
+            border: 8px #1e1e1ea1 solid;
+            border-radius: 32px;
+            opacity: 0;
+            transition: all 0.5s,left 0.8s,top 0.8s,border 0.1s;
+            left: 280px;
+            top: 206px;
+            box-sizing: border-box;
         }
     </style>
     <script>
-        function sleep(i){
-            return new Promise(function(r,e){
+        function sleep(i) {
+            return new Promise(function (r, e) {
                 setTimeout(() => {
                     r()
                 }, i);
             })
         }
-        window.onload = async function(){
+        window.onload = async function () {
             var a = document.getElementById("a");
             var b = document.getElementById("b");
             var c1 = document.getElementById("c1");
@@ -107,36 +164,40 @@
             var c5 = document.getElementById("c5");
             var c6 = document.getElementById("c6");
             var welcome = document.getElementById("welcome");
-            var isPlaying=false
-            async function play(){
-                if(isPlaying){
+            var isPlaying = false
+            async function play() {
+                if (isPlaying) {
                     return
                 }
                 //Start
-                isPlaying=true
-                a.style.left = (512 - 368)/2 +"px"
+                isPlaying = true
+                a.style.left = (512 - 368) / 2 + "px"
                 a.style.transition = "all 0.5s cubic-bezier(.1,.31,.39,.97)"
                 await sleep(300)
                 b.style.opacity = 1
-                b.style.top = (512/2 - 38)+"px"
+                b.style.top = (512 / 2 - 38) + "px"
                 b.style.transition = "all 0.5s cubic-bezier(.21,.79,.82,.94)"
                 await sleep(200)
                 c.style.opacity = 1
                 c.style.top = "245px"
                 c.style.transition = "all 0.5s cubic-bezier(.21,.79,.82,.94)"
-                await sleep(500)
+                await sleep(2000)
                 a.style.transition = "all 0.5s cubic-bezier(.39,.6,.33,1.08)"
                 b.style.transition = "all 0.5s cubic-bezier(.39,.6,.33,1.08)"
                 c.style.transition = "all 0.5s cubic-bezier(.39,.6,.33,1.08)"
-                a.style.top = 512/2 - 40 - 160 +"px"
+                a.style.top = 512 / 2 - 40 - 160 + "px"
                 await sleep(10)
-                b.style.top = 512/2 - 38 - 160 +"px"
+                b.style.top = 512 / 2 - 38 - 160 + "px"
                 await sleep(10)
-                c.style.top = 245 - 160+"px"
-                await sleep(500)
+                c.style.top = 245 - 160 + "px"
+                await sleep(100)
                 await cardOut(c1)
                 await sleep(500)
                 await cardOut(c2)
+                await sleep(3000)
+                await cardOut(c3)
+                // await sleep(100)
+                // await cardOut(c2)
                 // await sleep(500)
                 // await cardOut(c3)
                 // await sleep(500)
@@ -147,62 +208,185 @@
                 // await cardOut(c6)
             }
             var loadedCards = []
-            async function cardOut(c){
-                c.style.transition =   "all 0.5s cubic-bezier(.39,.6,.33,1.08),"+
-                                        "transform 0.75s cubic-bezier(.49,.12,.87,.87),"+
-                                        "box-shadow 0.75s cubic-bezier(.49,.12,.87,.87)"
+            async function cardOut(c) {
+                c.style.transition = "all 0.75s cubic-bezier(.39,.6,.33,1.08)," +
+                    "transform 1.125s cubic-bezier(.49,.12,.87,.87)," +
+                    "box-shadow 1.125s cubic-bezier(.49,.12,.87,.87)"
                 c.style.transform = "translateY(0) translateX(0) rotateX(0)"
                 c.style.boxShadow = "0 0 8px 4px rgba(0,0,0,0.1)"
-                await sleep(300)
+                await sleep(450)
                 c.style.top = "160px"
-                for(var i=0;i<loadedCards.length;i++){
-                    loadedCards[i].style.transition = "transform 0.3s cubic-bezier(.18,.73,1,.99),"+
-                                                "box-shadow 0.3s cubic-bezier(.18,.73,1,.99)"
-                    loadedCards[i].style.transform = "rotateX(0) translateY("+(-8-16*(loadedCards.length-i))+"px) translateZ("+(-150-150*(loadedCards.length-i))+"px)"
-                    loadedCards[i].style.boxShadow = "0 0 "+(8/(loadedCards.length-i+1))+"px "+(4/(loadedCards.length-i+1))+"px rgba(0,0,0,0.1)"
+                for (var i = 0; i < loadedCards.length; i++) {
+                    loadedCards[i].style.transition = "transform 0.3s cubic-bezier(.18,.73,1,.99)," +
+                        "box-shadow 0.3s cubic-bezier(.18,.73,1,.99)"
+                    loadedCards[i].style.transform = "rotateX(0) translateY(" + (-8 - 16 * (loadedCards.length - i)) + "px) translateZ(" + (-150 - 150 * (loadedCards.length - i)) + "px)"
+                    loadedCards[i].style.boxShadow = "0 0 " + (8 / (loadedCards.length - i + 1)) + "px " + (4 / (loadedCards.length - i + 1)) + "px rgba(0,0,0,0.1)"
                 }
-                if(c.id=="c1"){
+                if (c.id == "c1") {
                     await sleep(200)
                     var img1 = document.getElementById("img2");
                     var img2 = document.getElementById("img1");
                     var img3 = document.getElementById("img4");
                     var img4 = document.getElementById("img3");
                     var img5 = document.getElementById("img5");
+                    var sp1 = document.getElementById("sp1");
+                    var sp2 = document.getElementById("sp2");
+                    var sp3 = document.getElementById("sp3");
+                    var sp4 = document.getElementById("sp4");
                     img1.style.transform = "translateY(0)"
-                    img1.style.opacity="1"
+                    img1.style.opacity = "1"
                     await sleep(50)
                     img2.style.transform = "translateY(0)"
-                    img2.style.opacity="1"
-                    await sleep(450-50-200);
+                    img2.style.opacity = "1"
+                    await sleep(450 - 50 - 200);
                     await sleep(50)
                     img3.style.transform = "translateY(0)"
-                    img3.style.opacity="1"
+                    img3.style.opacity = "1"
                     await sleep(50)
                     img4.style.transform = "translateY(0)"
-                    img4.style.opacity="1"
+                    img4.style.opacity = "1"
+                    sp3.style.backgroundPositionX = "0";
+                    sp4.style.transform = "";
                     await sleep(50)
                     img5.style.transform = "translateY(0)"
-                    img5.style.opacity="1"
-                }else{
-                    await sleep(450)
+                    img5.style.opacity = "1"
+                    await sleep(50)
+                    sp1.style.opacity = "1"
+                    sp2.style.transform = "scale(1.08)"
+                    var temp = (async function () {
+                        await sleep(500)
+                        sp2.style.transform = "scale(1)"
+                    })
+                    temp();
+                    await sleep(675 - 400)
+                } 
+                if(c.id == "c2"){
+                    await sleep(400)
+                    var sq1 = document.getElementById("sq1");
+                    var sq2 = document.getElementById("sq2");
+                    var sq3 = document.getElementById("sq3");
+                    var sq4 = document.getElementById("sq4");
+                    var sq5 = document.getElementById("sq5");
+                    var sq6 = document.getElementById("sq6");
+                    var sq7 = document.getElementById("sq7");
+                    var sq8 = document.getElementById("sq8");
+                    var sq9 = document.getElementById("sq9");
+                    var sq10 = document.getElementById("sq10");
+                    var sq11 = document.getElementById("sq11");
+                    var sq12 = document.getElementById("sq12");
+                    var sq13 = document.getElementById("sq13");
+                    var sq14 = document.getElementById("sq14");
+                    var sq15 = document.getElementById("sq15");
+                    var sq16 = document.getElementById("sq16");
+                    var sq17 = document.getElementById("sq17");
+                    var sq18 = document.getElementById("sq18");
+
+                    sq6.style.backgroundPositionX="0"
+                    sq7.style.transform=""
+                    sq5.style.left="0"
+                    sq5.style.opacity="1"
+                    sq1.style.left="0"
+                    sq1.style.opacity="1"
+                    await sleep(100)
+                    sq2.style.left="0"
+                    sq2.style.opacity="1"
+                    await sleep(200)
+                    sq3.style.left="0"
+                    sq3.style.opacity="1"
+                    await sleep(100)
+                    sq4.style.left="0"
+                    sq4.style.opacity="1"
+                    var temp=async function(){
+                        await sleep(300)
+                        sq8.style.opacity="1"
+                        sq8.style.transform="translateX(-50%)"
+                        await sleep(500)
+                        sq11.style.opacity="0.8"
+                        await sleep(200)
+                        sq11.style.left="196px"
+                        sq11.style.top="10px"
+                        await sleep(900)
+                        sq11.style.opacity="1"
+                        sq11.style.border="6px #1e1e1ea1 solid"
+                        await sleep(50)
+                        sq12.style.opacity="1"
+                        await sleep(100)
+                        sq11.style.opacity="0.8"
+                        sq11.style.border=""
+                        await sleep(200)
+                        sq12.style.width="12px"
+                        await sleep(200)
+                        sq12.style.width="32px"
+                        await sleep(200)
+                        sq12.style.width="56px"
+                        await sleep(200)
+                        sq12.style.width="72px"
+                        await sleep(200)
+                        sq12.style.width="96px"
+                        await sleep(200)
+                        sq12.style.width="128px"
+                        await sleep(200)
+                        sq12.style.width="144px"
+                        await sleep(200)
+                        sq11.style.top="80px"
+                        await sleep(900)
+                        sq11.style.opacity="1"
+                        sq11.style.border="6px #1e1e1ea1 solid"
+                        await sleep(50)
+                        sq13.style.opacity="0"
+                        sq14.style.opacity="1"
+                        await sleep(100)
+                        sq11.style.opacity="0.8"
+                        sq11.style.border=""
+                        await sleep(200)
+                        sq14.style.width="12px"
+                        await sleep(200)
+                        sq14.style.width="32px"
+                        await sleep(200)
+                        sq14.style.width="56px"
+                        await sleep(200)
+                        sq14.style.width="72px"
+                        await sleep(200)
+                        sq14.style.width="96px"
+                        await sleep(200)
+                        sq11.style.left="128px"
+                        sq11.style.top="152px"
+                        await sleep(900)
+                        sq11.style.opacity="1"
+                        sq11.style.border="6px #1e1e1ea1 solid"
+                        sq16.style.backgroundColor="#303030"
+                        await sleep(50)
+                        sq15.style.opacity="0"
+                        await sleep(100)
+                        sq11.style.opacity="0.8"
+                        sq11.style.border=""
+                        sq16.style.backgroundColor=""
+                        await sleep(200)
+                        sq17.style.opacity="0"
+                        sq18.style.opacity="1"
+                    }
+                    temp()
+                }
+                else {
+                    await sleep(675)
                 }
                 loadedCards.push(c)
                 c.style.transition = "all 10s ease-in"
                 var d = 20
-                for(var i=0;i<5;i++){
-                c.style.transform = "rotateX(0) translateX("+
-                (Math.random()>0.5 ? d+Math.random()*d : -d-Math.random()*d)
-                +"px) translateY("+
-                (Math.random()>0.5 ? d+Math.random()*d : -d-Math.random()*d)
-                +"px)"
+                for (var i = 0; i < 5; i++) {
+                    c.style.transform = "rotateX(0) translateX(" +
+                        (Math.random() > 0.5 ? d + Math.random() * d : -d - Math.random() * d)
+                        + "px) translateY(" +
+                        (Math.random() > 0.5 ? d + Math.random() * d : -d - Math.random() * d)
+                        + "px)"
                     await sleep(1000)
                 }
                 c.style.transform = "rotateX(0)"
                 await sleep(1000)
-                c.style.animation = ""                
+                c.style.animation = ""
 
             }
-            window.onclick = async function(){
+            window.onclick = async function () {
                 await play()
             }
             await sleep(10000)
@@ -210,6 +394,7 @@
         }
     </script>
 </head>
+
 <body>
     <div id="welcome">
         <h1 id="a">欢迎使用</h1>
@@ -219,22 +404,81 @@
     <div id="cards">
         <div class="card" id="c1">
             ScreenInMC 2.0 采用<span style="filter: blur(0.5px);" class="dither">抖色</span>算法<br>
-            <span style="font-size: 15px;">可在<span style="text-shadow:0 0 4px black;"><span style="color: #FF0000;">有</span><span style="color: #FF8800;">限</span><span style="color: #FFFF00;">的</span><span style="color: #00FF00;">色</span><span style="color: #00FFFF;">彩</span><span style="color: #0000FF;">空</span><span style="color: #FF00FF;">间</span></span>内呈现出
-            <span>
-                <span style="transform: translateY(1px);position: absolute;text-shadow:0 0 4px rgba(0,0,0,0.5)">更丰富的颜色</span>
-                <span style="transform: translateY(1px);position: absolute;background: linear-gradient(to right, #FF0000,#FF8800, #FFFF00,#00FF00,#00FFFF,#0000FF,#FF00FF);-webkit-background-clip: text;-webkit-text-fill-color: transparent;">更丰富的颜色</span><br>
+            <span style="font-size: 15px;">可在<span style="text-shadow:0 0 4px black;"><span
+                        style="color: #FF0000;">有</span><span style="color: #FF8800;">限</span><span
+                        style="color: #FFFF00;">的</span><span style="color: #00FF00;">色</span><span
+                        style="color: #00FFFF;">彩</span><span style="color: #0000FF;">空</span><span
+                        style="color: #FF00FF;">间</span></span>内呈现出
+                <span id="sp4" style="transform: translateX(6px);transition: all 0.5s;width: 90px;">
+                    <span style="position: absolute;text-shadow:0 0 4px rgba(0,0,0,0.5)">更丰富的颜色</span>
+                    <span id="sp3"
+                        style="transition: background-position-x 1s;background-position-x:90px;position: absolute;background-image: linear-gradient(to right, #FF0000,#FF8800, #FFFF00,#00FF00,#00FFFF,#0000FF,#FF00FF);-webkit-background-clip: text;-webkit-text-fill-color: transparent;">更丰富的颜色</span><br>
+                </span>
                 <img id="img2" src="2.png" style="left:32px;top:70px;height: 100px; width: 100px;position: absolute;">
                 <img id="img1" src="1.png" style="right:32px;top:70px;height: 100px; width: 100px;position: absolute;">
-                <img id="img4" src="4.png" style="left:32px;top:70px;height: 165.625px; width: 100px;position: absolute;">
-                <img id="img3" src="3.png" style="right:32px;top:70px;height: 165.625px; width: 100px;position: absolute;">
+                <img id="img4" src="4.png"
+                    style="left:32px;top:70px;height: 165.625px; width: 100px;position: absolute;">
+                <img id="img3" src="3.png"
+                    style="right:32px;top:70px;height: 165.625px; width: 100px;position: absolute;">
                 <img id="img5" src="5.png" style="left:142px;top:100px;height: 36px; width: 48px;position: absolute;">
-
-            </span>
-        </span><br>
+                <span style="left: 16px;top: 246px;position: absolute;opacity: 0;transition: all 0.5s;" id="sp1">
+                    <span><span>支持使用</span>
+                        <span style="height: 19px;width: 67.5px;">
+                            <span
+                                style="transform: translateY(2px);position: absolute;text-shadow:0 0 4px rgba(238, 51, 45,0.5)">OpenCL</span>
+                            <span
+                                style="transform: translateY(2px);position: absolute;background-image: linear-gradient(to right, #3dae2b,#abd038, #f2ba1a,#ee332d);-webkit-background-clip: text;-webkit-text-fill-color: transparent;">OpenCL</span>
+                        </span>
+                        <span>框架</span><span id="sp2"
+                            style="transform:translateY(64px);transition: all 0.5s cubic-bezier(0,1.22,1,1.01);">加速</span>运算</span>
+                </span>
+            </span><br>
         </div>
         <div class="card" id="c2">
-            迎
+            插件内置<span>
+                <span id="sq7" style="height: 20px;width: 84px; transform: translateX(4px);transition: all 0.5s;">
+                    <span
+                        style="transform: translateY(2px);position: absolute;text-shadow:0 0 4px rgba(41, 140, 244,0.5)">VNC客户端</span>
+                    <span id="sq6"
+                        style="transform: translateY(2px);position: absolute;transition: background-position-x 1s;background-position-x:84px;background-image: linear-gradient(to right, #73b0f1,#298cf4,#298cf4,#73b0f1,#73b0f1);-webkit-background-clip: text;-webkit-text-fill-color: transparent;">VNC客户端</span>
+                </span>
+            </span>
+            <br>
+            <span id="sq5">可</span><span id="sq1" style="color: #00cec9;text-shadow:0 0 4px rgba(0,0,0,0.5);">方便</span><span id="sq2" style="color:#00b894;text-shadow:0 0 4px rgba(0,0,0,0.5);">快捷地</span><span id="sq3">使用</span><span id="sq4" style="color: #6c5ce7;text-shadow:0 0 4px rgba(0,0,0,0.5);">远程桌面</span>
+            <div id="sq8" style="width:256px;height:192px;transform: translateX(-50%) translateY(16px);left: 50%;position: relative; top:16px;background-color: #FFFFFF; border-radius: 16px;box-shadow: 0 0 8px 4px rgba(0,0,0,0.1);transition: all 0.5s;opacity: 0;">
+                <div id="sq17" style="transition: opacity 0.5s;width:256px;height:208px;position: relative; transform:scale(0.6) translate(-50%,-50%);transform-origin: 0 0; left: 50%; top: 50%;font-size: 20px;">
+                    <div id="sq9" style="width:256px;height:64px;position:absolute;left:0;top:0;" class="minput">
+                        <span style="margin: 16px;color:#646464">地址</span>
+                        <div id="sq12" style="position: absolute;top: 16px;height: 32px;width: 2px;left: 16px;background-color: #b8b5b5;border-radius: 10px;transition: width 0.2s,opacity 0.1s;opacity: 0;">
+                            <div id="sq13" style="position: absolute;right: 0;height: 100%;width: 2px;background-color: #727272;opacity: 1;transition: all 0.1s;"></div>
+                        </div>
+                    </div>
+                    <div id="sq10" style="width:256px;height:64px;position:absolute;left:0;top:72px;" class="minput">
+                        <span style="margin: 16px;color:#646464">密码</span>
+                        <div id="sq14" style="position: absolute;top: 16px;height: 32px;width: 2px;left: 16px;background-color: #b8b5b5;border-radius: 10px;transition: width 0.2s,opacity 0.1s;opacity: 0;">
+                            <div id="sq15" style="position: absolute;right: 0;height: 100%;width: 2px;background-color: #727272;opacity: 1;transition: all 0.1s;"></div>
+                        </div>
+                    </div>
+                    <div id="sq16" style="width:128px;height:64px;position:absolute;left:0;top:144px;left:64px;line-height: 64px;" class="mbutton">
+                        连接
+                    </div>
+                    <div id="sq11"></div>
+                </div>
+                <div id="sq18" style="opacity: 0;position:absolute; height: 100%;width: 100%;top: 0;left: 0;border-radius: 16px;overflow: hidden;background-color: #c4d9e7;transition: all 0.5s;">
+                    <div style="position: absolute;bottom: 0;width: 100%;left: 0;height: 24px;background-color: #d6e1f7;/* display: flex; */text-align: center;">
+                        <div style="background-color:#3fc1f7;height:16px;width:16px;display: inline-block;margin: 4px;border-radius: 4px;">
+                        </div>
+                        <div style="background-color:#c2c2c2;height:16px;width:16px;display: inline-block;margin: 4px;border-radius: 4px;">
+                        </div>
+                        <div style="background-color:#c2c2c2;height:16px;width:16px;display: inline-block;margin: 4px;border-radius: 4px;">
+                        </div>
+                        
+                        <div style="background-color:#c2c2c2;height:16px;width:16px;display: inline-block;margin: 4px;border-radius: 4px;">
+                        </div></div>
+                </div>
+            </div>
         </div>
+            
         <div class="card" id="c3">
             使
         </div>
@@ -250,4 +494,5 @@
 
     </div>
 </body>
+
 </html>
