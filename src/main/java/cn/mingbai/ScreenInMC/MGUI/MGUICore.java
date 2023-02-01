@@ -1,4 +1,4 @@
-package cn.mingbai.ScreenInMC.Cores;
+package cn.mingbai.ScreenInMC.MGUI;
 
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.MGUI.ClickType;

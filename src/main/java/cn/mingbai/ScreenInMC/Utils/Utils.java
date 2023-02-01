@@ -5,11 +5,8 @@ import cn.mingbai.ScreenInMC.Screen.Screen;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
-
-import static cn.mingbai.ScreenInMC.Screen.Screen.Facing.*;
 
 public class Utils {
     public static final byte[] intToByteArray(int value) {
@@ -53,7 +50,7 @@ public class Utils {
             case "linux":
                 return ".so";
             case "macosx":
-                return "dylib";
+                return ".dylib";
         }
         return null;
     }
@@ -321,27 +318,6 @@ public class Utils {
                 return new ScreenClickResult();
         }
         return new ScreenClickResult(true,mouseX,mouseY);
-    }
-    public static void deleteDir(File file)
-    {
-        if(file.isFile())
-        {
-            file.delete();
-        }else
-        {
-            File[] files = file.listFiles();
-            if(files == null)
-            {
-                file.delete();
-            }else
-            {
-                for (int i = 0; i < files.length; i++)
-                {
-                    deleteDir(files[i]);
-                }
-                file.delete();
-            }
-        }
     }
 }
 

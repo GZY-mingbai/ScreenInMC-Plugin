@@ -1,21 +1,13 @@
 package cn.mingbai.ScreenInMC;
 
-import cn.mingbai.ScreenInMC.Natives.GPUDither;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
-import cn.mingbai.ScreenInMC.Utils.Utils;
+import cn.mingbai.ScreenInMC.Utils.FileUtils;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.channels.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -279,7 +271,7 @@ public class VideoProcessor {
                             inputChannel.close();
                             outputChannel.close();
                         }
-                        Utils.deleteDir(tempDir);
+                        FileUtils.deleteDir(tempDir);
                         System.out.println("Finished");
                     } else {
                         throw new Exception();

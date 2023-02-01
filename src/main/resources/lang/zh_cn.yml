@@ -1,6 +1,8 @@
 start-download-chromium-core: "开始下载Chromium核心"
 download-progress: "已下载 %%"
 download-success: "下载完成"
+decompress-progress: "已解压 %%"
+decompress-success: "解压完成"
 kb-basic: "基础键盘:"
 controller-item-name: "ScreenInMC 控制器"
 controller-item-now-mode: "当前模式:"

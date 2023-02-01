@@ -1,6 +1,6 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
-import cn.mingbai.ScreenInMC.Cores.MGUICore;
+import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MGIFImage;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;

@@ -1,8 +1,9 @@
 package cn.mingbai.ScreenInMC;
 
-import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
+import cn.mingbai.ScreenInMC.Browsers.Browser;
+import cn.mingbai.ScreenInMC.Browsers.Chromium;
 import cn.mingbai.ScreenInMC.Controller.Item;
-import cn.mingbai.ScreenInMC.Cores.MGUICore;
+import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import org.bukkit.Bukkit;
@@ -70,8 +71,18 @@ public class CommandListener implements TabExecutor {
             }
         }
         if (args[0].equals("download")) {
-            ChromiumCoreInitialization initialization = new ChromiumCoreInitialization();
-            initialization.installCore();
+            Browser initialization = new Chromium();
+            switch (Integer.parseInt(args[1])){
+                case 0:
+                    initialization.installCore();
+                    break;
+                case 1:
+                    Main.getPluginLogger().info("State: "+initialization.getCoreState());
+                    break;
+                case 2:
+                    initialization.loadCore();
+                    break;
+            }
         }
         if (args[0].equals("listDevices")) {
             String[] platforms = getPlatforms();
@@ -126,6 +137,9 @@ public class CommandListener implements TabExecutor {
             if(sender instanceof Player){
                 Item.giveItem(((Player) sender));
             }
+        }
+        if(args[0].equals("installChromium")){
+            new Chromium().installCore();
         }
         sender.sendMessage("Success");
         return true;

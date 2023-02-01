@@ -1,15 +1,16 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.Browsers.Browser;
+import cn.mingbai.ScreenInMC.Browsers.Chromium;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.*;
 import cn.mingbai.ScreenInMC.Controller.Item;
-import cn.mingbai.ScreenInMC.Cores.MGUICore;
+import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
-import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -20,17 +21,14 @@ import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
-    public static final String PluginFilesPath = "./plugins/ScreenInMC/";
+    public static final String PluginFilesPath = "plugins/ScreenInMC/";
     private static Plugin thisPlugin;
     private static boolean isEnabled = false;
     private static Logger logger;
@@ -92,14 +90,15 @@ public class Main extends JavaPlugin {
         saveScreens();
         Item.onDisable();
     }
-
     @Override
     public void onEnable() {
+        Browser.addBrowser(new Chromium());
         Core.addCore(new Welcome());
         Core.addCore(new ImageViewer());
         Core.addCore(new VNCClient());
         Core.addCore(new speedTest());
         Core.addCore(new VideoPlayer());
+        Core.addCore(new WebBrowser());
         ImageUtils.initImageUtils();
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();

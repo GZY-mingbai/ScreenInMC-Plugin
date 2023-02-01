@@ -1,20 +1,17 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
+import cn.mingbai.ScreenInMC.Utils.FileUtils;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -353,7 +350,7 @@ public class CLI {
             }
         }
         if (tempDir.exists()) {
-            Utils.deleteDir(tempDir);
+            FileUtils.deleteDir(tempDir);
         }
         if (device == -3) {
             String[] plats = getPlatforms();

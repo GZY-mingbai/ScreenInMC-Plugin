@@ -1,6 +1,6 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
-import cn.mingbai.ScreenInMC.Cores.MGUICore;
+import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
@@ -16,7 +16,6 @@ import com.shinyhut.vernacular.client.rendering.ColorDepth;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.function.Consumer;

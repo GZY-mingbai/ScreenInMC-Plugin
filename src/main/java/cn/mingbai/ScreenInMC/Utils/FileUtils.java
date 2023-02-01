@@ -1,19 +1,23 @@
 package cn.mingbai.ScreenInMC.Utils;
 
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-public class HttpUtils {
+public class FileUtils {
     public static String getString(String url, String proxyUrlString) {
         try {
             URLConnection urlConnection;
@@ -36,6 +40,48 @@ public class HttpUtils {
             throw (RuntimeException) e;
         }
         return "";
+    }
+    public static void decompressTarGz(String filePath, String outPath, Function<String, Void> callback) {
+        try {
+            File file = new File(filePath);
+            File out = new File(outPath);
+            FileInputStream inputStream = new FileInputStream(file);
+            GZIPInputStream gzipInputStream = new GZIPInputStream(inputStream);
+            TarArchiveInputStream stream = new TarArchiveInputStream(gzipInputStream);
+            ReadableByteChannel readableByteChannel = Channels.newChannel(stream);
+            if(out.exists()){
+                deleteDir(out);
+            }
+            out.mkdirs();
+            TarArchiveEntry entry = null;
+            Throwable error = null;
+            try {
+                while ((entry = stream.getNextTarEntry()) != null) {
+                    if (entry.isDirectory()) {
+                        new File(outPath+entry.getName()).mkdirs();
+                    } else {
+                        FileOutputStream outputStream = new FileOutputStream(outPath+entry.getName());
+                        FileChannel channel = outputStream.getChannel();
+                        channel.transferFrom(readableByteChannel,0,stream.available());
+                        channel.close();
+                        outputStream.close();
+                        callback.apply(entry.getName());
+                    }
+                }
+            }catch (Throwable e){
+                error = e;
+            }
+            readableByteChannel.close();
+            stream.close();
+            gzipInputStream.close();
+            inputStream.close();
+            if(error!=null){
+                throw error;
+            }
+        }catch (Throwable e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     public static long downloadFile(String url, String path, String proxyUrlString, Function<Utils.Pair<Long, Long>, Void> callback) {
@@ -67,17 +113,47 @@ public class HttpUtils {
                 CallbackByteChannel callbackByteChannel = new CallbackByteChannel(Channels.newChannel(inputStream), size, callback);
                 FileOutputStream fileOutputStream = new FileOutputStream(file);
                 FileChannel fileChannel = fileOutputStream.getChannel();
-                fileChannel.transferFrom(callbackByteChannel, 0, Long.MAX_VALUE);
+                Throwable error = null;
+                try {
+                    fileChannel.transferFrom(callbackByteChannel, 0, Long.MAX_VALUE);
+                }catch (Exception e){
+                    error = e;
+                }
                 fileChannel.close();
                 fileOutputStream.close();
                 callbackByteChannel.close();
                 inputStream.close();
+                if(error!=null){
+                    throw error;
+                }
                 return size;
             }
-        } catch (Exception e) {
-            throw (RuntimeException) e;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
         return 0;
+    }
+
+    public static void deleteDir(File file)
+    {
+        if(file.isFile())
+        {
+            file.delete();
+        }else
+        {
+            File[] files = file.listFiles();
+            if(files == null)
+            {
+                file.delete();
+            }else
+            {
+                for (int i = 0; i < files.length; i++)
+                {
+                    deleteDir(files[i]);
+                }
+                file.delete();
+            }
+        }
     }
 
     public static class CallbackByteChannel implements ReadableByteChannel {

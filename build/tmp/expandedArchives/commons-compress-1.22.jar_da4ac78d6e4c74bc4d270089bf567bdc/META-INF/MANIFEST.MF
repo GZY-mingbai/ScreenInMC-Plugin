@@ -1,0 +1,70 @@
+Manifest-Version: 1.0
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-SymbolicName: org.apache.commons.commons-compress
+Implementation-Vendor-Id: org.apache
+Specification-Title: Apache Commons Compress
+Bundle-DocURL: https://commons.apache.org/proper/commons-compress/
+Include-Resource: META-INF/NOTICE.txt=NOTICE.txt,META-INF/LICENSE.txt=
+ LICENSE.txt
+Import-Package: org.tukaani.xz;resolution:=optional,org.brotli.dec;res
+ olution:=optional,com.github.luben.zstd;resolution:=optional,org.obje
+ ctweb.asm;resolution:=optional,javax.crypto;resolution:=optional,java
+ x.crypto.spec;resolution:=optional
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Main-Class: org.apache.commons.compress.archivers.Lister
+Export-Package: org.apache.commons.compress;version="1.22",org.apache.
+ commons.compress.archivers;version="1.22",org.apache.commons.compress
+ .archivers.ar;version="1.22",org.apache.commons.compress.archivers.ar
+ j;version="1.22",org.apache.commons.compress.archivers.cpio;version="
+ 1.22",org.apache.commons.compress.archivers.dump;version="1.22",org.a
+ pache.commons.compress.archivers.examples;version="1.22",org.apache.c
+ ommons.compress.archivers.jar;version="1.22",org.apache.commons.compr
+ ess.archivers.sevenz;version="1.22",org.apache.commons.compress.archi
+ vers.tar;version="1.22",org.apache.commons.compress.archivers.zip;ver
+ sion="1.22",org.apache.commons.compress.changes;version="1.22",org.ap
+ ache.commons.compress.compressors;version="1.22",org.apache.commons.c
+ ompress.compressors.brotli;version="1.22",org.apache.commons.compress
+ .compressors.bzip2;version="1.22",org.apache.commons.compress.compres
+ sors.deflate;version="1.22",org.apache.commons.compress.compressors.d
+ eflate64;version="1.22",org.apache.commons.compress.compressors.gzip;
+ version="1.22",org.apache.commons.compress.compressors.lz4;version="1
+ .22",org.apache.commons.compress.compressors.lz77support;version="1.2
+ 2",org.apache.commons.compress.compressors.lzma;version="1.22",org.ap
+ ache.commons.compress.compressors.lzw;version="1.22",org.apache.commo
+ ns.compress.compressors.pack200;version="1.22",org.apache.commons.com
+ press.compressors.snappy;version="1.22",org.apache.commons.compress.c
+ ompressors.xz;version="1.22",org.apache.commons.compress.compressors.
+ z;version="1.22",org.apache.commons.compress.compressors.zstandard;ve
+ rsion="1.22",org.apache.commons.compress.harmony.archive.internal.nls
+ ;version="1.22",org.apache.commons.compress.harmony.pack200;version="
+ 1.22",org.apache.commons.compress.harmony.unpack200;version="1.22",or
+ g.apache.commons.compress.harmony.unpack200.bytecode;version="1.22",o
+ rg.apache.commons.compress.harmony.unpack200.bytecode.forms;version="
+ 1.22",org.apache.commons.compress.java.util.jar;version="1.22",org.ap
+ ache.commons.compress.parallel;version="1.22",org.apache.commons.comp
+ ress.utils;version="1.22"
+Bundle-Name: Apache Commons Compress
+Extension-Name: org.apache.commons.compress
+Build-Jdk-Spec: 1.8
+Implementation-Title: Apache Commons Compress
+Bundle-Description: Apache Commons Compress software defines an API fo
+ r working withcompression and archive formats.  These include: bzip2,
+  gzip, pack200,lzma, xz, Snappy, traditional Unix Compress, DEFLATE, 
+ DEFLATE64, LZ4,Brotli, Zstandard and ar, cpio, jar, tar, zip, dump, 7
+ z, arj.
+Automatic-Module-Name: org.apache.commons.compress
+Implementation-Version: 1.22
+Specification-Vendor: The Apache Software Foundation
+Bundle-ManifestVersion: 2
+Bundle-Vendor: The Apache Software Foundation
+Tool: Bnd-6.3.1.202206071316
+Implementation-Vendor: The Apache Software Foundation
+Originally-Created-By: Apache Maven Bundle Plugin 5.1.8
+Bundle-Version: 1.22.0
+X-Compile-Target-JDK: 1.8
+Implementation-Build: UNKNOWN@r${buildNumber}; 2022-10-25 19:44:41+000
+ 0
+X-Compile-Source-JDK: 1.8
+Created-By: Apache Maven Bundle Plugin 5.1.8
+Specification-Version: 1.22
+

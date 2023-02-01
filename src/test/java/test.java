@@ -1,12 +1,3 @@
-import cn.mingbai.ScreenInMC.BrowserCoreInitializations.ChromiumCoreInitialization;
-import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Natives.GPUDither;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
-import cn.mingbai.ScreenInMC.Utils.LangUtils;
-import cn.mingbai.ScreenInMC.Utils.Utils;
-
-import java.util.ArrayList;
-
 public class test {
     public static void main(String[] args){
     }
