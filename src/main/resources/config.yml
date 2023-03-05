@@ -9,4 +9,4 @@ download-browser-core:
   main-page: "https://bing.com/"
 language: "zh_cn" #支持zh_cn en_us qps_ploc
 opencl-device: -3 #-3=自动选择 -2=Java运算 -1=C++运算 0+=OpenCL设备 (-2,-1均不支持更换分块大小)
-piece-size: 4 #分块大小 可设置 101(关闭抖色) 2 4 8 16
+piece-size: 4 #分块大小 可设置 1(关闭抖色) 2 4 8 16

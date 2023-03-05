@@ -1,5 +1,6 @@
 # ScreenInMC-Plugin
 ![ScreenInMC Logo(Temporary) By zhuWin](http://zw.mingbaitalk.cn/wp-content/uploads/2022/11/logolong.png)
+因开学 可能断更一段时间
 #欢迎使用 ScreenInMC Bukkit插件！
 <br>
 该插件可以向 Minecraft 世界维度中提供多个视频源，但远非这么简单。
