@@ -19,10 +19,10 @@ public class MButton extends MTextBlock {
 
     public MButton(String text) {
         super(text);
-        this.setBackground(new Color(100,100,100, 255));
+        this.setBackground(new Color(100, 100, 100, 255));
         this.setRoundHeight(ROUND_AUTO);
         this.setRoundWidth(ROUND_AUTO);
-        this.setForeground(new Color(255,255,255));
+        this.setForeground(new Color(255, 255, 255));
     }
 
     @Override
@@ -55,11 +55,11 @@ public class MButton extends MTextBlock {
         super.onRender(mRenderer);
         if (pressed) {
             mRenderer.setPaint(new Color(0, 0, 0, 20));
-            mRenderer.drawRoundRect(0, 0, (int) getWidth(), (int) getHeight(),  (int) getHeight(), (int) getHeight(),true);
+            mRenderer.drawRoundRect(0, 0, (int) getWidth(), (int) getHeight(), (int) getHeight(), (int) getHeight(), true);
         }
         mRenderer.setPaint(new Color(0, 0, 0, 40));
         mRenderer.setStroke(new BasicStroke(2));
-        mRenderer.drawRoundRect(2,2, (int) getWidth()-4, (int) getHeight()-4,(int) getHeight()-4,(int) getHeight()-4,false);
+        mRenderer.drawRoundRect(2, 2, (int) getWidth() - 4, (int) getHeight() - 4, (int) getHeight() - 4, (int) getHeight() - 4, false);
 
     }
 }

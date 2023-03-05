@@ -16,6 +16,7 @@ public class IOUtils {
         bos.close();
         return bos.toByteArray();
     }
+
     public static void close(Closeable closeable) {
         if (null != closeable) {
             try {

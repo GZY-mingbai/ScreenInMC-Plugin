@@ -1,6 +1,5 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
-import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
@@ -21,31 +20,33 @@ import java.util.Base64;
 import java.util.function.Consumer;
 
 public class VNCClient extends MGUICore {
+    boolean directMode = true;
+    Image nowImage = null;
+    BukkitRunnable runnable;
+    boolean update = false;
+    private MControl control = null;
+    private boolean isConnected = false;
+    private VernacularClient client;
+    private boolean sending = false;
+
     public VNCClient() {
         super("VNCClient");
     }
 
-    public static class VNCClientStoredData{
-        public String IP;
-        public String password;
-        public VNCClientStoredData(String IP,String password){
-            this.IP=IP;
-            this.password=password;
-        }
-    }
     @Override
     public void onUnload() {
         super.onUnload();
-        if(isConnected){
+        if (isConnected) {
             client.stop();
         }
     }
-//    private MControl VNCControl; }
+
+    //    private MControl VNCControl; }
     @Override
     public void onCreate(MContainer container) {
 
-        container.setBackground(new Color(255,255,255));
-        MInput IPInput = new MInput(LangUtils.getText("vnc-client-address")){
+        container.setBackground(new Color(255, 255, 255));
+        MInput IPInput = new MInput(LangUtils.getText("vnc-client-address")) {
             @Override
             public void onActive() {
                 super.onActive();
@@ -53,7 +54,7 @@ public class VNCClient extends MGUICore {
 
             @Override
             public void onRender(MRenderer mRenderer) {
-                if(!isConnected){
+                if (!isConnected) {
                     super.onRender(mRenderer);
                 }
             }
@@ -61,10 +62,10 @@ public class VNCClient extends MGUICore {
         IPInput.setHeight(64);
         IPInput.setWidth(256);
         IPInput.setPaddingLeft(32);
-        MInput passwordInput = new MInput(LangUtils.getText("vnc-client-password")){
+        MInput passwordInput = new MInput(LangUtils.getText("vnc-client-password")) {
             @Override
             public void onRender(MRenderer mRenderer) {
-                if(!isConnected){
+                if (!isConnected) {
                     super.onRender(mRenderer);
                 }
             }
@@ -73,23 +74,24 @@ public class VNCClient extends MGUICore {
         passwordInput.setWidth(256);
         passwordInput.setTop(72);
         passwordInput.setPaddingLeft(32);
-        MButton connectButton = new MButton(LangUtils.getText("vnc-client-connect")){
+        MButton connectButton = new MButton(LangUtils.getText("vnc-client-connect")) {
             @Override
             public void onClick(int x, int y, ClickType type) {
                 super.onClick(x, y, type);
-                BukkitRunnable thread = new BukkitRunnable(){
+                BukkitRunnable thread = new BukkitRunnable() {
 
                     @Override
                     public void run() {
-                        setStoredData(new VNCClientStoredData(IPInput.getText(),Base64.getEncoder().encodeToString(passwordInput.getText().getBytes(StandardCharsets.UTF_8))));
-                        connectServer(IPInput.getText(),passwordInput.getText());
+                        setStoredData(new VNCClientStoredData(IPInput.getText(), Base64.getEncoder().encodeToString(passwordInput.getText().getBytes(StandardCharsets.UTF_8))));
+                        connectServer(IPInput.getText(), passwordInput.getText());
                     }
                 };
                 thread.runTaskAsynchronously(Main.thisPlugin());
             }
+
             @Override
             public void onRender(MRenderer mRenderer) {
-                if(!isConnected){
+                if (!isConnected) {
                     super.onRender(mRenderer);
                 }
             }
@@ -108,32 +110,30 @@ public class VNCClient extends MGUICore {
         control.setVerticalAlignment(Alignment.VerticalAlignment.Center);
         control.setHorizontalAlignment(Alignment.HorizontalAlignment.Center);
         container.addChildControl(control);
-        if(getStoredData()!=null){
-            try{
+        if (getStoredData() != null) {
+            try {
                 LinkedTreeMap data = (LinkedTreeMap) getStoredData();
-                connectServer((String) data.get("IP"),new String(Base64.getDecoder().decode((String) data.get("password")),StandardCharsets.UTF_8));
-            }catch (Exception e){
+                connectServer((String) data.get("IP"), new String(Base64.getDecoder().decode((String) data.get("password")), StandardCharsets.UTF_8));
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
-    private MControl control=null;
-    public void onError(Exception e){
+
+    public void onError(Exception e) {
         e.printStackTrace();
     }
-    public void onBell(){
+
+    public void onBell() {
 
     }
-    private boolean isConnected =false;
-    private VernacularClient client;
-    private boolean sending = false;
 
-    public void connectServer(String ip, String passwd){
+    public void connectServer(String ip, String passwd) {
         try {
-            if(control!=null){
+            if (control != null) {
                 control.setVisible(false);
             }
-            if(client!=null){
+            if (client != null) {
                 client.stop();
             }
             VernacularConfig config = new VernacularConfig();
@@ -145,7 +145,7 @@ public class VNCClient extends MGUICore {
                     onError(e);
                 }
             });
-            if(passwd.length()!=0){
+            if (passwd.length() != 0) {
                 config.setPasswordSupplier(() -> passwd);
             }
             config.setBellListener(v -> onBell());
@@ -159,111 +159,117 @@ public class VNCClient extends MGUICore {
                 }
             });
             String[] ipPort = ip.split(":");
-             if(ipPort.length==1){
-                client.start(ipPort[0],5900);
-            }else{
-                client.start(ipPort[0],Integer.parseInt(ipPort[1]));
+            if (ipPort.length == 1) {
+                client.start(ipPort[0], 5900);
+            } else {
+                client.start(ipPort[0], Integer.parseInt(ipPort[1]));
             }
-            isConnected=true;
+            isConnected = true;
             runnable = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    while (getContainer().isLoaded() && isConnected){
+                    while (getContainer().isLoaded() && isConnected) {
                         long timeStart = System.currentTimeMillis();
                         boolean send;
-                        synchronized (this){
-                            send = directMode && nowImage!=null && update;
+                        synchronized (this) {
+                            send = directMode && nowImage != null && update;
                         }
-                        if(send){
-                            synchronized (this){
-                                sending=true;
+                        if (send) {
+                            synchronized (this) {
+                                sending = true;
                             }
                             int w = nowImage.getWidth(null);
                             int h = nowImage.getHeight(null);
                             boolean subImage = false;
-                            if(w> getContainer().getWidth()){
+                            if (w > getContainer().getWidth()) {
                                 w = (int) getContainer().getWidth();
                                 subImage = true;
                             }
-                            if(h> getContainer().getHeight()){
+                            if (h > getContainer().getHeight()) {
                                 h = (int) getContainer().getHeight();
                                 subImage = true;
                             }
                             Image image = nowImage;
-                            if(subImage){
-                                image = ImageUtils.imageToBufferedImage(image).getSubimage(0,0,w,h);
+                            if (subImage) {
+                                image = ImageUtils.imageToBufferedImage(image).getSubimage(0, 0, w, h);
                             }
-                            getScreen().sendView(ImageUtils.imageToMapColors(image),0,0,w,h);
-                            synchronized (this){
-                                sending=false;
+                            getScreen().sendView(ImageUtils.imageToMapColors(image), 0, 0, w, h);
+                            synchronized (this) {
+                                sending = false;
                                 update = false;
                             }
                         }
                         int time = (int) (50 - (System.currentTimeMillis() - timeStart));
-                        if(time>0){
+                        if (time > 0) {
                             try {
                                 Thread.sleep(time);
                             } catch (InterruptedException e) {
-                                if(control!=null){
-                                    directMode=false;
+                                if (control != null) {
+                                    directMode = false;
                                     isConnected = false;
-                                    update=true;
+                                    update = true;
                                     control.setVisible(true);
                                 }
                                 throw new RuntimeException(e);
                             }
                         }
                     }
-                    if(control!=null){
-                        directMode=false;
+                    if (control != null) {
+                        directMode = false;
                         isConnected = false;
-                        update=true;
+                        update = true;
                         control.setVisible(true);
                     }
                 }
 
             };
             runnable.runTaskAsynchronously(Main.thisPlugin());
-        }catch (Exception e){
+        } catch (Exception e) {
             onError(e);
-            if(control!=null){
-                directMode=false;
+            if (control != null) {
+                directMode = false;
                 isConnected = false;
-                update=true;
+                update = true;
                 control.setVisible(true);
             }
         }
     }
-    boolean directMode = true;
-    Image nowImage = null;
-    BukkitRunnable runnable;
-    boolean update = false;
 
     @Override
     public void onMouseClick(int x, int y, Utils.MouseClickType type) {
-        if(isConnected){
+        if (isConnected) {
             client.moveMouse(x, y);
-            if(type== Utils.MouseClickType.LEFT){
+            if (type == Utils.MouseClickType.LEFT) {
                 client.click(1);
             }
-            if(type== Utils.MouseClickType.RIGHT){
+            if (type == Utils.MouseClickType.RIGHT) {
                 client.click(2);
             }
-        }else{
+        } else {
             super.onMouseClick(x, y, type);
         }
     }
 
     @Override
     public void onTextInput(String text) {
-        if(isConnected){
+        if (isConnected) {
             try {
                 client.type(text);
-            }catch (Exception e){
+            } catch (Exception e) {
                 onError(e);
             }
-        }else{
+        } else {
             super.onTextInput(text);
+        }
+    }
+
+    public static class VNCClientStoredData {
+        public String IP;
+        public String password;
+
+        public VNCClientStoredData(String IP, String password) {
+            this.IP = IP;
+            this.password = password;
         }
     }
 }

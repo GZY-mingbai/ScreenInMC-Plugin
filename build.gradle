@@ -17,13 +17,14 @@ repositories {
 }
 
 dependencies {
+    implementation project(path: ':src:main:LibrariesLoader')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
     compileOnly 'org.spigotmc:spigot:1.19.2-R0.1-SNAPSHOT:remapped-mojang'
     implementation 'com.shinyhut:vernacular:1.14'
     implementation 'org.apache.commons:commons-compress:1.22'
-    implementation 'me.friwi:jcef-api:jcef-854af1f+cef-109.1.11+g6d4fdb2+chromium-109.0.5414.87'
+    implementation 'me.friwi:jcef-api:jcef-87476e9+cef-110.0.25+g75b1c96+chromium-110.0.5481.78'
 }
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
@@ -45,6 +46,7 @@ task remappingJar{
         out.close()
     }
 }
+jar.dependsOn ":src:main:LibrariesLoader:jar"
 remappingJar.dependsOn jar
 jar {
     baseName = 'ScreenInMC'
@@ -52,38 +54,44 @@ jar {
     manifest {
         attributes 'Main-Class': 'cn.mingbai.ScreenInMC.CLI'
     }
-}
-jar.from {
-    configurations.compileClasspath.findAll {
-        it.name.contains("vernacular")
-    }.collect {
-        System.out.println(zipTree(it).getFiles())
-        zipTree it
+    from{
+        configurations.compileClasspath.findAll {
+            it.name.contains("vernacular")
+        }.collect {
+            System.out.println(zipTree(it).getFiles())
+            zipTree it
+        }
     }
-    configurations.compileClasspath.findAll {
-        it.name.contains("commons-compress")
-    }.collect {
-        def zip = zipTree(it).matching{
-            include '**/TarConstants.class'
-            include '**/ArchiveEntry.class'
-            include '**/EntryStreamOffsets.class'
-            include '**/ZipEncoding.class'
-            include '**/ZipEncodingHelper.class'
-            include '**/ArchiveUtils.class'
-            include '**/IOUtils.class'
-            include '**/ArchiveInputStream.class'
-            include '**/TarArchiveInputStream.class'
-            include '**/TarArchiveEntry.class'
-            include '**/TarArchiveSparseZeroInputStream.class'
-            include '**/NioZipEncoding.class'
-            include '**/CharsetAccessor.class'
-            include '**/TarUtils.class'
-            include '**/TarUtils$1.class'
+    from{
+        configurations.compileClasspath.findAll {
+            it.name.contains("commons-compress")
+        }.collect {
+            def zip = zipTree(it).matching{
+                include '**/TarConstants.class'
+                include '**/ArchiveEntry.class'
+                include '**/EntryStreamOffsets.class'
+                include '**/ZipEncoding.class'
+                include '**/ZipEncodingHelper.class'
+                include '**/ArchiveUtils.class'
+                include '**/IOUtils.class'
+                include '**/ArchiveInputStream.class'
+                include '**/TarArchiveInputStream.class'
+                include '**/TarArchiveEntry.class'
+                include '**/TarArchiveSparseZeroInputStream.class'
+                include '**/NioZipEncoding.class'
+                include '**/CharsetAccessor.class'
+                include '**/TarUtils.class'
+                include '**/TarUtils$1.class'
+            }
+            zip.forEach {
+                System.out.println(it.path)
+            }
+            zip
         }
-        zip.forEach {
-            System.out.println(it.path)
-        }
-        zip
+    }
+    into("lib"){
+        from(file "./src/main/LibrariesLoader/build/libs/LibrariesLoader.jar")
+        from(fileTree(dir: "./src/main/cpp/out"))
     }
 }
 test {

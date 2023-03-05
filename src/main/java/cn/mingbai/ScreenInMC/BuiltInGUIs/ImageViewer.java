@@ -13,6 +13,7 @@ import java.net.URL;
 
 public class ImageViewer extends Core {
     BufferedImage image;
+
     public ImageViewer() {
         super("ImageViewer");
     }
@@ -22,16 +23,16 @@ public class ImageViewer extends Core {
         new BukkitRunnable() {
             @Override
             public void run() {
-                try{
+                try {
                     image = ImageIO.read(new URL("https://i1.hdslb.com/bfs/archive/360d6633673f1b403cbbeb9d33d02161eda3486a.jpg"));
-                    image = ImageUtils.imageToBufferedImage(image.getScaledInstance(getScreen().getWidth()*128,getScreen().getHeight()*128, Image.SCALE_SMOOTH));
-                    new BukkitRunnable(){
+                    image = ImageUtils.imageToBufferedImage(image.getScaledInstance(getScreen().getWidth() * 128, getScreen().getHeight() * 128, Image.SCALE_SMOOTH));
+                    new BukkitRunnable() {
                         @Override
                         public void run() {
                             send();
                         }
                     }.runTask(Main.thisPlugin());
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -44,18 +45,19 @@ public class ImageViewer extends Core {
 
     @Override
     public void onMouseClick(int x, int y, Utils.MouseClickType type) {
-        if(image!=null){
+        if (image != null) {
             send();
         }
     }
 
     @Override
     public void onTextInput(String text) {
-        if(image!=null){
+        if (image != null) {
             send();
         }
     }
-    private void send(){
-        getScreen().sendView(ImageUtils.imageToMapColors(image),0,0,image.getWidth(),image.getHeight());
+
+    private void send() {
+        getScreen().sendView(ImageUtils.imageToMapColors(image), 0, 0, image.getWidth(), image.getHeight());
     }
 }

@@ -1,9 +1,9 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
-import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MGIFImage;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
+import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 
 import java.awt.*;
 import java.io.BufferedInputStream;
@@ -29,7 +29,7 @@ public class speedTest extends MGUICore {
             image.setHorizontalAlignment(Alignment.HorizontalAlignment.Stretch);
             image.setVerticalAlignment(Alignment.VerticalAlignment.Stretch);
             container.addChildControl(image);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

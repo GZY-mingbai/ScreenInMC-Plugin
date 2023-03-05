@@ -1,7 +1,7 @@
 {
-    "files.associations": {
-        "xlocale": "cpp",
-        "*.cl": "cpp",
-        "xiosbase": "cpp"
-    }
+  "files.associations": {
+    "xlocale": "cpp",
+    "*.cl": "cpp",
+    "xiosbase": "cpp"
+  }
 }

@@ -7,6 +7,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class MControl {
+    public static final int ROUND_AUTO = -1;
+    private final List<MControl> childMControls = Collections.synchronizedList(new ArrayList<>());
+    protected boolean loaded = false;
     private MControl parentMControl;
     private double left = 0;
     private double top = 0;
@@ -18,7 +21,10 @@ public class MControl {
     private Stroke borderStroke = new BasicStroke(2);
     private Alignment.HorizontalAlignment horizontalAlignment = Alignment.HorizontalAlignment.None;
     private Alignment.VerticalAlignment verticalAlignment = Alignment.VerticalAlignment.None;
-    private final List<MControl> childMControls = Collections.synchronizedList(new ArrayList<>());
+    private boolean active;
+    private int roundWidth = 0;
+    private int roundHeight = 0;
+    private List<Runnable> renderTasks = Collections.synchronizedList(new ArrayList<>());
 
     public Paint getBorderPaint() {
         return borderPaint;
@@ -58,23 +64,24 @@ public class MControl {
 
     public synchronized void onClick(int x, int y, ClickType type) {
         MContainer container = getMContainer();
-        if(container!=null){
-            if(container.activeControl==this){
+        if (container != null) {
+            if (container.activeControl == this) {
                 return;
             }
-            if(container.activeControl!=null){
-                container.activeControl.active=false;
+            if (container.activeControl != null) {
+                container.activeControl.active = false;
                 container.activeControl.onPassive();
             }
             container.activeControl = this;
-            active=true;
+            active = true;
             onActive();
         }
     }
-    private boolean active;
-    public void onActive(){
+
+    public void onActive() {
     }
-    public void onPassive(){
+
+    public void onPassive() {
     }
 
     public Alignment.HorizontalAlignment getHorizontalAlignment() {
@@ -94,6 +101,7 @@ public class MControl {
         this.verticalAlignment = verticalAlignment;
         onResize();
     }
+
     public void onResize() {
         onResize(true);
     }
@@ -102,10 +110,10 @@ public class MControl {
         return active;
     }
 
-    private void addNowSize(){
+    private void addNowSize() {
         MContainer container = getMContainer();
-        if(container!=null){
-            container.addReRender(new Rectangle2D.Double(getAbsoluteLeft(),getAbsoluteTop(),getWidth(),getHeight()));
+        if (container != null) {
+            container.addReRender(new Rectangle2D.Double(getAbsoluteLeft(), getAbsoluteTop(), getWidth(), getHeight()));
         }
     }
 
@@ -160,13 +168,13 @@ public class MControl {
                 this.height = parentHeight;
                 break;
         }
-        for(MControl i:getChildControls()){
-            if(i.getVerticalAlignment()!= Alignment.VerticalAlignment.None ||
-                    i.getHorizontalAlignment()!= Alignment.HorizontalAlignment.None){
+        for (MControl i : getChildControls()) {
+            if (i.getVerticalAlignment() != Alignment.VerticalAlignment.None ||
+                    i.getHorizontalAlignment() != Alignment.HorizontalAlignment.None) {
                 i.onResize(false);
             }
         }
-        if(render){
+        if (render) {
             reRender();
         }
     }
@@ -284,10 +292,10 @@ public class MControl {
         if (mControl.parentMControl == null && !mControl.loaded) {
             childMControls.add(mControl);
             mControl.parentMControl = this;
-            mControl.loaded=true;
+            mControl.loaded = true;
             try {
                 mControl.onLoad();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
@@ -300,10 +308,10 @@ public class MControl {
             MControl child = childMControls.get(i);
             if (mControl == child) {
                 child.parentMControl = null;
-                childMControls.get(i).loaded=false;
+                childMControls.get(i).loaded = false;
                 try {
                     childMControls.get(i).onUnload();
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 childMControls.remove(i);
@@ -324,6 +332,7 @@ public class MControl {
         renderBackground(mRenderer);
         renderChildren(mRenderer);
     }
+
     protected synchronized void renderBackground(MRenderer mRenderer) {
         if (roundWidth == 0 && roundHeight == 0) {
             mRenderer.setPaint(background);
@@ -331,43 +340,38 @@ public class MControl {
             mRenderer.setPaint(borderPaint);
             mRenderer.setStroke(borderStroke);
             mRenderer.drawRect(0, 0, (int) width, (int) height, false);
-        }else{
+        } else {
             int rw = roundWidth;
             int rh = roundHeight;
-            if(rh==ROUND_AUTO||rw==ROUND_AUTO){
+            if (rh == ROUND_AUTO || rw == ROUND_AUTO) {
                 rh = (int) height;
                 rw = (int) height;
             }
             mRenderer.setPaint(background);
-            mRenderer.drawRoundRect(0, 0, (int) width, (int) height, rw,rh,true);
+            mRenderer.drawRoundRect(0, 0, (int) width, (int) height, rw, rh, true);
             mRenderer.setPaint(borderPaint);
             mRenderer.setStroke(borderStroke);
-            mRenderer.drawRoundRect(0, 0, (int) width, (int) height, rw,rh, false);
+            mRenderer.drawRoundRect(0, 0, (int) width, (int) height, rw, rh, false);
         }
     }
-    private int roundWidth = 0;
-    private int roundHeight = 0;
 
     public int getRoundHeight() {
         return roundHeight;
-    }
-
-    public int getRoundWidth() {
-        return roundWidth;
     }
 
     public synchronized void setRoundHeight(int roundHeight) {
         this.roundHeight = roundHeight;
         reRender();
     }
-    public static final int ROUND_AUTO = -1;
+
+    public int getRoundWidth() {
+        return roundWidth;
+    }
 
     public synchronized void setRoundWidth(int roundWidth) {
         this.roundWidth = roundWidth;
         reRender();
     }
-
-    private List<Runnable> renderTasks = Collections.synchronizedList(new ArrayList<>());
 
     public List<Runnable> getRenderTasks() {
         List<Runnable> result = new ArrayList<>();
@@ -376,20 +380,23 @@ public class MControl {
         }
         return result;
     }
-    public synchronized void removeRenderTask(Runnable runnable){
+
+    public synchronized void removeRenderTask(Runnable runnable) {
         for (int i = 0; i < renderTasks.size(); i++) {
-            if(runnable==renderTasks.get(i)){
+            if (runnable == renderTasks.get(i)) {
                 renderTasks.remove(i);
                 i--;
             }
         }
     }
-    public synchronized void removeRenderTaskAt(int i){
+
+    public synchronized void removeRenderTaskAt(int i) {
         if (i >= renderTasks.size()) {
             throw new RuntimeException("Wrong index.");
         }
         removeRenderTask(renderTasks.get(i));
     }
+
     public synchronized List<Runnable> getAllRenderTasks() {
         List<Runnable> result = new ArrayList<>();
         result.addAll(getRenderTasks());
@@ -399,10 +406,12 @@ public class MControl {
         }
         return result;
     }
-    public synchronized void addRenderTask(Runnable runnable){
+
+    public synchronized void addRenderTask(Runnable runnable) {
         renderTasks.add(runnable);
     }
-    protected synchronized void renderChildren(MRenderer mRenderer){
+
+    protected synchronized void renderChildren(MRenderer mRenderer) {
         for (MControl i : childMControls) {
             if (i.visible) {
                 MRenderer newMRenderer = ((MRenderer) mRenderer.clone());
@@ -411,43 +420,47 @@ public class MControl {
             }
         }
     }
-    protected boolean loaded=false;
 
     public boolean isLoaded() {
         return loaded;
     }
 
-    public void onLoad(){
+    public void onLoad() {
         onResize();
     }
-    public void onUnload(){
+
+    public void onUnload() {
 
     }
-    public void onTextInput(String text){}
-    public MContainer getMContainer(){
-        if(this instanceof MContainer){
+
+    public void onTextInput(String text) {
+    }
+
+    public MContainer getMContainer() {
+        if (this instanceof MContainer) {
             return (MContainer) this;
-        }else{
-            if(parentMControl==null){
+        } else {
+            if (parentMControl == null) {
                 return null;
             }
             return parentMControl.getMContainer();
         }
     }
+
     public void reRender() {
         MContainer container = getMContainer();
-        if(container!=null) {
+        if (container != null) {
             double left = getAbsoluteLeft();
             double top = getAbsoluteTop();
-            if(left<0){
-                left=0;
+            if (left < 0) {
+                left = 0;
             }
-            if(top<0){
-                top=0;
+            if (top < 0) {
+                top = 0;
             }
             double width = getWidth();
             double height = getHeight();
-            if(width<=0||height<=0){
+            if (width <= 0 || height <= 0) {
                 return;
             }
             container.addReRender(new Rectangle2D.Double(left, top, width, height));

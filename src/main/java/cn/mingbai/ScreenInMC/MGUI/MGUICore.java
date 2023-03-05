@@ -1,8 +1,6 @@
 package cn.mingbai.ScreenInMC.MGUI;
 
 import cn.mingbai.ScreenInMC.Core;
-import cn.mingbai.ScreenInMC.MGUI.ClickType;
-import cn.mingbai.ScreenInMC.MGUI.MContainer;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
 public abstract class MGUICore extends Core {
@@ -20,7 +18,8 @@ public abstract class MGUICore extends Core {
         onCreate(container);
         container.load();
     }
-    public void crash(){
+
+    public void crash() {
         container.crash();
     }
 

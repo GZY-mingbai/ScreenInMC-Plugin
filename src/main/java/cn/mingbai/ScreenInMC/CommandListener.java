@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Browsers.Browser;
 import cn.mingbai.ScreenInMC.Browsers.Chromium;
+import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
@@ -26,18 +27,18 @@ public class CommandListener implements TabExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args[0].equals("putScreen")) {
             try {
-                if(args.length!=9){
+                if (args.length != 9) {
                     sender.sendMessage("Failed");
                     return true;
                 }
-                Core core=null;
-                for(Core i:Core.getAllCore()){
-                    if(i.getCoreName().equals(args[8])){
-                        core= (Core) i.clone();
+                Core core = null;
+                for (Core i : Core.getAllCore()) {
+                    if (i.getCoreName().equals(args[8])) {
+                        core = (Core) i.clone();
                         break;
                     }
                 }
-                if(core==null) {
+                if (core == null) {
                     sender.sendMessage("Failed");
                     return true;
                 }
@@ -53,31 +54,31 @@ public class CommandListener implements TabExecutor {
                 );
                 screen.setCore(core);
                 screen.putScreen();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if(args[0].equals("removeScreen")){
+        if (args[0].equals("removeScreen")) {
             Screen[] allScreens = Screen.getAllScreens();
-            if(Integer.parseInt(args[1])<=allScreens.length){
-                if(args.length==2){
+            if (Integer.parseInt(args[1]) <= allScreens.length) {
+                if (args.length == 2) {
                     Screen.removeScreen(allScreens[Integer.parseInt(args[1])]);
                     sender.sendMessage("Success");
-                }else{
+                } else {
                     sender.sendMessage("Failed");
                 }
-            }else{
+            } else {
                 sender.sendMessage("Failed");
             }
         }
         if (args[0].equals("download")) {
             Browser initialization = new Chromium();
-            switch (Integer.parseInt(args[1])){
+            switch (Integer.parseInt(args[1])) {
                 case 0:
                     initialization.installCore();
                     break;
                 case 1:
-                    Main.getPluginLogger().info("State: "+initialization.getCoreState());
+                    Main.getPluginLogger().info("State: " + initialization.getCoreState());
                     break;
                 case 2:
                     initialization.loadCore();
@@ -92,9 +93,9 @@ public class CommandListener implements TabExecutor {
         }
         if (args[0].equalsIgnoreCase("initOpenCL")) {
             int[] p = getPalette();
-            if(GPUDither.init(Integer.parseInt(args[1]), p, p.length,getPieceSize())){
+            if (GPUDither.init(Integer.parseInt(args[1]), p, p.length, getPieceSize())) {
                 sender.sendMessage("Success");
-            }else{
+            } else {
                 sender.sendMessage("Failed");
             }
         }
@@ -105,40 +106,48 @@ public class CommandListener implements TabExecutor {
             setPieceSize(Integer.parseInt(args[1]));
             sender.sendMessage("Success");
         }
-        if(args[0].equals("crash")){
+        if (args[0].equals("crash")) {
             Screen[] allScreens = Screen.getAllScreens();
-            if(Integer.parseInt(args[1])<=allScreens.length){
+            if (Integer.parseInt(args[1]) <= allScreens.length) {
                 Core core = allScreens[Integer.parseInt(args[1])].getCore();
-                if(core instanceof MGUICore){
-                    ((MGUICore)core).crash();
+                if (core instanceof MGUICore) {
+                    ((MGUICore) core).crash();
                     sender.sendMessage("Success");
 
-                }else{
+                } else {
                     sender.sendMessage("Failed");
                 }
-            }else{
+            } else {
                 sender.sendMessage("Failed");
             }
         }
-        if(args[0].equals("input")){
+        if (args[0].equals("browser")) {
+            Screen screen = Screen.getAllScreens()[Integer.parseInt(args[1])];
+            if (args[2].equals("openurl")) {
+                ((WebBrowser) screen.getCore()).getBrowser().openURL(screen, args[3]);
+            } else if (args[2].equals("refresh")) {
+                ((WebBrowser) screen.getCore()).getBrowser().refreshPage(screen);
+            }
+        }
+        if (args[0].equals("input")) {
             Screen[] allScreens = Screen.getAllScreens();
-            if(Integer.parseInt(args[1])<=allScreens.length){
-                if(args.length==3){
+            if (Integer.parseInt(args[1]) <= allScreens.length) {
+                if (args.length == 3) {
                     allScreens[Integer.parseInt(args[1])].getCore().onTextInput(args[2]);
-                }else{
+                } else {
                     allScreens[Integer.parseInt(args[1])].getCore().onTextInput("");
                 }
                 sender.sendMessage("Success");
-            }else{
+            } else {
                 sender.sendMessage("Failed");
             }
         }
-        if(args[0].equals("controller")){
-            if(sender instanceof Player){
+        if (args[0].equals("controller")) {
+            if (sender instanceof Player) {
                 Item.giveItem(((Player) sender));
             }
         }
-        if(args[0].equals("installChromium")){
+        if (args[0].equals("installChromium")) {
             new Chromium().installCore();
         }
         sender.sendMessage("Success");
@@ -149,14 +158,14 @@ public class CommandListener implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (sender.isOp()) {
             if (args.length == 1) {
-                String[] sub1 = {"initOpenCL","setPieceSize","listDevices","putScreen","input","removeScreen","controller"};
+                String[] sub1 = {"initOpenCL", "setPieceSize", "listDevices", "putScreen", "input", "removeScreen", "controller", "browser"};
                 return Arrays.stream(sub1).filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase())).collect(Collectors.toList());
             }
-            List<String> sub2=new ArrayList<>();
+            List<String> sub2 = new ArrayList<>();
             if (args.length == 2) {
-                switch (args[0]){
+                switch (args[0]) {
                     case "initOpenCL":
-                        for(int i=0;i<getPlatforms().length;i++){
+                        for (int i = 0; i < getPlatforms().length; i++) {
                             sub2.add(Integer.toString(i));
                         }
                         break;
@@ -169,51 +178,62 @@ public class CommandListener implements TabExecutor {
                         break;
                     case "input":
                     case "removeScreen":
-                        for(int i=0;i<Screen.getAllScreens().length;i++){
+                        for (int i = 0; i < Screen.getAllScreens().length; i++) {
                             sub2.add(Integer.toString(i));
                         }
                         break;
+                    case "browser":
+                        for (int i = 0; i < Screen.getAllScreens().length; i++) {
+                            if (Screen.getAllScreens()[i].getCore() instanceof WebBrowser) {
+                                sub2.add(Integer.toString(i));
+                            }
+                        }
+                        break;
                     case "putScreen":
-                        for(World i:Bukkit.getWorlds()){
+                        for (World i : Bukkit.getWorlds()) {
                             sub2.add(i.getName());
                         }
                         break;
                 }
             }
             if (args.length == 3 || args.length == 4 || args.length == 5) {
-                if(args[0].equals("putScreen")){
-                    if(sender instanceof Player){
-                        switch (args.length){
+                if (args[0].equals("browser")) {
+                    sub2.add("openurl");
+                    sub2.add("refresh");
+                }
+                if (args[0].equals("putScreen")) {
+                    if (sender instanceof Player) {
+                        switch (args.length) {
                             case 3:
-                                sub2.add(String.valueOf(((Player)sender).getLocation().getBlockX()));
+                                sub2.add(String.valueOf(((Player) sender).getLocation().getBlockX()));
                                 break;
                             case 4:
-                                sub2.add(String.valueOf(((Player)sender).getLocation().getBlockY()));
+                                sub2.add(String.valueOf(((Player) sender).getLocation().getBlockY()));
                                 break;
                             case 5:
-                                sub2.add(String.valueOf(((Player)sender).getLocation().getBlockZ()));
+                                sub2.add(String.valueOf(((Player) sender).getLocation().getBlockZ()));
                                 break;
                         }
-                    }else{
+                    } else {
                         sub2.add("0");
                     }
                 }
             }
-            if(args.length==6){
-                if(args[0].equals("putScreen")) {
-                    for(Screen.Facing i: Screen.Facing.values()){
+            if (args.length == 6) {
+                if (args[0].equals("putScreen")) {
+                    for (Screen.Facing i : Screen.Facing.values()) {
                         sub2.add(i.toString());
                     }
                 }
             }
-            if(args.length==9){
-                if(args[0].equals("putScreen")) {
-                    for(Core i:Core.getAllCore()){
+            if (args.length == 9) {
+                if (args[0].equals("putScreen")) {
+                    for (Core i : Core.getAllCore()) {
                         sub2.add(i.getCoreName());
                     }
                 }
             }
-            return Arrays.stream(sub2.toArray(new String[0])).filter(s -> s.toLowerCase().startsWith(args[args.length-1].toLowerCase())).collect(Collectors.toList());
+            return Arrays.stream(sub2.toArray(new String[0])).filter(s -> s.toLowerCase().startsWith(args[args.length - 1].toLowerCase())).collect(Collectors.toList());
 
         }
         return null;

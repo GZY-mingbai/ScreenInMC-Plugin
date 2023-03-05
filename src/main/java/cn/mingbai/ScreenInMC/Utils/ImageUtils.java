@@ -5,7 +5,6 @@ import net.minecraft.world.level.material.MaterialColor;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,23 +13,22 @@ public class ImageUtils {
     private static Color[] palette;
     private static int[] palette_;
     private static boolean useOpenCL = true;
+    private static String[] platforms;
 
     public static int[] getPalette() {
         return palette_;
     }
-    private static String[] platforms;
 
     public static String[] getPlatforms() {
         return platforms.clone();
     }
 
+    public static int getPieceSize() {
+        return pieceSize;
+    }
 
     public static void setPieceSize(int pieceSize) {
         ImageUtils.pieceSize = pieceSize;
-    }
-
-    public static int getPieceSize() {
-        return pieceSize;
     }
 
     public static void initImageUtils() {
@@ -60,7 +58,8 @@ public class ImageUtils {
             e.printStackTrace();
         }
     }
-    private static byte[] imageToMapColorsWithGPU(int[] data,int width,int height) {
+
+    private static byte[] imageToMapColorsWithGPU(int[] data, int width, int height) {
         byte[] result = GPUDither.dither(data, width, height, pieceSize);
         return result;
     }
@@ -108,34 +107,37 @@ public class ImageUtils {
     public static int rgbToInt(int r, int g, int b) {
         return 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);
     }
-    public static byte[] imageToMapColors(Image image){
+
+    public static byte[] imageToMapColors(Image image) {
         BufferedImage img = imageToBufferedImage(image);
         int height = img.getHeight();
         int width = img.getWidth();
         int[] data = img.getRGB(0, 0, width, height, null, 0, width);
-        return imageToMapColors(data,width,height);
+        return imageToMapColors(data, width, height);
     }
-    public static Color getColor(int index){
-        if(index<0){
-            index+=256;
+
+    public static Color getColor(int index) {
+        if (index < 0) {
+            index += 256;
         }
-        index-=4;
+        index -= 4;
         return palette[index];
     }
-    public static int getColorInt(int index){
-        if(index<0){
-            index+=256;
+
+    public static int getColorInt(int index) {
+        if (index < 0) {
+            index += 256;
         }
-        index-=4;
-        if(index>=palette_.length||index<0){
+        index -= 4;
+        if (index >= palette_.length || index < 0) {
             return 0x00000000;
         }
         return palette_[index];
     }
 
-    public static byte[] imageToMapColors(int[] data,int width,int height) {
+    public static byte[] imageToMapColors(int[] data, int width, int height) {
         if (useOpenCL) {
-            return imageToMapColorsWithGPU(data,width,height);
+            return imageToMapColorsWithGPU(data, width, height);
         }
         byte[] result = new byte[height * width];
         int i = 0;

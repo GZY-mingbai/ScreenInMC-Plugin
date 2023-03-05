@@ -5,6 +5,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class Items {
     public final static ItemStack KEYBOARD = new ItemStack(Material.WRITTEN_BOOK);
+
     public static void setAllItems() {
 //        BookMeta keyboardMeta = (BookMeta) KEYBOARD.getItemMeta();
 //        keyboardMeta.spigot().addPage(

@@ -2,7 +2,7 @@ name: ScreenInMC
 version: 2.0
 api-version: 1.19
 description: "ScreenInMC 2.0 支持浏览器和远程桌面等"
-authors: [GZY_mingbai]
+authors: [ GZY_mingbai ]
 website: "https://mb233.net/"
 main: cn.mingbai.ScreenInMC.Main
 commands:
@@ -15,3 +15,5 @@ permissions:
   screen:
     description: "允许使用/screen指令"
     default: op
+#load: STARTUP
+prefix: "ScreenInMC"

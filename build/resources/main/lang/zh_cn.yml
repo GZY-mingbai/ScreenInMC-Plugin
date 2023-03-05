@@ -17,7 +17,7 @@ controller-point-start: "起点 (%%)"
 controller-points-different-worlds: "起点和终点不在同一世界"
 controller-set-point-end: "已设置显示器终点 (%%)"
 controller-point-end: "终点 (%%)"
-controller-mode-info: |- 
+controller-mode-info: |-
   当前模式: %now-mode%
   使用 %sneak%+滚轮 来切换模式
 controller-select-mode-info: |-

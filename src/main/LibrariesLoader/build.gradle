@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.mingbai'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+jar {
+    baseName = 'LibrariesLoader'
+    version = ''
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'me.friwi:jcef-api:jcef-87476e9+cef-110.0.25+g75b1c96+chromium-110.0.5481.78'
+}
+
+test {
+    useJUnitPlatform()
+}

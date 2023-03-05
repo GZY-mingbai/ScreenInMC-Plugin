@@ -13,47 +13,54 @@ public class MGIFImage extends MControl {
     private final GIFUtils.GifDecoder gifDecoder = new GIFUtils.GifDecoder();
     private Image nowImage;
     private int nowFrame = 0;
+    private int scaleMode = Image.SCALE_DEFAULT;
+    private Runnable renderTask;
+
+    public MGIFImage() {
+    }
+
+    public MGIFImage(BufferedInputStream stream) {
+        gifDecoder.read(stream);
+        registerRenderTask();
+    }
+
     public synchronized void setImage(BufferedInputStream stream) {
         nowFrame = 0;
         gifDecoder.read(stream);
         registerRenderTask();
     }
-    private int scaleMode = Image.SCALE_DEFAULT;
-    public synchronized void setScaleMode(int scaleMode) {
-        this.scaleMode = scaleMode;
-    }
 
     public int getScaleMode() {
         return scaleMode;
     }
-    public MGIFImage(){}
-    public MGIFImage(BufferedInputStream stream){
-        gifDecoder.read(stream);
-        registerRenderTask();
+
+    public synchronized void setScaleMode(int scaleMode) {
+        this.scaleMode = scaleMode;
     }
-    private void registerRenderTask(){
-        if(renderTask!=null){
+
+    private void registerRenderTask() {
+        if (renderTask != null) {
             removeRenderTask(renderTask);
         }
-        renderTask=new Runnable() {
+        renderTask = new Runnable() {
             @Override
             public synchronized void run() {
-                if(renderTask!=this){
+                if (renderTask != this) {
                     return;
                 }
-                if(gifDecoder.getFrameCount()>0){
+                if (gifDecoder.getFrameCount() > 0) {
                     BufferedImage image = gifDecoder.getFrame(nowFrame);
-                    if(getWidth()<=0||getHeight()<=0||(image.getWidth()==(int)getWidth()&&image.getHeight()==(int)getHeight())){
+                    if (getWidth() <= 0 || getHeight() <= 0 || (image.getWidth() == (int) getWidth() && image.getHeight() == (int) getHeight())) {
                         nowImage = image;
-                    }else{
-                        nowImage = image.getScaledInstance((int)getWidth(),(int)getHeight(),scaleMode);
+                    } else {
+                        nowImage = image.getScaledInstance((int) getWidth(), (int) getHeight(), scaleMode);
                     }
                     reRender();
                     nowFrame++;
-                    if(nowFrame>=gifDecoder.getFrameCount()){
-                        nowFrame=0;
+                    if (nowFrame >= gifDecoder.getFrameCount()) {
+                        nowFrame = 0;
                     }
-                }else{
+                } else {
                     removeRenderTask(renderTask);
                 }
             }
@@ -64,11 +71,8 @@ public class MGIFImage extends MControl {
     @Override
     public void onRender(MRenderer mRenderer) {
         renderBackground(mRenderer);
-        mRenderer.drawImage(nowImage,0,0);
+        mRenderer.drawImage(nowImage, 0, 0);
         renderChildren(mRenderer);
     }
-
-
-    private Runnable renderTask;
 
 }

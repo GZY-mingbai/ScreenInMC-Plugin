@@ -15,14 +15,22 @@ import java.util.Collections;
 import java.util.List;
 
 public class MContainer extends MControl {
-    BufferedImage image;
+    public static final int minClickInterval = 100;
+    private static final String crashedText = ":((( Crashed / ScreenInMC 2.0";
+    public final String[] defaultFonts = {"PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei", "SimSun"};
     private final Screen screen;
+    protected MControl activeControl;
+    BufferedImage image;
+    List<Rectangle2D.Double> reRenderRectangles = Collections.synchronizedList(new ArrayList<>());
     private Graphics2D graphics;
     private FontRenderContext frc;
     private boolean canClick = true;
     private long clickTime = 0;
-    public static final int minClickInterval = 100;
-
+    private Object renderLock = new Object();
+    private Object renderLock2 = new Object();
+    private BukkitRunnable renderThread;
+    private short reRenderCount = 0;
+    private boolean rerender = false;
 
     public MContainer(Screen screen) {
         this.screen = screen;
@@ -30,41 +38,45 @@ public class MContainer extends MControl {
         this.setHeight(screen.getHeight() * 128);
         createImage();
     }
-    public void load(){
-        this.loaded=true;
+
+    public void load() {
+        this.loaded = true;
         onLoad();
-        addReRender(new Rectangle2D.Double(0,0,getWidth(),getHeight()));
+        addReRender(new Rectangle2D.Double(0, 0, getWidth(), getHeight()));
     }
-    public void unload(){
+
+    public void unload() {
         onUnload();
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
-        if(renderThread!=null){
+        if (renderThread != null) {
             renderThread.cancel();
         }
         renderThread = new BukkitRunnable() {
             private boolean cancelRender = false;
+
             @Override
             public synchronized void cancel() throws IllegalStateException {
-                cancelRender=true;
+                cancelRender = true;
                 super.cancel();
             }
+
             @Override
             public void run() {
-                while (!cancelRender){
+                while (!cancelRender) {
                     long startTime = System.currentTimeMillis();
                     render();
-                    for(Runnable i:getAllRenderTasks()){
+                    for (Runnable i : getAllRenderTasks()) {
                         i.run();
                     }
                     long sleepTime = 50 - System.currentTimeMillis() + startTime;
-                    if(sleepTime>0){
+                    if (sleepTime > 0) {
                         try {
                             Thread.sleep(sleepTime);
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             return;
                         }
                     }
@@ -73,17 +85,17 @@ public class MContainer extends MControl {
         };
         renderThread.runTaskAsynchronously(Main.thisPlugin());
     }
-    public void crash(){
+
+    public void crash() {
         reRenderCount = 10;
         reRender();
     }
-    private Object renderLock = new Object();
-    private Object renderLock2 = new Object();
+
     public Object getRenderLock() {
         return renderLock;
     }
 
-    private synchronized void render(){
+    private synchronized void render() {
         if (rerender) {
 
             if (graphics == null) {
@@ -102,7 +114,7 @@ public class MContainer extends MControl {
                 LineMetrics metrics = graphics.getFont().getLineMetrics(crashedText, frc);
                 graphics.drawString(crashedText, 0, metrics.getAscent());
                 screen.sendView(ImageUtils.imageToMapColors(image));
-                if(renderThread!=null){
+                if (renderThread != null) {
                     renderThread.cancel();
                 }
                 return;
@@ -133,21 +145,21 @@ public class MContainer extends MControl {
                     int y = (int) reRenderRectangles.get(i).y;
                     int w = (int) reRenderRectangles.get(i).width;
                     int h = (int) reRenderRectangles.get(i).height;
-                    if(x<0){
-                        x=0;
+                    if (x < 0) {
+                        x = 0;
                     }
-                    if(y<0){
-                        y=0;
+                    if (y < 0) {
+                        y = 0;
                     }
-                    if(w<=0 || h<=0){
+                    if (w <= 0 || h <= 0) {
                         continue;
                     }
                     try {
-                        if(x==0&&y==0&&w==(int)getWidth()&&h==(int)getHeight()){
+                        if (x == 0 && y == 0 && w == (int) getWidth() && h == (int) getHeight()) {
                             if (loaded) {
                                 screen.sendView(ImageUtils.imageToMapColors(image));
                             }
-                        }else{
+                        } else {
                             if (loaded) {
                                 screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
                             }
@@ -158,23 +170,22 @@ public class MContainer extends MControl {
                 }
                 reRenderRectangles.clear();
             }
-            synchronized (renderLock){
+            synchronized (renderLock) {
                 renderLock.notifyAll();
             }
-            rerender=false;
+            rerender = false;
         }
     }
+
     @Override
-    public void onUnload(){
+    public void onUnload() {
         super.onUnload();
         loaded = false;
-        if(renderThread!=null){
+        if (renderThread != null) {
             renderThread.cancel();
         }
     }
-    private BukkitRunnable renderThread;
-    protected MControl activeControl;
-        public final String[] defaultFonts = {"PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei","SimSun"};
+
     private void createImage() {
         if (graphics != null) {
             try {
@@ -184,21 +195,21 @@ public class MContainer extends MControl {
         }
         image = new BufferedImage((int) this.getWidth(), (int) this.getHeight(), BufferedImage.TYPE_INT_ARGB);
         graphics = (Graphics2D) image.getGraphics();
-        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         frc = graphics.getFontRenderContext();
         Font font = null;
-            for(String i:defaultFonts){
-                font = Font.getFont(i);
-                if(font!=null){
-                    break;
-                }
+        for (String i : defaultFonts) {
+            font = Font.getFont(i);
+            if (font != null) {
+                break;
             }
-        if(font == null) {
+        }
+        if (font == null) {
             font = graphics.getFont();
         }
-        if(font!=null){
-            Font newFont = new Font(font.getFontName(),font.getStyle(),16);
+        if (font != null) {
+            Font newFont = new Font(font.getFontName(), font.getStyle(), 16);
             graphics.setFont(newFont);
         }
     }
@@ -206,7 +217,7 @@ public class MContainer extends MControl {
     @Override
     public void onTextInput(String text) {
         super.onTextInput(text);
-        if(activeControl!=null){
+        if (activeControl != null) {
             activeControl.onTextInput(text);
         }
     }
@@ -215,14 +226,11 @@ public class MContainer extends MControl {
         return screen;
     }
 
-    private short reRenderCount = 0;
-    private static final String crashedText = ":((( Crashed / ScreenInMC 2.0";
-    private boolean rerender = false;
     @Override
     public void reRender() {
         rerender = true;
     }
-    List<Rectangle2D.Double> reRenderRectangles = Collections.synchronizedList(new ArrayList<>());
+
     public void addReRender(Rectangle2D.Double rect) {
         synchronized (renderLock2) {
             for (Rectangle2D.Double i : reRenderRectangles) {
@@ -236,7 +244,8 @@ public class MContainer extends MControl {
             reRenderRectangles.add((Rectangle2D.Double) rect.clone());
         }
     }
-    public void addReRender(Rectangle2D.Double[] rect){
+
+    public void addReRender(Rectangle2D.Double[] rect) {
         synchronized (renderLock2) {
             for (Rectangle2D.Double i : rect) {
                 if (i.width == 0 || i.height == 0) {
@@ -246,9 +255,11 @@ public class MContainer extends MControl {
             }
         }
     }
-    public void inputText(String text){
+
+    public void inputText(String text) {
         onTextInput(text);
     }
+
     public void clickAt(int x, int y, ClickType type) {
         try {
             if (canClick && (System.currentTimeMillis() - clickTime) >= minClickInterval) {
@@ -263,7 +274,7 @@ public class MContainer extends MControl {
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         canClick = true;

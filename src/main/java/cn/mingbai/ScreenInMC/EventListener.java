@@ -14,7 +14,6 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.util.Vector;
 
 import static cn.mingbai.ScreenInMC.Controller.Item.CONTROLLER;
 import static cn.mingbai.ScreenInMC.Controller.Item.onPlayerSwitchMode;
@@ -44,41 +43,42 @@ public class EventListener implements Listener {
         }
         Player player = e.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
-        if(item!=null&&item.hasItemMeta()){
+        if (item != null && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
-            if(meta.hasCustomModelData()&&meta.getCustomModelData()==CONTROLLER){
-                Item.onPlayerClick(player,item,type);
+            if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
+                Item.onPlayerClick(player, item, type);
                 e.setCancelled(true);
                 return;
             }
         }
         for (Screen i : Screen.getAllScreens()) {
             Location screenLocation = i.getLocation().clone();
-            Utils.ScreenClickResult result = Utils.getScreenClickAt(player.getEyeLocation(),screenLocation,i.getFacing(),i.getWidth(),i.getHeight(),1024);
-            if(result.isClicked()){
-                i.getCore().onMouseClick((int) (result.getMouseX() * 128), (int) (result.getMouseY() * 128),type);
+            Utils.ScreenClickResult result = Utils.getScreenClickAt(player.getEyeLocation(), screenLocation, i.getFacing(), i.getWidth(), i.getHeight(), 1024);
+            if (result.isClicked()) {
+                i.getCore().onMouseClick((int) (result.getMouseX() * 128), (int) (result.getMouseY() * 128), type);
                 return;
             }
         }
     }
+
     @EventHandler
-    public void onPlayerItemHeld(PlayerItemHeldEvent e){
-        if(e.getPreviousSlot()==e.getNewSlot()||!e.getPlayer().isSneaking()){
+    public void onPlayerItemHeld(PlayerItemHeldEvent e) {
+        if (e.getPreviousSlot() == e.getNewSlot() || !e.getPlayer().isSneaking()) {
             return;
         }
         ItemStack item = e.getPlayer().getInventory().getItem(e.getPreviousSlot());
-        if(item!=null&&item.hasItemMeta()){
+        if (item != null && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
-            if(meta.hasCustomModelData()&&meta.getCustomModelData()==CONTROLLER){
+            if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
 //                e.getPlayer().getInventory().setHeldItemSlot(e.getPreviousSlot());
-                if(e.getPreviousSlot()-e.getNewSlot()==-1){
-                    onPlayerSwitchMode(e.getPlayer(),item,true,e.getPreviousSlot());
-                }else if(e.getPreviousSlot()-e.getNewSlot()==1){
-                    onPlayerSwitchMode(e.getPlayer(),item,false,e.getPreviousSlot());
-                }else if(e.getPreviousSlot()==0&&e.getNewSlot()==8){
-                    onPlayerSwitchMode(e.getPlayer(),item,false,e.getPreviousSlot());
-                }else if(e.getPreviousSlot()==8&&e.getNewSlot()==0){
-                    onPlayerSwitchMode(e.getPlayer(),item,true,e.getPreviousSlot());
+                if (e.getPreviousSlot() - e.getNewSlot() == -1) {
+                    onPlayerSwitchMode(e.getPlayer(), item, true, e.getPreviousSlot());
+                } else if (e.getPreviousSlot() - e.getNewSlot() == 1) {
+                    onPlayerSwitchMode(e.getPlayer(), item, false, e.getPreviousSlot());
+                } else if (e.getPreviousSlot() == 0 && e.getNewSlot() == 8) {
+                    onPlayerSwitchMode(e.getPlayer(), item, false, e.getPreviousSlot());
+                } else if (e.getPreviousSlot() == 8 && e.getNewSlot() == 0) {
+                    onPlayerSwitchMode(e.getPlayer(), item, true, e.getPreviousSlot());
                 }
 //                e.getPlayer().getInventory().setItem(e.getPreviousSlot(),item);
                 e.setCancelled(true);

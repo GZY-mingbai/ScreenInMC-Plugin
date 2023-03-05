@@ -21,7 +21,6 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -31,27 +30,8 @@ import java.util.List;
 import static cn.mingbai.ScreenInMC.Core.getCoreFromData;
 
 public class Screen {
-    private static Utils.Pair<Integer,Integer> maxScreenSize = new Utils.Pair<>(50,50);
-
-    public static Utils.Pair<Integer, Integer> getMaxScreenSize() {
-        return maxScreenSize;
-    }
-
-    public static void setMaxScreenSize(int width,int height) {
-        Screen.maxScreenSize = new Utils.Pair<>(width,height);
-    }
-
-    public static class ScreenData{
-        public String world;
-        public int x=0;
-        public int y=0;
-        public int z=0;
-        public Facing facing=Facing.UP;
-        public int width=1;
-        public int height=1;
-        public Core.CoreData core=null;
-    }
     private static final List<Screen> allScreens = Collections.synchronizedList(new ArrayList<>());
+    private static Utils.Pair<Integer, Integer> maxScreenSize = new Utils.Pair<>(50, 50);
     private final int displayDistance = 32;
     private final Location location;
     private final Facing facing;
@@ -61,26 +41,13 @@ public class Screen {
     private ScreenPiece[][] screenPieces;
     private Core core;
 
-    public ScreenData getScreenData(){
-        ScreenData screenData = new ScreenData();
-        screenData.world=location.getWorld().getName();
-        screenData.x=location.getBlockX();
-        screenData.y=location.getBlockY();
-        screenData.z=location.getBlockZ();
-        screenData.facing=this.facing;
-        screenData.width = this.width;
-        screenData.height = this.height;
-        if(core!=null){
-            screenData.core=core.getCoreData();
-        }
-        return screenData;
-    }
     public Screen(Location location, Facing facing, int width, int height) {
         this.location = location;
         this.facing = facing;
         this.height = height;
         this.width = width;
     }
+
     public Screen(ScreenData data) {
         this.location = new Location(Bukkit.getWorld(data.world), data.x, data.y, data.z);
         this.facing = data.facing;
@@ -91,10 +58,18 @@ public class Screen {
         }
     }
 
+    public static Utils.Pair<Integer, Integer> getMaxScreenSize() {
+        return maxScreenSize;
+    }
+
+    public static void setMaxScreenSize(int width, int height) {
+        Screen.maxScreenSize = new Utils.Pair<>(width, height);
+    }
+
     public static Screen[] getAllScreens() {
         Screen[] result = new Screen[allScreens.size()];
-        for(int i=0;i< allScreens.size();i++){
-            result[i]=allScreens.get(i);
+        for (int i = 0; i < allScreens.size(); i++) {
+            result[i] = allScreens.get(i);
         }
         return result;
     }
@@ -115,6 +90,26 @@ public class Screen {
                 return new Utils.Pair<>(-180, 0);
         }
         return null;
+    }
+
+    public static void removeScreen(Screen screen) {
+        screen.disableScreen();
+        allScreens.remove(screen);
+    }
+
+    public ScreenData getScreenData() {
+        ScreenData screenData = new ScreenData();
+        screenData.world = location.getWorld().getName();
+        screenData.x = location.getBlockX();
+        screenData.y = location.getBlockY();
+        screenData.z = location.getBlockZ();
+        screenData.facing = this.facing;
+        screenData.width = this.width;
+        screenData.height = this.height;
+        if (core != null) {
+            screenData.core = core.getCoreData();
+        }
+        return screenData;
     }
 
     public Location getLocation() {
@@ -150,7 +145,7 @@ public class Screen {
                             pitchYaw.getKey(), pitchYaw.getValue(), EntityType.ITEM_FRAME,
                             facing.ordinal(), new Vec3(0, 0, 0), 0
                     );
-                    CraftUtils.sendPacket(player,packet1);
+                    CraftUtils.sendPacket(player, packet1);
                     ItemStack mapItem = new ItemStack(Items.FILLED_MAP);
                     mapItem.getOrCreateTag().putInt("map", entityID);
                     SynchedEntityData.DataItem dataItem = new SynchedEntityData.DataItem(new EntityDataAccessor<>(8, EntityDataSerializers.ITEM_STACK), mapItem);
@@ -161,7 +156,7 @@ public class Screen {
                     dataItemList.add(new SynchedEntityData.DataItem<>(new EntityDataAccessor<>(0, EntityDataSerializers.BYTE), (byte) 0x20));
                     SynchedEntityData.pack(dataItemList, byteBuf);
                     ClientboundSetEntityDataPacket packet2 = new ClientboundSetEntityDataPacket(byteBuf);
-                    CraftUtils.sendPacket(player,packet2);
+                    CraftUtils.sendPacket(player, packet2);
                 }
             }
         } else {
@@ -227,27 +222,24 @@ public class Screen {
             throw new RuntimeException("This Screen has been placed.");
         }
     }
-    public void disableScreen(){
-        placed=false;
+
+    public void disableScreen() {
+        placed = false;
         core.unload();
         List<Integer> ids = new ArrayList<>();
-        for(int i=0;i<screenPieces.length;i++){
-            for(int j=0;j<screenPieces[i].length;j++){
+        for (int i = 0; i < screenPieces.length; i++) {
+            for (int j = 0; j < screenPieces[i].length; j++) {
                 ids.add(screenPieces[i][j].getEntityId());
             }
         }
         int[] array = new int[ids.size()];
-        for(int i=0;i<array.length;i++){
+        for (int i = 0; i < array.length; i++) {
             array[i] = ids.get(i);
         }
         ClientboundRemoveEntitiesPacket packet = new ClientboundRemoveEntitiesPacket(array);
         for (Player player : location.getWorld().getPlayers()) {
-            CraftUtils.sendPacket(player,packet);
+            CraftUtils.sendPacket(player, packet);
         }
-    }
-    public static void removeScreen(Screen screen){
-        screen.disableScreen();
-        allScreens.remove(screen);
     }
 
     public Core getCore() {
@@ -259,18 +251,19 @@ public class Screen {
     }
 
     public void sendView(byte[] colors) {
-        List<Packet> packets= getPackets(colors);
+        List<Packet> packets = getPackets(colors);
         for (Player player : location.getWorld().getPlayers()) {
-            for(Packet i:packets){
-                CraftUtils.sendPacket(player,i);
+            for (Packet i : packets) {
+                CraftUtils.sendPacket(player, i);
             }
         }
     }
-    public void sendView(byte[] colors,int x,int y,int w,int h) {
-        List<Packet> packets= getPackets(colors,x,y,w,h);
+
+    public void sendView(byte[] colors, int x, int y, int w, int h) {
+        List<Packet> packets = getPackets(colors, x, y, w, h);
         for (Player player : location.getWorld().getPlayers()) {
-            for(Packet i:packets){
-                CraftUtils.sendPacket(player,i);
+            for (Packet i : packets) {
+                CraftUtils.sendPacket(player, i);
             }
         }
     }
@@ -282,11 +275,12 @@ public class Screen {
         if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
-        for(Packet i:getPackets(colors)){
-            CraftUtils.sendPacket(player,i);
+        for (Packet i : getPackets(colors)) {
+            CraftUtils.sendPacket(player, i);
         }
     }
-    public List<Packet> getPackets(byte[] colors){
+
+    public List<Packet> getPackets(byte[] colors) {
         List<Packet> packets = new ArrayList<>();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -301,104 +295,106 @@ public class Screen {
         }
         return packets;
     }
-    public List<Packet> getPackets(byte[] colors,int x,int y,int w,int h) {
+
+    public List<Packet> getPackets(byte[] colors, int x, int y, int w, int h) {
         List<Packet> packets = new ArrayList<>();
-        int a = x/128;
-        int b = y/128;
-        int c = x%128;
-        int d = y%128;
-        int e,f;
-        if(w+c<128){
-            e=w;
-        }else{
-            e=128-c;
+        int a = x / 128;
+        int b = y / 128;
+        int c = x % 128;
+        int d = y % 128;
+        int e, f;
+        if (w + c < 128) {
+            e = w;
+        } else {
+            e = 128 - c;
         }
-        if(h+d<128){
-            f=h;
-        }else{
-            f=128-d;
+        if (h + d < 128) {
+            f = h;
+        } else {
+            f = 128 - d;
         }
-        byte[] r1 = new byte[e*f];
-        for(int i=0;i<f;i++){
+        byte[] r1 = new byte[e * f];
+        for (int i = 0; i < f; i++) {
             System.arraycopy(colors, i * w, r1, i * e, e);
         }
         MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(c, d, e, f, r1);
         packets.add(new ClientboundMapItemDataPacket(screenPieces[a][b].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
-        int k = (c+w)/128+1;
-        int l = (d+h)/128+1;
-        for(int i=0;i<l;i++){
-            for(int j=0;j<k;j++){
-                if(i==0&&j==0){
+        int k = (c + w) / 128 + 1;
+        int l = (d + h) / 128 + 1;
+        for (int i = 0; i < l; i++) {
+            for (int j = 0; j < k; j++) {
+                if (i == 0 && j == 0) {
                     continue;
                 }
-                int m,n,o,p,q,s;
-                if(j==0){
-                    m=c;
-                }else{
-                    m=0;
-                }
-                if(i==0){
-                    n=d;
-                }else{
-                    n=0;
-                }
-                if(j==0){
-                    if(k==1){
-                        o=w;
-                    }else{
-                        o=128-m;
-                    }
-                } else if (j==k-1) {
-                    o=w-e-(k-2)*128;
+                int m, n, o, p, q, s;
+                if (j == 0) {
+                    m = c;
                 } else {
-                    o=128;
+                    m = 0;
                 }
-                if(i==0){
-                    if(l==1){
-                        p=h;
-                    }else{
-                        p=128-n;
-                    }
-                } else if (i==l-1) {
-                    p=h-f-(l-2)*128;
+                if (i == 0) {
+                    n = d;
                 } else {
-                    p=128;
+                    n = 0;
                 }
-                if(j==0){
-                    q=0;
-                }else{
-                    q=e+(j-1)*128;
+                if (j == 0) {
+                    if (k == 1) {
+                        o = w;
+                    } else {
+                        o = 128 - m;
+                    }
+                } else if (j == k - 1) {
+                    o = w - e - (k - 2) * 128;
+                } else {
+                    o = 128;
                 }
-                if(i==0){
-                    s=0;
-                }else{
-                    s=f+(i-1)*128;
+                if (i == 0) {
+                    if (l == 1) {
+                        p = h;
+                    } else {
+                        p = 128 - n;
+                    }
+                } else if (i == l - 1) {
+                    p = h - f - (l - 2) * 128;
+                } else {
+                    p = 128;
                 }
-                byte[] r2 = new byte[o*p];
-                if(r2.length==0){
+                if (j == 0) {
+                    q = 0;
+                } else {
+                    q = e + (j - 1) * 128;
+                }
+                if (i == 0) {
+                    s = 0;
+                } else {
+                    s = f + (i - 1) * 128;
+                }
+                byte[] r2 = new byte[o * p];
+                if (r2.length == 0) {
                     continue;
                 }
-                for(int r=0;r<p;r++){
-                    System.arraycopy(colors, (r+s) * w+q, r2, r * o, o);
+                for (int r = 0; r < p; r++) {
+                    System.arraycopy(colors, (r + s) * w + q, r2, r * o, o);
                 }
                 mapPatch = new MapItemSavedData.MapPatch(m, n, o, p, r2);
-                packets.add(new ClientboundMapItemDataPacket(screenPieces[a+j][b+i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
+                packets.add(new ClientboundMapItemDataPacket(screenPieces[a + j][b + i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
             }
         }
         return packets;
     }
-    public void sendView(Player player,byte[] colors,int x,int y,int w,int h){
+
+    public void sendView(Player player, byte[] colors, int x, int y, int w, int h) {
         if (!location.getWorld().equals(player.getWorld())) {
             return;
         }
         if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
-        if(w*h!=colors.length){
+        if (w * h != colors.length) {
             return;
         }
-        for(Packet i:getPackets(colors,x,y,w,h)){
-            CraftUtils.sendPacket(player,i);
+        for (Packet i : getPackets(colors, x, y, w, h)) {
+            CraftUtils.sendPacket(player, i);
         }
     }
 
@@ -409,8 +405,9 @@ public class Screen {
         SOUTH,
         WEST,
         EAST;
-        public Facing getOpposition(){
-            switch (this){
+
+        public Facing getOpposition() {
+            switch (this) {
                 case UP:
                     return DOWN;
                 case DOWN:
@@ -426,8 +423,9 @@ public class Screen {
             }
             return null;
         }
-        public String getFacingName(){
-            switch (this){
+
+        public String getFacingName() {
+            switch (this) {
                 case UP:
                     return LangUtils.getText("facing-up");
                 case DOWN:
@@ -444,5 +442,16 @@ public class Screen {
             return "";
         }
 
+    }
+
+    public static class ScreenData {
+        public String world;
+        public int x = 0;
+        public int y = 0;
+        public int z = 0;
+        public Facing facing = Facing.UP;
+        public int width = 1;
+        public int height = 1;
+        public Core.CoreData core = null;
     }
 }
