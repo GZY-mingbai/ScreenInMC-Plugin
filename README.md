@@ -1,14 +1,16 @@
 # ScreenInMC-Plugin
-![ScreenInMC Logo(Temporary) By zhuWin](http://zw.mingbaitalk.cn/wp-content/uploads/2022/11/logolong.png)
+![ScreenInMC Logo(Temporary) By zhuWin](http://zw.mb233.net/wp-content/uploads/2022/11/logolong.png)
 因开学 可能断更一段时间
-#欢迎使用 ScreenInMC Bukkit插件！
+# 欢迎使用 ScreenInMC Bukkit插件！
 <br>
 该插件可以向 Minecraft 世界维度中提供多个视频源，但远非这么简单。
 <br>
 毕竟，用户在 Minecraft 中设置视频源，一定有其必要的用途。没有实际的用途，那视频源又谈何意义？<br>
 记住，它不是简单的玩具。
 <br><br>
-![Example](http://zw.mingbaitalk.cn/pic/example.png)
+
+![Example](http://zw.mb233.net/pic/example.png)
+
 <br>
 通过与 Minecraft 实际环境高度优化的抖色技术，我们将视频源的质量推向了 Minecraft 的极限。<br>
 视频预先渲染，让您在需要使用的时候不再捉襟见肘。<br>
@@ -42,5 +44,4 @@ Requires:
 
 
 This project is working in progress.
-At present,this plugin was only tested with Minecraft 1.19.2 on Windows x64.
 
