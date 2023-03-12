@@ -264,7 +264,6 @@ public class Chromium extends Browser {
                 app = org.cef.CefApp.getInstance();
             }
             client = app.createClient();
-
             client.addRequestHandler(new org.cef.handler.CefRequestHandlerAdapter() {
                 @Override
                 public boolean onOpenURLFromTab(org.cef.browser.CefBrowser browser, org.cef.browser.CefFrame frame, String target_url, boolean user_gesture) {
@@ -326,9 +325,14 @@ public class Chromium extends Browser {
                 Utils.Pair image;
                 try {
                     synchronized (browser) {
-                        int[] newData = new int[browser.imageData.length];
-                        System.arraycopy(browser.imageData, 0, newData, 0, newData.length);
-                        image = new Utils.Pair<>(new Utils.Pair<>(browser.imageWidth, browser.imageHeight), newData);
+                        int[] newImage = new int[browser.imageWidth * browser.imageHeight];
+                        for (int i = 0; i < newImage.length; i++) {
+                            newImage[i] = browser.imageData[i * 4] & 0xFF |
+                                    (browser.imageData[i * 4 + 1] & 0xFF) << 8 |
+                                    (browser.imageData[i * 4 + 2] & 0xFF) << 16 |
+                                    (browser.imageData[i * 4 + 3] & 0xFF) << 24;
+                        }
+                        image = new Utils.Pair<>(new Utils.Pair<>(browser.imageWidth, browser.imageHeight), newImage);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

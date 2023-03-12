@@ -9,7 +9,7 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
 public class ScreenInMCChromiumBrowser extends CefBrowserOsr {
-    public int[] imageData = new int[0];
+    public byte[] imageData = new byte[0];
     public int imageWidth = 0;
     public int imageHeight = 0;
 
@@ -20,15 +20,8 @@ public class ScreenInMCChromiumBrowser extends CefBrowserOsr {
     @Override
     public void onPaint(CefBrowser browser, boolean popup, Rectangle[] dirtyRects, ByteBuffer buffer, int width, int height) {
 //        super.onPaint(browser, popup, dirtyRects, buffer, width, height);
-        int[] image = new int[width * height];
-        for (int i = 0; i < image.length; i++) {
-            image[i] = buffer.get(i * 4) & 0xFF |
-                    (buffer.get(i * 4 + 1) & 0xFF) << 8 |
-                    (buffer.get(i * 4 + 2) & 0xFF) << 16 |
-                    (buffer.get(i * 4 + 3) & 0xFF) << 24;
-        }
         synchronized (this) {
-            imageData = image;
+            imageData = buffer.array();
             imageWidth = width;
             imageHeight = height;
         }
