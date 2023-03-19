@@ -1,10 +1,14 @@
 package cn.mingbai.ScreenInMC.Utils;
 
+import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import net.minecraft.world.level.material.MaterialColor;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +33,19 @@ public class ImageUtils {
 
     public static void setPieceSize(int pieceSize) {
         ImageUtils.pieceSize = pieceSize;
+    }
+    public static String getOpenCLCode(){
+        String loadCode = "code.cl";
+        if(pieceSize==1){
+            loadCode = "code_1x1.cl";
+        }
+        InputStream stream = Main.class.getResourceAsStream("/lib/"+loadCode);
+        try {
+            String codeStr = new String(IOUtils.readInputStream(stream), StandardCharsets.UTF_8);
+            return codeStr;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void initImageUtils() {

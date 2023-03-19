@@ -7,6 +7,7 @@ import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -93,7 +94,7 @@ public class CommandListener implements TabExecutor {
         }
         if (args[0].equalsIgnoreCase("initOpenCL")) {
             int[] p = getPalette();
-            if (GPUDither.init(Integer.parseInt(args[1]), p, p.length, getPieceSize())) {
+            if (GPUDither.init(Integer.parseInt(args[1]), p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
                 sender.sendMessage("Success");
             } else {
                 sender.sendMessage("Failed");
@@ -197,7 +198,7 @@ public class CommandListener implements TabExecutor {
                 }
             }
             if (args.length == 3 || args.length == 4 || args.length == 5) {
-                if (args[0].equals("browser")) {
+                if (args[0].equals("browser")&&args.length == 3) {
                     sub2.add("openurl");
                     sub2.add("refresh");
                 }

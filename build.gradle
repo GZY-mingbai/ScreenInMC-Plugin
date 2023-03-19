@@ -92,6 +92,7 @@ jar {
     into("lib"){
         from(file "./src/main/LibrariesLoader/build/libs/LibrariesLoader.jar")
         from(fileTree(dir: "./src/main/cpp/out"))
+        from(fileTree(dir: "./src/main/cpp/opencl_codes"))
     }
 }
 test {

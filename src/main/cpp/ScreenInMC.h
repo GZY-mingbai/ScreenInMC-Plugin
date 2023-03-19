@@ -9,7 +9,7 @@ JNIEXPORT jobjectArray JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_getP
 (JNIEnv*, jclass);
 
 JNIEXPORT jboolean JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_init
-(JNIEnv*, jclass, jint, jintArray, jint, jint);
+(JNIEnv*, jclass, jint, jintArray, jint, jint, jstring);
 
 JNIEXPORT jbyteArray JNICALL Java_cn_mingbai_ScreenInMC_Natives_GPUDither_dither
 (JNIEnv*, jclass, jintArray, jint, jint,jint);
@@ -31,7 +31,7 @@ static int paletteColorCount;
 static int* palette;
 bool getPlatforms(cl_uint* count, cl_platform_id** result);
 bool getPlatformNames(cl_uint* count, char*** names);
-bool init(int size);
+//bool init(int size);
 bool init(const char* code);
 bool dither(int* image, const int width, const int height, char* result,int pieceSize);
 bool ditherWithCPU(int* image, const int width, const int height, char* result);

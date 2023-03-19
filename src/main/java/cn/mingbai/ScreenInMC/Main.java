@@ -194,7 +194,7 @@ public class Main extends JavaPlugin {
         if (device >= -1) {
             ImageUtils.setUseOpenCL(true);
             int[] p = getPalette();
-            if (!GPUDither.init(device, p, p.length, getPieceSize())) {
+            if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
                 ImageUtils.setUseOpenCL(false);
             }
         }

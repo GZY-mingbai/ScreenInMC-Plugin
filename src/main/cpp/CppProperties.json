@@ -8,7 +8,7 @@
       "includePath": [
         "C:\\Users\\27857\\.jdks\\corretto-17.0.4\\include",
         "C:\\Users\\27857\\.jdks\\corretto-17.0.4\\include\\win32",
-        "E:\\Nvidia\\Sdk\\include\\",
+        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.0\\include",
         "${env.INCLUDE}",
         "${workspaceRoot}\\**"
       ],

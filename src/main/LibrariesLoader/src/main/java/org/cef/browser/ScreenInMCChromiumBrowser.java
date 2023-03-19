@@ -21,7 +21,8 @@ public class ScreenInMCChromiumBrowser extends CefBrowserOsr {
     public void onPaint(CefBrowser browser, boolean popup, Rectangle[] dirtyRects, ByteBuffer buffer, int width, int height) {
 //        super.onPaint(browser, popup, dirtyRects, buffer, width, height);
         synchronized (this) {
-            imageData = buffer.array();
+            imageData = new byte[buffer.remaining()];
+            buffer.get(imageData);
             imageWidth = width;
             imageHeight = height;
         }

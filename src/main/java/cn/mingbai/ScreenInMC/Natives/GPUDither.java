@@ -3,7 +3,7 @@ package cn.mingbai.ScreenInMC.Natives;
 public class GPUDither {
     public static native String[] getPlatforms();
 
-    public static native boolean init(int platformId, int[] palette, int colorCount, int pieceSize);
+    public static native boolean init(int platformId, int[] palette, int colorCount, int pieceSize,String code);
 
     public static native boolean unInit();
 
