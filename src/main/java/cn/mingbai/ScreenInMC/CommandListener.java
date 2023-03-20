@@ -26,7 +26,7 @@ import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
 public class CommandListener implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args[0].equals("putScreen")) {
+        if (args[0].equalsIgnoreCase("putScreen")) {
             try {
                 if (args.length != 9) {
                     sender.sendMessage("Failed");
@@ -34,7 +34,7 @@ public class CommandListener implements TabExecutor {
                 }
                 Core core = null;
                 for (Core i : Core.getAllCore()) {
-                    if (i.getCoreName().equals(args[8])) {
+                    if (i.getCoreName().equalsIgnoreCase(args[8])) {
                         core = (Core) i.clone();
                         break;
                     }
@@ -59,7 +59,7 @@ public class CommandListener implements TabExecutor {
                 e.printStackTrace();
             }
         }
-        if (args[0].equals("removeScreen")) {
+        if (args[0].equalsIgnoreCase("removeScreen")) {
             Screen[] allScreens = Screen.getAllScreens();
             if (Integer.parseInt(args[1]) <= allScreens.length) {
                 if (args.length == 2) {
@@ -72,7 +72,7 @@ public class CommandListener implements TabExecutor {
                 sender.sendMessage("Failed");
             }
         }
-        if (args[0].equals("download")) {
+        if (args[0].equalsIgnoreCase("download")) {
             Browser initialization = new Chromium();
             switch (Integer.parseInt(args[1])) {
                 case 0:
@@ -86,7 +86,7 @@ public class CommandListener implements TabExecutor {
                     break;
             }
         }
-        if (args[0].equals("listDevices")) {
+        if (args[0].equalsIgnoreCase("listDevices")) {
             String[] platforms = getPlatforms();
             for (int i = 0; i < platforms.length; i++) {
                 sender.sendMessage("Find device: " + i + " " + platforms[i]);
@@ -100,14 +100,14 @@ public class CommandListener implements TabExecutor {
                 sender.sendMessage("Failed");
             }
         }
-        if (args[0].equals("switch")) {
+        if (args[0].equalsIgnoreCase("switch")) {
             setUseOpenCL(!isUseOpenCL());
         }
         if (args[0].equalsIgnoreCase("setPieceSize")) {
             setPieceSize(Integer.parseInt(args[1]));
             sender.sendMessage("Success");
         }
-        if (args[0].equals("crash")) {
+        if (args[0].equalsIgnoreCase("crash")) {
             Screen[] allScreens = Screen.getAllScreens();
             if (Integer.parseInt(args[1]) <= allScreens.length) {
                 Core core = allScreens[Integer.parseInt(args[1])].getCore();
@@ -122,15 +122,15 @@ public class CommandListener implements TabExecutor {
                 sender.sendMessage("Failed");
             }
         }
-        if (args[0].equals("browser")) {
+        if (args[0].equalsIgnoreCase("browser")) {
             Screen screen = Screen.getAllScreens()[Integer.parseInt(args[1])];
-            if (args[2].equals("openurl")) {
+            if (args[2].equalsIgnoreCase("openurl")) {
                 ((WebBrowser) screen.getCore()).getBrowser().openURL(screen, args[3]);
-            } else if (args[2].equals("refresh")) {
+            } else if (args[2].equalsIgnoreCase("refresh")) {
                 ((WebBrowser) screen.getCore()).getBrowser().refreshPage(screen);
             }
         }
-        if (args[0].equals("input")) {
+        if (args[0].equalsIgnoreCase("input")) {
             Screen[] allScreens = Screen.getAllScreens();
             if (Integer.parseInt(args[1]) <= allScreens.length) {
                 if (args.length == 3) {
@@ -143,13 +143,16 @@ public class CommandListener implements TabExecutor {
                 sender.sendMessage("Failed");
             }
         }
-        if (args[0].equals("controller")) {
+        if (args[0].equalsIgnoreCase("controller")) {
             if (sender instanceof Player) {
                 Item.giveItem(((Player) sender));
             }
         }
-        if (args[0].equals("installChromium")) {
+        if (args[0].equalsIgnoreCase("installChromium")) {
             new Chromium().installCore();
+        }
+        if(args[0].equalsIgnoreCase("loadCode")){
+            setCustomOpenCLCode(args[1]);
         }
         sender.sendMessage("Success");
         return true;
@@ -198,11 +201,11 @@ public class CommandListener implements TabExecutor {
                 }
             }
             if (args.length == 3 || args.length == 4 || args.length == 5) {
-                if (args[0].equals("browser")&&args.length == 3) {
+                if (args[0].equalsIgnoreCase("browser")&&args.length == 3) {
                     sub2.add("openurl");
                     sub2.add("refresh");
                 }
-                if (args[0].equals("putScreen")) {
+                if (args[0].equalsIgnoreCase("putScreen")) {
                     if (sender instanceof Player) {
                         switch (args.length) {
                             case 3:
@@ -221,14 +224,14 @@ public class CommandListener implements TabExecutor {
                 }
             }
             if (args.length == 6) {
-                if (args[0].equals("putScreen")) {
+                if (args[0].equalsIgnoreCase("putScreen")) {
                     for (Screen.Facing i : Screen.Facing.values()) {
                         sub2.add(i.toString());
                     }
                 }
             }
             if (args.length == 9) {
-                if (args[0].equals("putScreen")) {
+                if (args[0].equalsIgnoreCase("putScreen")) {
                     for (Core i : Core.getAllCore()) {
                         sub2.add(i.getCoreName());
                     }

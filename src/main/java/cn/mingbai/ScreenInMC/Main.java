@@ -156,7 +156,6 @@ public class Main extends JavaPlugin {
         Core.addCore(new Welcome());
         Core.addCore(new ImageViewer());
         Core.addCore(new VNCClient());
-        Core.addCore(new speedTest());
         Core.addCore(new VideoPlayer());
         Core.addCore(new WebBrowser());
         ImageUtils.initImageUtils();

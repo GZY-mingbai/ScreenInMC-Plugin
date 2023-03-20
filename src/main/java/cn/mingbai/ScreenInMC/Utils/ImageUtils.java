@@ -34,10 +34,19 @@ public class ImageUtils {
     public static void setPieceSize(int pieceSize) {
         ImageUtils.pieceSize = pieceSize;
     }
+    private static String customOpenCLCode = "code_fast.cl";
+
+    public static void setCustomOpenCLCode(String customOpenCLCode) {
+        ImageUtils.customOpenCLCode = customOpenCLCode;
+    }
+
     public static String getOpenCLCode(){
         String loadCode = "code.cl";
         if(pieceSize==1){
             loadCode = "code_1x1.cl";
+        }
+        if(customOpenCLCode.length()!=0){
+            loadCode=customOpenCLCode;
         }
         InputStream stream = Main.class.getResourceAsStream("/lib/"+loadCode);
         try {
