@@ -57,12 +57,12 @@ NearlyColorResult getNearlyColor(__global int *palette,int colorCount,RGBA rgb) 
     int minIndex;
     int index = c1*40/256*1600+c2*40/256*40+c1*40/256;
     if(index>32000){
-        minIndex = ColorsListB[index-32000]-4;
+        minIndex = ColorsListB[index-32000];
     }else{
-        minIndex = ColorsListA[index]-4;
+        minIndex = ColorsListA[index];
     }
     result.index=minIndex;
-    result.color=palette[minIndex];
+    result.color=palette[minIndex-4];
     RGBA tempColor = intToRgba(result.color);
     result.r=c1-tempColor.r;
     result.g=c2-tempColor.g;
