@@ -1,6 +1,5 @@
 package cn.mingbai.ScreenInMC.Utils;
 
-import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import net.minecraft.world.level.material.MaterialColor;
 
@@ -48,7 +47,7 @@ public class ImageUtils {
         if(customOpenCLCode.length()!=0){
             loadCode=customOpenCLCode;
         }
-        InputStream stream = Main.class.getResourceAsStream("/lib/"+loadCode);
+        InputStream stream = ImageUtils.class.getResourceAsStream("/lib/"+loadCode);
         try {
             String codeStr = new String(IOUtils.readInputStream(stream), StandardCharsets.UTF_8);
             return codeStr;
