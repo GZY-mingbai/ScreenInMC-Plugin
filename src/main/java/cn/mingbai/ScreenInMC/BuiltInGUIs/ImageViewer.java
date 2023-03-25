@@ -2,7 +2,7 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.scheduler.BukkitRunnable;
 

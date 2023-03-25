@@ -11,7 +11,7 @@ import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.imageToMapColors;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.imageToMapColors;
 
 public class VideoProcessor {
     public static GenerateProcess generateDitheredVideo(File ffmpegFile, File tempDir, File videoFile, File outputFile, boolean useGzip, String[] ffmpegArgs) {

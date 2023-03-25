@@ -4,7 +4,7 @@ import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
 import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.internal.LinkedTreeMap;

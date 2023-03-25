@@ -7,7 +7,9 @@ import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.GameCodePaletteLoader;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
@@ -22,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
     public static final String PluginFilesPath = "plugins/ScreenInMC/";
@@ -158,7 +160,7 @@ public class Main extends JavaPlugin {
         Core.addCore(new VNCClient());
         Core.addCore(new VideoPlayer());
         Core.addCore(new WebBrowser());
-        ImageUtils.initImageUtils();
+        ImageUtils.initImageUtils(new GameCodePaletteLoader().get(),new DitheringProcessor.JavaDitheringProcessor());
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();
         thisPlugin.saveDefaultConfig();
@@ -168,34 +170,18 @@ public class Main extends JavaPlugin {
         Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
         int device = config.getInt("opencl-device");
         if (device == -3) {
-            String[] plats = getPlatforms();
-            String[] suggestions = new String[]{"openclon", "nvidia", "intel(r)cpu", "intel(r)opencl"};
-            boolean found = false;
-            for (int i = 0; i < suggestions.length; i++) {
-                for (int j = 0; j < plats.length; j++) {
-                    String plat = plats[j].replace(" ", "").toLowerCase();
-                    if (plat.startsWith(suggestions[i])) {
-                        device = j;
-                        found = true;
-                    }
-                }
-                if (found) {
-                    break;
-                }
-            }
-            if (!found && plats.length > 0) {
-                device = 0;
-            }
-            if (plats.length == 0) {
-                device = -1;
-            }
+            device = ImageUtils.getBestOpenCLDevice();
         }
         if (device >= -1) {
-            ImageUtils.setUseOpenCL(true);
+            DitheringProcessor.OpenCLDitheringProcessor processor = new DitheringProcessor.OpenCLDitheringProcessor();
+            ImageUtils.setDitheringProcessor(processor);
             int[] p = getPalette();
             if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
-                ImageUtils.setUseOpenCL(false);
+                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
             }
+        }
+        if(device==-2){
+            ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
         }
         int pieceSize = config.getInt("piece-size");
         if (pieceSize == 1 || pieceSize == 2 || pieceSize == 4 || pieceSize == 8 || pieceSize == 16) {

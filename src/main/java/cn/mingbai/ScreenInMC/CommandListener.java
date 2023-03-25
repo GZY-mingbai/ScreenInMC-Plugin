@@ -7,7 +7,7 @@ import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class CommandListener implements TabExecutor {
     @Override
@@ -87,7 +87,7 @@ public class CommandListener implements TabExecutor {
             }
         }
         if (args[0].equalsIgnoreCase("listDevices")) {
-            String[] platforms = getPlatforms();
+            String[] platforms = getOpenCLPlatforms();
             for (int i = 0; i < platforms.length; i++) {
                 sender.sendMessage("Find device: " + i + " " + platforms[i]);
             }
@@ -99,9 +99,6 @@ public class CommandListener implements TabExecutor {
             } else {
                 sender.sendMessage("Failed");
             }
-        }
-        if (args[0].equalsIgnoreCase("switch")) {
-            setUseOpenCL(!isUseOpenCL());
         }
         if (args[0].equalsIgnoreCase("setPieceSize")) {
             setPieceSize(Integer.parseInt(args[1]));
@@ -169,7 +166,7 @@ public class CommandListener implements TabExecutor {
             if (args.length == 2) {
                 switch (args[0]) {
                     case "initOpenCL":
-                        for (int i = 0; i < getPlatforms().length; i++) {
+                        for (int i = 0; i < getOpenCLPlatforms().length; i++) {
                             sub2.add(Integer.toString(i));
                         }
                         break;

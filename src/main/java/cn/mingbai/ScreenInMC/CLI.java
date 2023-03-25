@@ -2,7 +2,10 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ConfigPaletteLoader;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.PaletteLoader;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import javax.swing.*;
@@ -14,7 +17,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.*;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class CLI {
     public static void main(String[] args) throws Exception {
@@ -32,8 +35,9 @@ public class CLI {
             System.load(file.getAbsolutePath());
         } catch (Exception e) {
         }
+        PaletteLoader paletteLoader = new ConfigPaletteLoader("1.19");
         try {
-            ImageUtils.initImageUtils();
+            ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
         } catch (Throwable e) {
             initImageUtils();
         }
@@ -115,7 +119,7 @@ public class CLI {
                     System.out.println("-3\t自动选择");
                     System.out.println("-2\tJava层 CPU抖色");
                     System.out.println("-1\tC++层 CPU抖色");
-                    String[] plats = ImageUtils.getPlatforms();
+                    String[] plats = ImageUtils.getOpenCLPlatforms();
                     for (int ii = 0; ii < plats.length; ii++) {
                         System.out.println(ii + "\t" + plats[ii]);
                     }
@@ -193,8 +197,16 @@ public class CLI {
                 synchronized (nowImage) {
                     for (int y = 0; y < video.getHeight(); y++) {
                         for (int x = 0; x < video.getWidth(); x++) {
-                            byte index = data[x + y * video.getWidth()];
-                            nowImage.setRGB(x, y, ImageUtils.getColorInt(index));
+                            try {
+                                byte index = data[x + y * video.getWidth()];
+                                if(index<=3 && index>=0){
+                                    nowImage.setRGB(x, y,0x00000000);
+                                }else{
+                                    nowImage.setRGB(x, y,paletteLoader.getPaletteColorRGBs()[((int)(index-4))&0xff]);
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -210,34 +222,17 @@ public class CLI {
             FileUtils.deleteDir(tempDir);
         }
         if (device == -3) {
-            String[] plats = getPlatforms();
-            String[] suggestions = new String[]{"openclon", "nvidia", "intel(r)cpu", "intel(r)opencl"};
-            boolean found = false;
-            for (int i = 0; i < suggestions.length; i++) {
-                for (int j = 0; j < plats.length; j++) {
-                    String plat = plats[j].replace(" ", "").toLowerCase();
-                    if (plat.startsWith(suggestions[i])) {
-                        device = j;
-                        found = true;
-                    }
-                }
-                if (found) {
-                    break;
-                }
-            }
-            if (!found && plats.length > 0) {
-                device = 0;
-            }
-            if (plats.length == 0) {
-                device = -1;
-            }
+            device = getBestOpenCLDevice();
         }
         if (device >= -1) {
-            ImageUtils.setUseOpenCL(true);
+            ImageUtils.setDitheringProcessor(new DitheringProcessor.OpenCLDitheringProcessor());
             int[] p = getPalette();
             if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
-                ImageUtils.setUseOpenCL(false);
+                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
             }
+        }
+        if(device == -2){
+            ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
         }
         ImageUtils.setPieceSize(pieceSize);
         VideoProcessor.generateDitheredVideo(ffmpegFile, tempDir, videoFile, outputFile, gzip, ffmpegArgs.toArray(new String[0]));
@@ -251,166 +246,9 @@ public class CLI {
                 field.setAccessible(true);
                 field.set(String[].class, GPUDither.getPlatforms());
             } catch (Throwable e) {
-
             }
-            java.util.List<Color> colors = new ArrayList<>();
-            List<Integer> colors_ = new ArrayList<>();
-            for (int i = 1; i < MaterialColor.MATERIAL_COLORS.length - 1; i++) {
-                MaterialColor materialColor = MaterialColor.byId(i);
-                if (materialColor == null || materialColor.equals(MaterialColor.NONE)) {
-                    break;
-                }
-                for (int b = 0; b < 4; b++) {
-                    Color color = new Color(materialColor.calculateRGBColor(MaterialColor.Brightness.byId(b)));
-                    int cr = color.getRed();
-                    int cg = color.getGreen();
-                    int cb = color.getBlue();
-                    int ca = color.getAlpha();
-                    color = new Color(cb, cg, cr, ca);
-                    colors.add(color);
-                    colors_.add(color.getRGB());
-                }
-            }
-            field = ImageUtils.class.getDeclaredField("palette");
-            field.setAccessible(true);
-            field.set(Color[].class, colors.toArray(new Color[0]));
-            field = ImageUtils.class.getDeclaredField("palette_");
-            field.setAccessible(true);
-            field.set(int[].class, Utils.toPrimitive(colors_.toArray(new Integer[0])));
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    public static class MaterialColor {
-        public static final MaterialColor[] MATERIAL_COLORS = new MaterialColor[64];
-        public static final MaterialColor NONE = new MaterialColor(0, 0);
-        public static final MaterialColor GRASS = new MaterialColor(1, 8368696);
-        public static final MaterialColor SAND = new MaterialColor(2, 16247203);
-        public static final MaterialColor WOOL = new MaterialColor(3, 13092807);
-        public static final MaterialColor FIRE = new MaterialColor(4, 16711680);
-        public static final MaterialColor ICE = new MaterialColor(5, 10526975);
-        public static final MaterialColor METAL = new MaterialColor(6, 10987431);
-        public static final MaterialColor PLANT = new MaterialColor(7, 31744);
-        public static final MaterialColor SNOW = new MaterialColor(8, 16777215);
-        public static final MaterialColor CLAY = new MaterialColor(9, 10791096);
-        public static final MaterialColor DIRT = new MaterialColor(10, 9923917);
-        public static final MaterialColor STONE = new MaterialColor(11, 7368816);
-        public static final MaterialColor WATER = new MaterialColor(12, 4210943);
-        public static final MaterialColor WOOD = new MaterialColor(13, 9402184);
-        public static final MaterialColor QUARTZ = new MaterialColor(14, 16776437);
-        public static final MaterialColor COLOR_ORANGE = new MaterialColor(15, 14188339);
-        public static final MaterialColor COLOR_MAGENTA = new MaterialColor(16, 11685080);
-        public static final MaterialColor COLOR_LIGHT_BLUE = new MaterialColor(17, 6724056);
-        public static final MaterialColor COLOR_YELLOW = new MaterialColor(18, 15066419);
-        public static final MaterialColor COLOR_LIGHT_GREEN = new MaterialColor(19, 8375321);
-        public static final MaterialColor COLOR_PINK = new MaterialColor(20, 15892389);
-        public static final MaterialColor COLOR_GRAY = new MaterialColor(21, 5000268);
-        public static final MaterialColor COLOR_LIGHT_GRAY = new MaterialColor(22, 10066329);
-        public static final MaterialColor COLOR_CYAN = new MaterialColor(23, 5013401);
-        public static final MaterialColor COLOR_PURPLE = new MaterialColor(24, 8339378);
-        public static final MaterialColor COLOR_BLUE = new MaterialColor(25, 3361970);
-        public static final MaterialColor COLOR_BROWN = new MaterialColor(26, 6704179);
-        public static final MaterialColor COLOR_GREEN = new MaterialColor(27, 6717235);
-        public static final MaterialColor COLOR_RED = new MaterialColor(28, 10040115);
-        public static final MaterialColor COLOR_BLACK = new MaterialColor(29, 1644825);
-        public static final MaterialColor GOLD = new MaterialColor(30, 16445005);
-        public static final MaterialColor DIAMOND = new MaterialColor(31, 6085589);
-        public static final MaterialColor LAPIS = new MaterialColor(32, 4882687);
-        public static final MaterialColor EMERALD = new MaterialColor(33, 55610);
-        public static final MaterialColor PODZOL = new MaterialColor(34, 8476209);
-        public static final MaterialColor NETHER = new MaterialColor(35, 7340544);
-        public static final MaterialColor TERRACOTTA_WHITE = new MaterialColor(36, 13742497);
-        public static final MaterialColor TERRACOTTA_ORANGE = new MaterialColor(37, 10441252);
-        public static final MaterialColor TERRACOTTA_MAGENTA = new MaterialColor(38, 9787244);
-        public static final MaterialColor TERRACOTTA_LIGHT_BLUE = new MaterialColor(39, 7367818);
-        public static final MaterialColor TERRACOTTA_YELLOW = new MaterialColor(40, 12223780);
-        public static final MaterialColor TERRACOTTA_LIGHT_GREEN = new MaterialColor(41, 6780213);
-        public static final MaterialColor TERRACOTTA_PINK = new MaterialColor(42, 10505550);
-        public static final MaterialColor TERRACOTTA_GRAY = new MaterialColor(43, 3746083);
-        public static final MaterialColor TERRACOTTA_LIGHT_GRAY = new MaterialColor(44, 8874850);
-        public static final MaterialColor TERRACOTTA_CYAN = new MaterialColor(45, 5725276);
-        public static final MaterialColor TERRACOTTA_PURPLE = new MaterialColor(46, 8014168);
-        public static final MaterialColor TERRACOTTA_BLUE = new MaterialColor(47, 4996700);
-        public static final MaterialColor TERRACOTTA_BROWN = new MaterialColor(48, 4993571);
-        public static final MaterialColor TERRACOTTA_GREEN = new MaterialColor(49, 5001770);
-        public static final MaterialColor TERRACOTTA_RED = new MaterialColor(50, 9321518);
-        public static final MaterialColor TERRACOTTA_BLACK = new MaterialColor(51, 2430480);
-        public static final MaterialColor CRIMSON_NYLIUM = new MaterialColor(52, 12398641);
-        public static final MaterialColor CRIMSON_STEM = new MaterialColor(53, 9715553);
-        public static final MaterialColor CRIMSON_HYPHAE = new MaterialColor(54, 6035741);
-        public static final MaterialColor WARPED_NYLIUM = new MaterialColor(55, 1474182);
-        public static final MaterialColor WARPED_STEM = new MaterialColor(56, 3837580);
-        public static final MaterialColor WARPED_HYPHAE = new MaterialColor(57, 5647422);
-        public static final MaterialColor WARPED_WART_BLOCK = new MaterialColor(58, 1356933);
-        public static final MaterialColor DEEPSLATE = new MaterialColor(59, 6579300);
-        public static final MaterialColor RAW_IRON = new MaterialColor(60, 14200723);
-        public static final MaterialColor GLOW_LICHEN = new MaterialColor(61, 8365974);
-        public final int col;
-        public final int id;
-
-        private MaterialColor(int var0, int var1) {
-            if (var0 >= 0 && var0 <= 63) {
-                this.id = var0;
-                this.col = var1;
-                MATERIAL_COLORS[var0] = this;
-            } else {
-                throw new IndexOutOfBoundsException("Map colour ID must be between 0 and 63 (inclusive)");
-            }
-        }
-
-        public static MaterialColor byId(int var0) {
-            return byIdUnsafe(var0);
-        }
-
-        private static MaterialColor byIdUnsafe(int var0) {
-            MaterialColor var1 = MATERIAL_COLORS[var0];
-            return var1 != null ? var1 : NONE;
-        }
-
-        public static int getColorFromPackedId(int var0) {
-            int var1 = var0 & 255;
-            return byIdUnsafe(var1 >> 2).calculateRGBColor(MaterialColor.Brightness.byIdUnsafe(var1 & 3));
-        }
-
-        public int calculateRGBColor(MaterialColor.Brightness var0) {
-            if (this == NONE) {
-                return 0;
-            } else {
-                int var1 = var0.modifier;
-                int var2 = (this.col >> 16 & 255) * var1 / 255;
-                int var3 = (this.col >> 8 & 255) * var1 / 255;
-                int var4 = (this.col & 255) * var1 / 255;
-                return -16777216 | var4 << 16 | var3 << 8 | var2;
-            }
-        }
-
-        public byte getPackedId(MaterialColor.Brightness var0) {
-            return (byte) (this.id << 2 | var0.id & 3);
-        }
-
-        public static enum Brightness {
-            LOW(0, 180),
-            NORMAL(1, 220),
-            HIGH(2, 255),
-            LOWEST(3, 135);
-
-            private static final MaterialColor.Brightness[] VALUES = new MaterialColor.Brightness[]{LOW, NORMAL, HIGH, LOWEST};
-            public final int id;
-            public final int modifier;
-
-            private Brightness(int var2, int var3) {
-                this.id = var2;
-                this.modifier = var3;
-            }
-
-            public static MaterialColor.Brightness byId(int var0) {
-                return byIdUnsafe(var0);
-            }
-
-            static MaterialColor.Brightness byIdUnsafe(int var0) {
-                return VALUES[var0];
-            }
         }
     }
 }
