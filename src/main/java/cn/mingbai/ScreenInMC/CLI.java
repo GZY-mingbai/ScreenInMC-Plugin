@@ -199,7 +199,7 @@ public class CLI {
                         for (int x = 0; x < video.getWidth(); x++) {
                             try {
                                 byte index = data[x + y * video.getWidth()];
-                                if(index<=3 && index>=0){
+                                if(index==0||index==1||index==2||index==3){
                                     nowImage.setRGB(x, y,0x00000000);
                                 }else{
                                     nowImage.setRGB(x, y,paletteLoader.getPaletteColorRGBs()[((int)(index-4))&0xff]);

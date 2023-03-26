@@ -94,7 +94,6 @@ public class ImageUtils {
     }
     public static byte[] imageToMapColors(DitheringProcessor processor,Image image, int pieceSize){
         return processor.processImage(image,paletteColors,pieceSize);
-
     }
     public static byte[] imageToMapColors(int[] data, int width, int height){
         return imageToMapColors(processor,data,width,height,pieceSize);
