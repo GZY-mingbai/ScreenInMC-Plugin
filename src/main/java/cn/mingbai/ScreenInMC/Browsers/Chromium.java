@@ -260,6 +260,7 @@ public class Chromium extends Browser {
 //            }
             try {
                 app = org.cef.CefApp.getInstance(args, settings);
+                app = org.cef.CefApp.getInstance();
             } catch (Exception e) {
                 app = org.cef.CefApp.getInstance();
             }
@@ -268,14 +269,14 @@ public class Chromium extends Browser {
                 @Override
                 public boolean onOpenURLFromTab(org.cef.browser.CefBrowser browser, org.cef.browser.CefFrame frame, String target_url, boolean user_gesture) {
                     browser.loadURL(target_url);
-                    return false;
+                    return true;
                 }
             });
             client.addLifeSpanHandler(new org.cef.handler.CefLifeSpanHandlerAdapter() {
                 @Override
                 public boolean onBeforePopup(org.cef.browser.CefBrowser browser, org.cef.browser.CefFrame frame, String target_url, String target_frame_name) {
                     browser.loadURL(target_url);
-                    return false;
+                    return true;
                 }
             });
         }
