@@ -1,5 +1,8 @@
+#define __int64 long long
+
 #include<jni.h>
 #include<CL/cl.h>
+
 #ifndef _Included_cn_mingbai_ScreenInMC_Natives_GPUDither
 #define _Included_cn_mingbai_ScreenInMC_Natives_GPUDither
 #ifdef __cplusplus

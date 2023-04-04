@@ -75,8 +75,8 @@ public class Item {
                                                     if (data.p2x != null && data.p2y != null && data.p2z != null) {
                                                         tc = new TextComponent(" " + LangUtils.getText("controller-point-end").replace("%%",
                                                                 data.p2x + "," + data.p2y + "," + data.p2z));
-                                                        tc.setColor(ChatColor.RED);
-                                                        extra.addExtra(tc);
+                                                            tc.setColor(ChatColor.RED);
+                                                            extra.addExtra(tc);
                                                         tc = new TextComponent(" " + data.w + "x" + data.h);
                                                         tc.setColor(ChatColor.YELLOW);
                                                         extra.addExtra(tc);
