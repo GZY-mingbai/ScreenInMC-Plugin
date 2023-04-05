@@ -2,6 +2,8 @@
 
 #include<jni.h>
 #include<CL/cl.h>
+#include<freerdp/freerdp.h>
+
 
 #ifndef _Included_cn_mingbai_ScreenInMC_Natives_GPUDither
 #define _Included_cn_mingbai_ScreenInMC_Natives_GPUDither
@@ -37,6 +39,7 @@ bool getPlatformNames(cl_uint* count, char*** names);
 //bool init(int size);
 bool init(const char* code);
 bool dither(int* image, const int width, const int height, char* result,int pieceSize);
+//ditherOnCPU
 bool ditherWithCPU(int* image, const int width, const int height, char* result);
 int colorDistance(unsigned char c1r,unsigned char c1g,unsigned char c1b,unsigned char c2r,unsigned char c2g,unsigned char c2b);
 int getClosestMatch(unsigned char c1r,unsigned char c1g,unsigned char c1b,unsigned char *c2r,unsigned char *c2g,unsigned char *c2b);

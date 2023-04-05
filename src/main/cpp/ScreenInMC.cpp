@@ -637,6 +637,3 @@ float fast_sqrt(float x)
 
     return 1 / x;
 }
-int main(int a, const char *b[])
-{
-}
