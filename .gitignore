@@ -23,3 +23,5 @@
 hs_err_pid*
 /VideoTest/
 /src/main/cpp/FreeRDP
+/src/main/cpp/.vscode/
+/src/main/cpp/out/
