@@ -25,3 +25,4 @@ hs_err_pid*
 /src/main/cpp/FreeRDP
 /src/main/cpp/.vscode/
 /src/main/cpp/out/
+/src/main/cpp/build/

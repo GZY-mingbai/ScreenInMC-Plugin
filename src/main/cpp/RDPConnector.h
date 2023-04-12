@@ -4,6 +4,7 @@
 #include<iostream>
 #include<freerdp/cache/bitmap.h>
 #include<freerdp/update.h>
+#include<freerdp/gdi/gdi.h>
 
 using namespace std;
 class RDPConnector{
@@ -20,17 +21,17 @@ class RDPConnector{
         void connect();
         ~RDPConnector();
 };
-BOOL freerdp_pre_connect(freerdp* instance);
+BOOL freerdp_post_connect(freerdp* instance);
 BOOL freerdp_authenticate(freerdp* instance, char** username, char** password, char** domain);
 int main();
-BOOL freerdp_onpaint(rdpContext* context, const SURFACE_BITS_COMMAND* surfaceBitsCommand);
-
-typedef struct freerdp_bitmap {
-} freerdp_bitmap;
-BOOL freerdp_bitmap_new(rdpContext* context, rdpBitmap* bitmap);
-BOOL freerdp_bitmap_paint(rdpContext* context, rdpBitmap* bitmap);
-void freerdp_bitmap_free(rdpContext* context, rdpBitmap* bitmap);
-BOOL freerdp_bitmap_setsurface(rdpContext* context, rdpBitmap* bitmap, BOOL primary);
 
 BOOL update_begin_paint(rdpContext* context);
 BOOL update_end_paint(rdpContext* context);
+
+BOOL bridge_Pointer_New(rdpContext* context, rdpPointer* pointer);
+void bridge_Pointer_Free(rdpContext* context, rdpPointer* pointer);
+BOOL bridge_Pointer_Set(rdpContext* context,const rdpPointer* pointer);
+BOOL bridge_Pointer_SetPosition(rdpContext* context, UINT32 x, UINT32 y);
+BOOL bridge_Pointer_SetNull(rdpContext* context);
+BOOL bridge_Pointer_SetDefault(rdpContext* context);
+static BOOL update_desktop_resize(rdpContext* context);

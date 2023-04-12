@@ -43,6 +43,7 @@ if(WINDOWS)
   set(Other_LIBRARIES "ws2_32")
 endif()
 
+message("FreeRDP in $ENV{FreeRDP_INCLUDE_DIRS}")
 
 # 查找 JNI 库
 find_package(JNI REQUIRED)

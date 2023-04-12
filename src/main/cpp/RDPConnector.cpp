@@ -36,16 +36,77 @@ BOOL update_begin_paint(rdpContext* context)
 
 BOOL update_end_paint(rdpContext* context)
 {
-    // rdpUpdate* update = context->update;
+	int i;
+	HGDI_WND hwnd;
+	int ninvalid;
+	rdpGdi* gdi;
+	HGDI_RGN cinvalid;
+	int x1, y1, x2, y2;
+	rdpSettings* settings;
 
-    // if (update->EndPaint)
-    // {
-    //     update->EndPaint(update->context);
-    // }
+	if (!context || !context->instance){
+        cout<<"???1";
+    	return FALSE;
+    }
+
+	settings = context->settings;
+
+	if (!settings){
+        cout<<"???2";
+    	return FALSE;
+    }
+
+	gdi = context->gdi;
+
+	if (!gdi || !gdi->primary || !gdi->primary->hdc)
+    {
+        cout<<"???3";
+    	return FALSE;
+    }
+
+	hwnd = gdi->primary->hdc->hwnd;
+
+	if (!hwnd){
+        cout<<"???4";
+    	return FALSE;
+    }
+	ninvalid = hwnd->ninvalid;
+
+	if (ninvalid < 1)
+		{
+        cout<<"???5";
+    	return TRUE;
+    }
+
+	cinvalid = hwnd->cinvalid;
+
+	if (!cinvalid)
+		{
+        cout<<"???6";
+    	return FALSE;
+    }
+
+	x1 = cinvalid[0].x;
+	y1 = cinvalid[0].y;
+	x2 = cinvalid[0].x + cinvalid[0].w;
+	y2 = cinvalid[0].y + cinvalid[0].h;
+
+	for (i = 0; i < ninvalid; i++)
+	{
+		x1 = MIN(x1, cinvalid[i].x);
+		y1 = MIN(y1, cinvalid[i].y);
+		x2 = MAX(x2, cinvalid[i].x + cinvalid[i].w);
+		y2 = MAX(y2, cinvalid[i].y + cinvalid[i].h);
+    }
+    int x = x1;
+    int y = y1;
+    int w = x2-x1;
+    int h = y2-y1;
+    printf("%d,%d,%d,%d\n",x,y,w,h);
     return TRUE;
 }
 void RDPConnector::connect(){
-    instance->PreConnect = freerdp_pre_connect;
+    instance->PostConnect = freerdp_post_connect;
     this->thread = new std::thread([&]()->void{
         if(!freerdp_context_new(instance)){
             printf("freerdp_context_new() error.");
@@ -54,10 +115,7 @@ void RDPConnector::connect(){
         // rdpUpdate* update;
         // update = (rdpUpdate*) calloc(1, sizeof(rdpUpdate));
         // update->context = instance->context;
-        instance->update->BeginPaint = update_begin_paint;
-        instance->update->EndPaint = update_end_paint;
         // instance->update = update;
-
         // this->instance->settings = freerdp_settings_new(0);
         freerdp_settings_set_string(instance->settings, FreeRDP_ServerHostname, this->addr);
         instance->settings->ServerPort=(UINT32) this->port;
@@ -75,6 +133,7 @@ void RDPConnector::connect(){
 		// instance->settings->GlyphCache = FALSE;
 		// instance->settings->BitmapCacheEnabled = 0;
         instance->settings->TlsSecLevel = 0;
+        
         // freerdp_settings_set_string(instance->settings, FreeRDP_Domain, this->addr);
         if(!freerdp_connect(this->instance)){
             printf("freerdp_connect() error.");
@@ -86,35 +145,79 @@ void RDPConnector::connect(){
         }
     });
 }
-BOOL freerdp_onpaint(rdpContext* context, const SURFACE_BITS_COMMAND* surfaceBitsCommand){
-    printf("update");
-    return TRUE;
-}
-BOOL freerdp_pre_connect(freerdp* instance){
-    rdpContext* context = instance->context;
-    rdpGraphics* graphics = context->graphics;
-    bitmap_cache_register_callbacks(instance->update);
-    // graphics_register_bitmap(graphics, &bitmap);
+BOOL freerdp_post_connect(freerdp* instance){
+    if (!gdi_init(instance, PIXEL_FORMAT_RGB24))
+		return FALSE;
+	rdpPointer pointer = { 0 };
+    rdpGraphics* graphics = instance->context->graphics;
+	if (!graphics)
+		return FALSE;
+
+	pointer.size = sizeof(pointer);
+	pointer.New = bridge_Pointer_New;
+	pointer.Free = bridge_Pointer_Free;
+	pointer.Set = bridge_Pointer_Set;
+	pointer.SetNull = bridge_Pointer_SetNull;
+	pointer.SetDefault = bridge_Pointer_SetDefault;
+	pointer.SetPosition = bridge_Pointer_SetPosition;
+	graphics_register_pointer(graphics, &pointer);
+    instance->update->BeginPaint = update_begin_paint;
+    instance->update->EndPaint = update_end_paint;
+    instance->update->DesktopResize = update_desktop_resize;
+    
     return TRUE;
 }
 int main(){
     printf("Connecting");
-    RDPConnector* connector = new RDPConnector("s.mb233.net",3389,"Administrator","Gzy20070115!!!");
+    RDPConnector* connector = new RDPConnector("192.168.0.202",3389,"root","Gzy20070115!!!");
     connector->connect();
     printf("Connected");
     system("pause");
 }
 bool RDPConnector::startedWSA=false;
+static BOOL bridge_Pointer_New(rdpContext* context, rdpPointer* pointer)
+{
+if (!context || !pointer || !context->gdi) {
+return FALSE;
+}
+return TRUE;
+}
 
-BOOL freerdp_bitmap_new(rdpContext* context, rdpBitmap* bitmap){
-    printf("new()");
-    return TRUE;
+static void bridge_Pointer_Free(rdpContext* context, rdpPointer* pointer)
+{
 }
-BOOL freerdp_bitmap_paint(rdpContext* context, rdpBitmap* bitmap){
-    return TRUE;
+
+static BOOL bridge_Pointer_Set(rdpContext* context, const rdpPointer* pointer)
+{
+if (!context || !pointer) {
+return FALSE;
 }
-void freerdp_bitmap_free(rdpContext* context, rdpBitmap* bitmap){
+return TRUE;
 }
-BOOL freerdp_bitmap_setsurface(rdpContext* context, rdpBitmap* bitmap, BOOL primary){
+
+static BOOL bridge_Pointer_SetPosition(rdpContext* context, UINT32 x, UINT32 y)
+{
+if (!context) {
+return FALSE;
+}
+return TRUE;
+}
+
+static BOOL bridge_Pointer_SetNull(rdpContext* context)
+{
+if (!context) {
+return FALSE;
+}
+return TRUE;
+}
+
+static BOOL bridge_Pointer_SetDefault(rdpContext* context)
+{
+if (!context) {
+return FALSE;
+}
+return TRUE;
+}
+static BOOL update_desktop_resize(rdpContext* context){
     return TRUE;
 }
