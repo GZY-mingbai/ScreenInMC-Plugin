@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Created-By: Apache Maven 3.8.3
-Built-By: Paul
-Build-Jdk: 17
-Main-Class: com.shinyhut.vernacular.VernacularViewer
-
