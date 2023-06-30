@@ -139,37 +139,41 @@ public class MContainer extends MControl {
                 createImage();
                 reRender();
             }
+            List<Rectangle2D.Double> nowReRenderRectangles = new ArrayList<>();
             synchronized (renderLock2) {
-                for (int i = 0; i < reRenderRectangles.size(); i++) {
-                    int x = (int) reRenderRectangles.get(i).x;
-                    int y = (int) reRenderRectangles.get(i).y;
-                    int w = (int) reRenderRectangles.get(i).width;
-                    int h = (int) reRenderRectangles.get(i).height;
-                    if (x < 0) {
-                        x = 0;
-                    }
-                    if (y < 0) {
-                        y = 0;
-                    }
-                    if (w <= 0 || h <= 0) {
-                        continue;
-                    }
-                    try {
-                        if (x == 0 && y == 0 && w == (int) getWidth() && h == (int) getHeight()) {
-                            if (loaded) {
-                                screen.sendView(ImageUtils.imageToMapColors(image));
-                            }
-                        } else {
-                            if (loaded) {
-                                screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                for (Rectangle2D.Double i : reRenderRectangles) {
+                    nowReRenderRectangles.add(new Rectangle2D.Double(i.x,i.y,i.width,i.height));
                 }
-                reRenderRectangles.clear();
             }
+            for (int i = 0; i < nowReRenderRectangles.size(); i++) {
+                int x = (int) nowReRenderRectangles.get(i).x;
+                int y = (int) nowReRenderRectangles.get(i).y;
+                int w = (int) nowReRenderRectangles.get(i).width;
+                int h = (int) nowReRenderRectangles.get(i).height;
+                if (x < 0) {
+                    x = 0;
+                }
+                if (y < 0) {
+                    y = 0;
+                }
+                if (w <= 0 || h <= 0) {
+                    continue;
+                }
+                try {
+                    if (x == 0 && y == 0 && w == (int) getWidth() && h == (int) getHeight()) {
+                        if (loaded) {
+                            screen.sendView(ImageUtils.imageToMapColors(image));
+                        }
+                    } else {
+                        if (loaded) {
+                            screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            reRenderRectangles.clear();
             synchronized (renderLock) {
                 renderLock.notifyAll();
             }

@@ -9,8 +9,8 @@ repositories {
     mavenCentral()
 }
 jar {
-    baseName = 'LibrariesLoader'
-    version = ''
+    archiveBaseName = 'LibrariesLoader'
+    archiveVersion = ''
 }
 
 dependencies {

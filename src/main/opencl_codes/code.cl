@@ -4,13 +4,13 @@ typedef struct RGBA{
         int b;
         int a;
 }RGBA;
-typedef struct NearlyColorResult{
+typedef struct ClosestColorResult{
         int index;
         int color;
         int r;
         int g;
         int b;
-}NearlyColorResult;
+}ClosestColorResult;
 RGBA intToRgba(int rgb) {
     RGBA rgba;
     rgba.r = (rgb >> 16) & 0xff;
@@ -47,7 +47,7 @@ int colorDistance(int r1,int g1,int b1, int r2,int g2,int b2) {
     int b = b1 - b2;
     return (int)(sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))));
 }
-NearlyColorResult getNearlyColor(__global int *palette,int colorCount,RGBA rgb) {
+ClosestColorResult getClosestColor(__global int *palette,int colorCount,RGBA rgb) {
     int c1=rgb.r;
     int c2=rgb.g;
     int c3=rgb.b;
@@ -71,7 +71,7 @@ NearlyColorResult getNearlyColor(__global int *palette,int colorCount,RGBA rgb) 
             m3=t3;
         }
     }
-    NearlyColorResult result;
+    ClosestColorResult result;
     result.index=minIndex+4;
     result.color=palette[minIndex];
     result.r=c1-m1;
@@ -86,7 +86,7 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
     int colorCount = settings[1];
     if (pieceSize == 1) {
         RGBA rgba = intToRgba(colors[id]);
-        NearlyColorResult near = getNearlyColor(palette, colorCount, rgba);
+        ClosestColorResult near = getClosestColor(palette, colorCount, rgba);
         result[id] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);
         return;
     }
@@ -95,7 +95,7 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
         for (int x = 0; x < pieceSize; ++x) {
             RGBA rgba = intToRgba(colors[r]);
             if(rgba.a==255) {
-                NearlyColorResult near = getNearlyColor(palette,colorCount,rgba);
+                ClosestColorResult near = getClosestColor(palette,colorCount,rgba);
                 colors[r] = near.color;
                 result[r] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);
                 if(x != pieceSize-1) {

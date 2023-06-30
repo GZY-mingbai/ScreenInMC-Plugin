@@ -29,6 +29,10 @@ public class WebBrowser extends Core {
                 LinkedTreeMap map = (LinkedTreeMap) data;
                 String browserName = (String) map.get("browser");
                 browser = Browser.getBrowser(browserName);
+                if(browser.getCoreState()==Browser.NOT_INSTALLED){
+                    Main.getPluginLogger().warning("Can't use "+browser.getName()+" browser because it is not installed.");
+                    return;
+                }
                 if (browser.getCoreState() != Browser.LOADED) {
                     try {
                         browser.loadCore();
@@ -70,10 +74,14 @@ public class WebBrowser extends Core {
 
     @Override
     public void onUnload() {
-        browser.destroyBrowser(getScreen());
-        browser = null;
-        if (renderRunnable != null) {
-            renderRunnable.cancel();
+        if (browser != null) {
+            if (browser.getCoreState() == Browser.LOADED) {
+                browser.destroyBrowser(getScreen());
+                browser = null;
+                if (renderRunnable != null) {
+                    renderRunnable.cancel();
+                }
+            }
         }
         unloaded = true;
     }
@@ -81,14 +89,18 @@ public class WebBrowser extends Core {
     @Override
     public void onMouseClick(int x, int y, Utils.MouseClickType type) {
         if (browser != null) {
-            browser.clickAt(getScreen(), x, y, type);
+            if(browser.getCoreState()==Browser.LOADED) {
+                browser.clickAt(getScreen(), x, y, type);
+            }
         }
     }
 
     @Override
     public void onTextInput(String text) {
         if (browser != null) {
-            browser.inputText(getScreen(), text);
+            if(browser.getCoreState()==Browser.LOADED) {
+                browser.inputText(getScreen(), text);
+            }
         }
     }
 }

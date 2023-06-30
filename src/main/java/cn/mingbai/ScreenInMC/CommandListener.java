@@ -146,7 +146,12 @@ public class CommandListener implements TabExecutor {
             }
         }
         if (args[0].equalsIgnoreCase("installChromium")) {
-            new Chromium().installCore();
+            new Thread(){
+                @Override
+                public void run() {
+                    new Chromium().installCore();
+                }
+            }.start();
         }
         if(args[0].equalsIgnoreCase("loadCode")){
             setCustomOpenCLCode(args[1]);

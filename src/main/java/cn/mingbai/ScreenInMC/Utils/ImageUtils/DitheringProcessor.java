@@ -25,7 +25,7 @@ public abstract class DitheringProcessor {
             int b = c1.getBlue() - c2.getBlue();
             return (int) Math.sqrt((((512 + rmean) * r * r) >> 8) + 4 * g * g + (((767 - rmean) * b * b) >> 8));
         }
-        public static int colorClip(int i) {
+        public int colorClip(int i) {
             if (i > 255) {
                 return 255;
             }
@@ -35,10 +35,10 @@ public abstract class DitheringProcessor {
             return i;
         }
 
-        public static int rgbToInt(int r, int g, int b) {
+        public int rgbToInt(int r, int g, int b) {
             return 0xFF000000 | ((r << 16) & 0x00FF0000) | ((g << 8) & 0x0000FF00) | (b & 0x000000FF);
         }
-        public static Utils.Pair<Integer, Color> getClosestMatch(Color color,Color[] paletteColors) {
+        public Utils.Pair<Integer, Color> getClosestMatch(Color color,Color[] paletteColors) {
             int minimum_index = 0;
             int minimum_difference = colorDistance(color, paletteColors[0]);
             for (int i = 1; i < paletteColors.length; i++) {
@@ -113,6 +113,59 @@ public abstract class DitheringProcessor {
             return result;
         }
 
+    }
+    public static class JavaFastDitheringProcessor extends JavaDitheringProcessor{
+        private Color[] nowPaletteColors=null;
+        private byte[][][] processedPaletteColors=null;
+        private short colorsCount;
+        public JavaFastDitheringProcessor() {
+            this((short) 40);
+        }
+        public JavaFastDitheringProcessor(short colorsCount){
+            if(colorsCount>256||colorsCount<4){
+                throw new RuntimeException("ColorsCount must be from 4 to 256.");
+            }
+            this.colorsCount = colorsCount;
+        }
+        public static byte[][][] processPaletteColors(Color[] paletteColors,short colorsCount){
+            byte[][][] processedPaletteColors = new byte[colorsCount][colorsCount][colorsCount];
+            for(byte r=0;r<colorsCount;r++){
+                for(byte g=0;g<colorsCount;g++){
+                    for(byte b=0;b<colorsCount;b++){
+                        Color nowColor = new Color(r*256/colorsCount,g*256/colorsCount,b*256/colorsCount);
+                        int closestColor = 0;
+                        int closestDistance = -1;
+                        for(int i=0;i<paletteColors.length;i++){
+                            if(paletteColors[i].getAlpha()==255){
+                                int distance = colorDistance(paletteColors[i],nowColor);
+                                if(closestDistance==-1||distance<=closestDistance){
+                                    closestColor = i;
+                                    closestDistance = distance;
+                                }
+                            }
+                        }
+                        processedPaletteColors[r][g][b]= (byte) closestColor;
+                    }
+                }
+            }
+            return processedPaletteColors;
+        }
+        @Override
+        public Utils.Pair<Integer, Color> getClosestMatch(Color color, Color[] paletteColors) {
+            if(paletteColors!=nowPaletteColors){
+                nowPaletteColors = paletteColors;
+                processedPaletteColors = processPaletteColors(paletteColors,colorsCount);
+            }
+            int index = processedPaletteColors
+                    [color.getRed()*colorsCount/256]
+                    [color.getGreen()*colorsCount/256]
+                    [color.getBlue()*colorsCount/256];
+            if(index<0){
+                index+=256;
+            }
+
+            return new Utils.Pair<>(index,paletteColors[index]);
+        }
     }
     public static class OpenCLDitheringProcessor extends DitheringProcessor{
         @Override

@@ -47,6 +47,21 @@ public class VideoProcessor {
             args[10 + ffmpegArgs.length] = "-y";
 
             process = runtime.exec(args);
+            Thread onExit = new Thread(){
+                @Override
+                public void run() {
+                    System.out.println("正在终止ffmpeg...");
+                    process.destroy();
+                    process.destroyForcibly();
+                    try {
+                        process.waitFor();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+            Runtime.getRuntime().addShutdownHook(onExit);
+
             InputStream stream = process.getErrorStream();
             generateProcess.thread = new Thread(() -> {
                 try {
@@ -57,6 +72,7 @@ public class VideoProcessor {
                         System.out.println(str);
                     }
                     process.waitFor();
+                    Runtime.getRuntime().removeShutdownHook(onExit);
                     if (process.exitValue() == 0) {
                         File[] f = tempDir.listFiles();
                         File[] files = new File[f.length];

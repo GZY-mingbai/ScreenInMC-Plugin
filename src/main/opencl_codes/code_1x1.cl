@@ -40,7 +40,7 @@ int colorDistance(int r1,int g1,int b1, int r2,int g2,int b2) {
     int b = b1 - b2;
     return (int)(sqrt((float)((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))));
 }
-int getNearlyColor(__global int *palette,int colorCount,RGBA rgb) {
+int getClosestColor(__global int *palette,int colorCount,RGBA rgb) {
     int c1=rgb.r;
     int c2=rgb.g;
     int c3=rgb.b;
@@ -71,7 +71,7 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
     int width = settings[0];
     int colorCount = settings[1];
     RGBA rgba = intToRgba(colors[id]);
-    int near = getNearlyColor(palette, colorCount, rgba);
+    int near = getClosestColor(palette, colorCount, rgba);
     result[id] = (char)((near / 4) << 2 | (near % 4) & 3);
 }
 __kernel void scale(__global int* image1, __global int* image2, __global int* width) {

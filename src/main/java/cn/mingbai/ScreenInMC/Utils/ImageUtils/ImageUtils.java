@@ -8,6 +8,8 @@ import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor.JavaFastDitheringProcessor.processPaletteColors;
+
 public class ImageUtils {
     private static int pieceSize = 4;
     private static Color[] paletteColors;
@@ -61,6 +63,7 @@ public class ImageUtils {
     public static void setCustomOpenCLCode(String customOpenCLCode) {
         ImageUtils.customOpenCLCode = customOpenCLCode;
     }
+    private static short openCLFastColorsCount = 40;
 
     public static String getOpenCLCode(){
         String loadCode = "code.cl";
@@ -73,6 +76,34 @@ public class ImageUtils {
         InputStream stream = ImageUtils.class.getResourceAsStream("/lib/"+loadCode);
         try {
             String codeStr = new String(IOUtils.readInputStream(stream), StandardCharsets.UTF_8);
+            if(customOpenCLCode.equals("code_fast.cl")){
+                byte[][][] colors = processPaletteColors(paletteColors, openCLFastColorsCount);
+                String result1 = "";
+                String result2 = "";
+                int halfLength = openCLFastColorsCount*openCLFastColorsCount*openCLFastColorsCount/2;
+                if(halfLength>32000){
+                    throw new RuntimeException("Too many colors.(>40)");
+                }
+                for(int b=0;b<openCLFastColorsCount;b++){
+                    for(int g=0;g<openCLFastColorsCount;g++) {
+                        for (int r = 0; r < openCLFastColorsCount; r++) {
+                            if(b*openCLFastColorsCount*openCLFastColorsCount+g*openCLFastColorsCount+r>=
+                                    halfLength){
+                                result2+=colors[r][g][b]+4+",";
+                            }else{
+                                result1+=colors[r][g][b]+4+",";
+                            }
+                        }
+                    }
+                }
+                result1 = result1.substring(0,result1.length()-1);
+                result2 = result2.substring(0,result2.length()-1);
+                codeStr = codeStr.replace("##LIST1##",result1);
+                codeStr = codeStr.replace("##LIST2##",result2);
+                codeStr = codeStr.replace("##ColorsCount##",String.valueOf(openCLFastColorsCount));
+                codeStr = codeStr.replace("##listLength##",String.valueOf(halfLength));
+
+            }
             return codeStr;
         } catch (Exception e) {
             throw new RuntimeException(e);

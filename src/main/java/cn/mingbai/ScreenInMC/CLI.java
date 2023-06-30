@@ -48,6 +48,7 @@ public class CLI {
         File tempDir = new File("./temp/");
         File outputFile = new File("output.smv");
         boolean watch = false;
+        boolean highSpeed = false;
         boolean gzip = false;
         boolean ffmpegArg = false;
         boolean loop = false;
@@ -116,6 +117,7 @@ public class CLI {
                 }
                 if (args[i].equals("-l")) {
                     System.out.println("序号\t名称");
+                    System.out.println("-4\tJava层 快速CPU抖色");
                     System.out.println("-3\t自动选择");
                     System.out.println("-2\tJava层 CPU抖色");
                     System.out.println("-1\tC++层 CPU抖色");
@@ -128,13 +130,16 @@ public class CLI {
                 if (args[i].equals("-h")) {
                     System.out.println("ScreenInMC 预处理器");
                     System.out.println();
-                    System.out.println("处理视频 Processor [-v 视频文件] [-o 输出文件(.smv)] ([-f ffmpeg路径] [-t 临时目录] [-d 使用设备] [-p 分块大小] [-g(使用GZip压缩)] [-a ffmpeg额外参数(放在最后)])");
+                    System.out.println("处理视频 Processor [-v 视频文件] [-o 输出文件(.smv)] ([-f ffmpeg路径] [-t 临时目录] [-d 使用设备] [-p 分块大小] [-g(使用GZip压缩)] [-a ffmpeg额外参数(放在最后)] [-s 使用极速模式(实验性)])");
                     System.out.println("播放已处理视频 Processor [-w 视频文件/链接(.smv)] ([-x(循环播放)] [-b 边框大小])");
                     System.out.println("列出可用设备 Processor -l");
                     return;
                 }
                 if (args[i].equals("-x")) {
                     loop = true;
+                }
+                if (args[i].equals("-s")) {
+                    highSpeed = true;
                 }
                 if (args[i].equals("-b")) {
                     if (i == args.length - 1) {
@@ -174,6 +179,7 @@ public class CLI {
                 }
             };
             frame.setResizable(false);
+            frame.setVisible(true);
             Insets insets = frame.getInsets();
             int ww = video.getWidth() + insets.left + insets.right + border * 2;
             int wh = video.getHeight() + insets.top + insets.bottom + border * 2;
@@ -184,7 +190,6 @@ public class CLI {
                 wh = 128;
             }
             frame.setSize(ww, wh);
-            frame.setVisible(true);
             while (true) {
                 long time = System.currentTimeMillis();
                 byte[] data = video.readAFrame();
@@ -227,6 +232,11 @@ public class CLI {
         if (device >= -1) {
             ImageUtils.setDitheringProcessor(new DitheringProcessor.OpenCLDitheringProcessor());
             int[] p = getPalette();
+            if(highSpeed){
+                ImageUtils.setCustomOpenCLCode("code_fast.cl");
+            }else{
+                ImageUtils.setCustomOpenCLCode("code.cl");
+            }
             if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
                 ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
             }
@@ -234,8 +244,12 @@ public class CLI {
         if(device == -2){
             ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
         }
+        if(device == -4){
+            ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
+        }
         ImageUtils.setPieceSize(pieceSize);
         VideoProcessor.generateDitheredVideo(ffmpegFile, tempDir, videoFile, outputFile, gzip, ffmpegArgs.toArray(new String[0]));
+
     }
 
     private static void initImageUtils() {

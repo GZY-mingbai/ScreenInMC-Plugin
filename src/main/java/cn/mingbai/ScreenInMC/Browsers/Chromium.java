@@ -135,7 +135,7 @@ public class Chromium extends Browser {
     public int getCoreState() {
         if (new File(Main.PluginFilesPath + "Chromium/bin").exists()) {
             try {
-                org.cef.CefApp.getState();
+                Chromium_.getState();
             } catch (Throwable e) {
                 return INSTALLED_NOT_LOADED;
             }
@@ -197,6 +197,9 @@ public class Chromium extends Browser {
         private static org.cef.CefApp app;
         private static org.cef.CefClient client;
         private static Map<Screen, org.cef.browser.ScreenInMCChromiumBrowser> clients = new HashMap<>();
+        public static org.cef.CefApp.CefAppState getState(){
+            return ChromiumLibrariesLoader.getState();
+        }
 
         public static void openURL(Screen screen, String url) {
             org.cef.browser.CefBrowser browser = clients.get(screen);
@@ -260,9 +263,9 @@ public class Chromium extends Browser {
 //            }
             try {
                 app = org.cef.CefApp.getInstance(args, settings);
-                app = org.cef.CefApp.getInstance();
+                app = ChromiumLibrariesLoader.getApp();
             } catch (Exception e) {
-                app = org.cef.CefApp.getInstance();
+                app = ChromiumLibrariesLoader.getApp();
             }
             client = app.createClient();
             client.addRequestHandler(new org.cef.handler.CefRequestHandlerAdapter() {

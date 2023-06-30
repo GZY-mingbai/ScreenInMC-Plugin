@@ -13,14 +13,21 @@ import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
+import jdk.jfr.Event;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -145,7 +152,9 @@ public class Main extends JavaPlugin {
             i.getCore().unload();
         }
         for (Browser i : Browser.getAllBrowsers()) {
-            i.unloadCore();
+            if(i.getCoreState()==Browser.LOADED) {
+                i.unloadCore();
+            }
         }
         saveScreens();
         Item.onDisable();
@@ -160,7 +169,7 @@ public class Main extends JavaPlugin {
         Core.addCore(new VNCClient());
         Core.addCore(new VideoPlayer());
         Core.addCore(new WebBrowser());
-        ImageUtils.initImageUtils(new GameCodePaletteLoader().get(),new DitheringProcessor.JavaDitheringProcessor());
+        ImageUtils.initImageUtils(new GameCodePaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();
         thisPlugin.saveDefaultConfig();
@@ -177,11 +186,14 @@ public class Main extends JavaPlugin {
             ImageUtils.setDitheringProcessor(processor);
             int[] p = getPalette();
             if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
-                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
+                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
             }
         }
         if(device==-2){
             ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
+        }
+        if(device==-4){
+            ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
         }
         int pieceSize = config.getInt("piece-size");
         if (pieceSize == 1 || pieceSize == 2 || pieceSize == 4 || pieceSize == 8 || pieceSize == 16) {
@@ -193,5 +205,4 @@ public class Main extends JavaPlugin {
         Item.onEnable();
         isEnabled = true;
     }
-
 }

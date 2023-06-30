@@ -49,8 +49,8 @@ task remappingJar{
 jar.dependsOn ":src:main:LibrariesLoader:jar"
 remappingJar.dependsOn jar
 jar {
-    baseName = 'ScreenInMC'
-    version = ''
+    archiveBaseName = 'ScreenInMC'
+    archiveVersion = ''
     manifest {
         attributes 'Main-Class': 'cn.mingbai.ScreenInMC.CLI'
     }
