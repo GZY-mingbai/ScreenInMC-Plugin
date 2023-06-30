@@ -1,9 +1,9 @@
 # ScreenInMC-Plugin
-![ScreenInMC Logo(Temporary) By zhuWin](http://zw.mb233.net/wp-content/uploads/2022/11/logolong.png)
+![ScreenInMC Logo(Temporary) By zhuWin](https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/logo.png?raw=true)
 # 欢迎使用 ScreenInMC Bukkit插件！
 此插件可以通过地图画，在Minecraft中拼接出一个显示器
 
-![Example](http://zw.mb233.net/pic/example.png)
+![Example](https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/example.png?raw=true)
 通过对 Minecraft 实际环境高度优化的抖色技术，我们将生成地图画的质量和速度推向了 Minecraft 的极限。
 1. 内置远程桌面客户端(VNC Client)功能。
 2. 可选的现代网页浏览器内核(Chromium)，让您在 Minecraft 中也可体验 Web 的乐趣。
