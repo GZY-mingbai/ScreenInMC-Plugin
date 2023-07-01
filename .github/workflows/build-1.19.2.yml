@@ -46,6 +46,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.13
       - name: Build CPP Bridge
         run: |
+          mv OpenCL-SDK-*Win*.zip src/main/cpp/
           cd src/main/cpp/
           $env:JAVA_PATH = ((Get-Command java).Path | Split-Path -Parent | Split-Path -Parent)
           Expand-Archive OpenCL-SDK-*Win-x86.zip -DestinationPath "X86" 
