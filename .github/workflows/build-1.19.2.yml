@@ -36,7 +36,7 @@ jobs:
         run: |
             sudo dpkg --add-architecture i386
             sudo apt-get -y update
-            sudo apt-get install -y ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc g++ make openjdk-17-jdk
+            sudo apt-get install --no-upgrade -y ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc g++ make openjdk-17-jdk
       - uses: robinraju/release-downloader@v1.8
         with:
           repository: "KhronosGroup/OpenCL-SDK"
@@ -56,8 +56,8 @@ jobs:
           cd ..\X64\
           Move-Item * OpenCL
           cd ..
-          $env:OpenCL86 = (Resolve-Path(".\X86\OpenCL\lib\")).Path
-          $env:OpenCL64 = (Resolve-Path(".\X64\OpenCL\lib\")).Path
+          $env:OpenCL86 = ((Resolve-Path(".\X86\OpenCL\lib\")).Path+"OpenCL.lib")
+          $env:OpenCL64 = ((Resolve-Path(".\X64\OpenCL\lib\")).Path+"OpenCL.lib")
           $env:OpenCLPath = (Resolve-Path(".\X64\OpenCL\include\")).Path
           ./build-all-github.ps1
 
