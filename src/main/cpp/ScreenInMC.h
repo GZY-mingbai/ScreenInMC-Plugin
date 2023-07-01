@@ -2,7 +2,7 @@
 
 #include<jni.h>
 #include<CL/cl.h>
-#include<freerdp/freerdp.h>
+// #include<freerdp/freerdp.h>
 
 
 #ifndef _Included_cn_mingbai_ScreenInMC_Natives_GPUDither
