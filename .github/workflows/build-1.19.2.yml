@@ -35,8 +35,6 @@ jobs:
         name: Setup Linux
         run: |
             sudo dpkg --add-architecture i386
-            sudo apt-get -y update
-            sudo apt-get -y dist-upgrade
             sudo apt-get install -y ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc gcc-c++ kernel-devel make openjdk-17-jdk
       - uses: robinraju/release-downloader@v1.8
         with:
