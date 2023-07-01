@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC.Screen;
 
+import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
@@ -40,6 +41,21 @@ public class Screen {
     private boolean placed = false;
     private ScreenPiece[][] screenPieces;
     private Core core;
+    private EditGUI gui;
+//    private int id = 0;
+
+    public int getID() {
+        if(placed){
+            for(int i=0;i<allScreens.size();i++){
+                if(allScreens.get(i)==this){
+                    return i;
+                }
+            }
+        }else{
+            throw new RuntimeException("This screen hasn't been placed.");
+        }
+        return -1;
+    }
 
     public Screen(Location location, Facing facing, int width, int height) {
         this.location = location;
@@ -56,6 +72,10 @@ public class Screen {
         if (data.core != null) {
             this.core = getCoreFromData(data.core);
         }
+    }
+
+    public EditGUI getEditGUI() {
+        return gui;
     }
 
     public static Utils.Pair<Integer, Integer> getMaxScreenSize() {
@@ -212,6 +232,7 @@ public class Screen {
                     break;
             }
             placed = true;
+            gui = new EditGUI(this);
             allScreens.add(this);
             for (Player player : location.getWorld().getPlayers()) {
                 sendPutScreenPacket(player);
@@ -424,7 +445,7 @@ public class Screen {
             return null;
         }
 
-        public String getFacingName() {
+        public String getTranslatedFacingName() {
             switch (this) {
                 case UP:
                     return LangUtils.getText("facing-up");

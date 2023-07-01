@@ -3,15 +3,14 @@ package cn.mingbai.ScreenInMC.Controller;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.Welcome;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
+import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -20,9 +19,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-
-import java.util.function.IntConsumer;
-
 import static cn.mingbai.ScreenInMC.Main.getGson;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getMaxScreenSize;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.itemBukkitToNMS;
@@ -44,10 +40,11 @@ public class Item {
     private static Color GREEN;
 
     public static void onEnable() {
-        BLUE = Color.fromRGB(ChatColor.BLUE.getColor().getRed(), ChatColor.BLUE.getColor().getGreen(), ChatColor.BLUE.getColor().getBlue());
-        RED = Color.fromRGB(ChatColor.RED.getColor().getRed(), ChatColor.RED.getColor().getGreen(), ChatColor.RED.getColor().getBlue());
-        YELLOW = Color.fromRGB(ChatColor.YELLOW.getColor().getRed(), ChatColor.YELLOW.getColor().getGreen(), ChatColor.YELLOW.getColor().getBlue());
-        GREEN = Color.fromRGB(ChatColor.GREEN.getColor().getRed(), ChatColor.GREEN.getColor().getGreen(), ChatColor.GREEN.getColor().getBlue());
+
+        BLUE = Color.fromRGB(85, 85, 255);
+        RED = Color.fromRGB(255, 85, 85);
+        YELLOW = Color.fromRGB(255, 255, 85);
+        GREEN = Color.fromRGB(85, 255, 85);
 
         runnable = new BukkitRunnable() {
             @Override
@@ -61,25 +58,25 @@ public class Item {
                                 if (meta.hasLocalizedName()) {
                                     try {
                                         ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
-                                        BaseComponent extra = new TextComponent("");
+                                        JsonText extra = new JsonText("");
                                         switch (data.nowMode) {
                                             case SELECT_MODE:
                                                 Location eyeLoc = player.getEyeLocation();
                                                 Location closest;
                                                 if (data.world != null && data.p1x != null && data.p1y != null && data.p1z != null) {
-                                                    TextComponent tc = new TextComponent(" " + LangUtils.getText("controller-point-start").replace("%%",
+                                                    JsonText jsonText = new JsonText(" " + LangUtils.getText("controller-point-start").replace("%%",
                                                             data.p1x + "," + data.p1y + "," + data.p1z));
-                                                    tc.setColor(ChatColor.BLUE);
-                                                    extra.addExtra(tc);
+                                                    jsonText.color = "blue";
+                                                    extra.addExtra(jsonText);
                                                     World world = Bukkit.getWorld(data.world);
                                                     if (data.p2x != null && data.p2y != null && data.p2z != null) {
-                                                        tc = new TextComponent(" " + LangUtils.getText("controller-point-end").replace("%%",
+                                                        jsonText = new JsonText(" " + LangUtils.getText("controller-point-end").replace("%%",
                                                                 data.p2x + "," + data.p2y + "," + data.p2z));
-                                                            tc.setColor(ChatColor.RED);
-                                                            extra.addExtra(tc);
-                                                        tc = new TextComponent(" " + data.w + "x" + data.h);
-                                                        tc.setColor(ChatColor.YELLOW);
-                                                        extra.addExtra(tc);
+                                                            jsonText.color="red";
+                                                            extra.addExtra(jsonText);
+                                                        jsonText = new JsonText(" " + data.w + "x" + data.h);
+                                                        jsonText.color="yellow";
+                                                        extra.addExtra(jsonText);
                                                         world.spawnParticle(Particle.REDSTONE, (double) data.p2x, (double) data.p2y, (double) data.p2z, 0, 0, 0, 0, 0, new Particle.DustOptions(RED, 1));
                                                         Utils.Pair<Utils.Pair<Screen.Facing, Location>, Utils.Pair<Screen.Facing, Location>> locations = getScreenLocations(world, data.p1x, data.p1y, data.p1z, data.p2x, data.p2y, data.p2z);
                                                         if (data.w != null && data.h != null) {
@@ -94,9 +91,9 @@ public class Item {
                                                         closest = getClosestPlane(eyeLoc, data.p1x, data.p1y, data.p1z);
                                                         if (closest != null) {
                                                             Utils.Pair<Integer, Integer> size = getScreenSize(new Location(world, data.p1x, data.p1y, data.p1z), closest);
-                                                            tc = new TextComponent(" " + size.getKey() + "x" + size.getValue());
-                                                            tc.setColor(ChatColor.YELLOW);
-                                                            extra.addExtra(tc);
+                                                            jsonText = new JsonText(" " + size.getKey() + "x" + size.getValue());
+                                                            jsonText.color="yellow";
+                                                            extra.addExtra(jsonText);
                                                         }
                                                     }
                                                     world.spawnParticle(Particle.REDSTONE, (double) data.p1x, (double) data.p1y, (double) data.p1z, 0, 0, 0, 0, 0, new Particle.DustOptions(BLUE, 1));
@@ -116,27 +113,28 @@ public class Item {
                                                 break;
                                             case PLACE_MODE:
                                                 if (data.world != null && data.p1x != null && data.p1y != null && data.p1z != null && data.p2x != null && data.p2y != null && data.p2z != null && data.w != null && data.h != null) {
-                                                    TextComponent tc = new TextComponent(" " + LangUtils.getText("controller-point-start").replace("%%",
+                                                    JsonText jsonText = new JsonText(" " + LangUtils.getText("controller-point-start").replace("%%",
                                                             data.p1x + "," + data.p1y + "," + data.p1z));
-                                                    tc.setColor(ChatColor.BLUE);
-                                                    extra.addExtra(tc);
-                                                    tc = new TextComponent(" " + LangUtils.getText("controller-point-end").replace("%%",
+                                                    jsonText.color="blue";
+                                                    extra.addExtra(jsonText);
+                                                    jsonText = new JsonText(" " + LangUtils.getText("controller-point-end").replace("%%",
                                                             data.p2x + "," + data.p2y + "," + data.p2z));
-                                                    tc.setColor(ChatColor.RED);
-                                                    extra.addExtra(tc);
-                                                    tc = new TextComponent(" " + data.w + "x" + data.h);
-                                                    tc.setColor(ChatColor.YELLOW);
-                                                    extra.addExtra(tc);
+                                                    jsonText.color="red";
+                                                    extra.addExtra(jsonText);
+                                                    jsonText = new JsonText(" " + data.w + "x" + data.h);
+                                                    jsonText.color="yellow";
+                                                    extra.addExtra(jsonText);
                                                     World world = Bukkit.getWorld(data.world);
                                                     world.spawnParticle(Particle.REDSTONE, (double) data.p1x, (double) data.p1y, (double) data.p1z, 0, 0, 0, 0, 0, new Particle.DustOptions(BLUE, 1));
                                                     world.spawnParticle(Particle.REDSTONE, (double) data.p2x, (double) data.p2y, (double) data.p2z, 0, 0, 0, 0, 0, new Particle.DustOptions(RED, 1));
                                                     spawnRectParticle(world, data.p1x, data.p1y, data.p1z, data.p2x, data.p2y, data.p2z, YELLOW);
                                                 }
                                         }
-                                        TextComponent component = new TextComponent(LangUtils.getText("controller-item-now-mode") + " " + getModeName(data.nowMode));
+                                        JsonText component = new JsonText(LangUtils.getText("controller-item-now-mode") + " " + getModeName(data.nowMode));
                                         component.addExtra(extra);
-                                        component.setColor(ChatColor.GOLD);
-                                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, component);
+                                        component.color="gold";
+                                        ClientboundSetActionBarTextPacket packet = new ClientboundSetActionBarTextPacket(component.toComponent());
+                                        CraftUtils.sendPacket(player,packet);
 
                                     } catch (Exception e) {
                                         e.printStackTrace();
@@ -227,35 +225,24 @@ public class Item {
         }
     }
 
-    private static void ForInRange(int f, int t, IntConsumer consumer) {
-        if (f <= t) {
-            for (int i = f; i < t + 1; i++) {
-                consumer.accept(i);
-            }
-        } else {
-            for (int i = f; i > t - 1; i--) {
-                consumer.accept(i);
-            }
-        }
-    }
 
-    private static LangUtils.JsonText[] replaceLoreKeybind(String text, String from, String to, String textColor, String keyBindColor) {
-        LangUtils.JsonText[] loreArray = new LangUtils.JsonText[3];
+    private static JsonText[] replaceLoreKeybind(String text, String from, String to, String textColor, String keyBindColor) {
+        JsonText[] loreArray = new JsonText[3];
         String[] lore = text.split(from);
         if (lore.length == 0) {
-            return new LangUtils.JsonText[]{getLoreColorfulJsonText(text, textColor)};
+            return new JsonText[]{getLoreColorfulJsonText(text, textColor)};
         }
-        LangUtils.JsonText loreTag = new LangUtils.JsonText();
+        JsonText loreTag = new JsonText();
         loreTag.text = lore[0];
         loreTag.color = textColor;
         loreTag.italic = false;
         loreArray[0] = loreTag;
-        loreTag = new LangUtils.JsonText();
+        loreTag = new JsonText();
         loreTag.keybind = to;
         loreTag.color = keyBindColor;
         loreTag.italic = false;
         loreArray[1] = loreTag;
-        loreTag = new LangUtils.JsonText();
+        loreTag = new JsonText();
         loreTag.text = lore[1];
         loreTag.color = textColor;
         loreTag.italic = false;
@@ -263,8 +250,8 @@ public class Item {
         return loreArray;
     }
 
-    private static LangUtils.JsonText getLoreColorfulJsonText(String text, String color) {
-        LangUtils.JsonText loreTag = new LangUtils.JsonText();
+    private static JsonText getLoreColorfulJsonText(String text, String color) {
+        JsonText loreTag = new JsonText();
         loreTag.text = text;
         loreTag.color = color;
         loreTag.italic = false;
@@ -276,39 +263,39 @@ public class Item {
         CompoundTag displayTag = (CompoundTag) stack.getOrCreateTag().get("display");
         ListTag lore = new ListTag();
         String[] lore1 = LangUtils.getText("controller-mode-info").split("\n");
-        lore.add(StringTag.valueOf(getGson().toJson(
+        lore.add(StringTag.valueOf(JsonText.toJSON(
                 getLoreColorfulJsonText(lore1[0].replace("%now-mode%", getModeName(nowMode)), "gold")
         )));
-        lore.add(StringTag.valueOf(getGson().toJson(
+        lore.add(StringTag.valueOf(JsonText.toJSON(
                 replaceLoreKeybind(lore1[1], "%sneak%", "key.sneak", "gold", "gold")
         )));
         lore.add(StringTag.valueOf(EMPTY_JSON_TEXT));
         switch (nowMode) {
             case SELECT_MODE:
                 String[] modeLore = LangUtils.getText("controller-select-mode-info").split("\n");
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         replaceLoreKeybind(modeLore[0], "%left-click%", "key.attack", "gold", "blue")
                 )));
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         replaceLoreKeybind(modeLore[1], "%right-click%", "key.use", "gold", "red")
                 )));
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         getLoreColorfulJsonText(modeLore[2], "gold")
                 )));
                 Utils.Pair maxSize = getMaxScreenSize();
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         getLoreColorfulJsonText(modeLore[3].replace("%max-size%", maxSize.getKey() + "x" + maxSize.getValue()), "gold")
                 )));
                 break;
             case PLACE_MODE:
                 modeLore = LangUtils.getText("controller-place-mode-info").split("\n");
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         getLoreColorfulJsonText(modeLore[0], "gold")
                 )));
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         replaceLoreKeybind(modeLore[1], "%left-click%", "key.attack", "gold", "yellow")
                 )));
-                lore.add(StringTag.valueOf(getGson().toJson(
+                lore.add(StringTag.valueOf(JsonText.toJSON(
                         getLoreColorfulJsonText(modeLore[2], "gold")
                 )));
                 break;
@@ -342,7 +329,7 @@ public class Item {
         }
     }
 
-    public static void onPlayerClick(Player player, ItemStack item, Utils.MouseClickType type) {
+    public static boolean onPlayerClick(Player player, ItemStack item, Utils.MouseClickType type) {
         try {
             ItemMeta meta = item.getItemMeta();
             ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
@@ -366,11 +353,11 @@ public class Item {
                     }
                     meta.setLocalizedName(getGson().toJson(data));
                     item.setItemMeta(meta);
-                    return;
+                    return true;
                 }
                 if (type.equals(Utils.MouseClickType.RIGHT)) {
                     if (data.world == null || data.p1x == null || data.p1y == null || data.p1z == null) {
-                        return;
+                        return true;
                     }
                     Location eyeLoc = player.getEyeLocation();
                     Location closest = getClosestPlane(eyeLoc, data.p1x, data.p1y, data.p1z);
@@ -396,7 +383,7 @@ public class Item {
                     }
                     meta.setLocalizedName(getGson().toJson(data));
                     item.setItemMeta(meta);
-                    return;
+                    return true;
                 }
             }
             if (data.nowMode == PLACE_MODE) {
@@ -416,7 +403,7 @@ public class Item {
                     }
                     if (facing == null || location == null) {
                         Main.sendMessage(player, LangUtils.getText("controller-selection-not-found"));
-                        return;
+                        return true;
                     }
                     clearPoints(data);
                     Main.sendMessage(player, LangUtils.getText("controller-place-start"));
@@ -425,22 +412,35 @@ public class Item {
                     screen.putScreen();
                     Main.sendMessage(player, "§a" + LangUtils.getText("controller-place-success")
                             .replace("%location%", "§9" + world.getName() + "(" + (int) location.getX() + "," + (int) location.getY() + "," + (int) location.getZ() + ")§a")
-                            .replace("%facing%", "§c" + facing.getFacingName() + "§a")
+                            .replace("%facing%", "§c" + facing.getTranslatedFacingName() + "§a")
                             .replace("%size%", "§e" + data.w + "x" + data.h + "§a")
                     );
                     meta.setLocalizedName(getGson().toJson(data));
                     item.setItemMeta(meta);
                 } else {
                     Main.sendMessage(player, LangUtils.getText("controller-selection-not-found"));
-                    return;
+                    return true;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             player.getInventory().setItemInMainHand(null);
         }
+        return false;
     }
 
+    public static void onPlayerClickScreen(Player player, ItemStack item, Utils.MouseClickType type,int x,int y,Screen screen){
+        try {
+            ItemMeta meta = item.getItemMeta();
+            ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
+            if (data.nowMode == EDIT_MODE) {
+                screen.getEditGUI().openGUI(player,x,y,type);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            player.getInventory().setItemInMainHand(null);
+        }
+    }
     private static void clearPoints(ItemData data) {
         data.world = null;
         data.p1x = null;

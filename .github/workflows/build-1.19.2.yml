@@ -67,6 +67,7 @@ jobs:
         name: Build CPP Bridge in Linux
         run: |
           cd src/main/cpp/
+            sed -i "s/\r//g" "./build-linux-github.sh"
           ./build-linux-github.sh
 #      - uses: shaowenchen/debugger-action@v2
 #        name: debugger

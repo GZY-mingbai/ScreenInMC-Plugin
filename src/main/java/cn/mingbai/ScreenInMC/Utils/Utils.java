@@ -301,6 +301,9 @@ public class Utils {
             }
             return 0;
         }
+        public String getTranslatedName(){
+            return LangUtils.getText(this.name().toLowerCase()+"-click");
+        }
     }
 
     //From javafx.utils.Pair

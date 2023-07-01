@@ -46,16 +46,26 @@ public class EventListener implements Listener {
         if (item != null && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
             if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
-                Item.onPlayerClick(player, item, type);
-                e.setCancelled(true);
-                return;
+                if(Item.onPlayerClick(player, item, type)) {
+                    e.setCancelled(true);
+                    return;
+                }
             }
         }
         for (Screen i : Screen.getAllScreens()) {
             Location screenLocation = i.getLocation().clone();
             Utils.ScreenClickResult result = Utils.getScreenClickAt(player.getEyeLocation(), screenLocation, i.getFacing(), i.getWidth(), i.getHeight(), 1024);
             if (result.isClicked()) {
-                i.getCore().onMouseClick((int) (result.getMouseX() * 128), (int) (result.getMouseY() * 128), type);
+                int x = (int) (result.getMouseX() * 128);
+                int y =  (int) (result.getMouseY() * 128);
+                if (item != null && item.hasItemMeta()) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
+                        Item.onPlayerClickScreen(player,item,type,x,y,i);
+                        return;
+                    }
+                }
+                i.getCore().onMouseClick(x,y, type);
                 return;
             }
         }
