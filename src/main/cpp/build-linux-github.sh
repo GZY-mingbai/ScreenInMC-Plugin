@@ -1,5 +1,5 @@
 export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64/"
-export PATH=/usr/bin/:/usr/lib/:/usr/lib/jvm/java-17-openjdk-amd64/include/:/usr/lib/jvm/java-17-openjdk-amd64/include/linux/
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/usr/lib/jvm/java-17-openjdk-amd64/include/:/usr/lib/jvm/java-17-openjdk-amd64/include/linux/
 rm -rf work_dir
 mkdir -p work_dir
 export OpenCL_LIBRARY=/lib/x86_64-linux-gnu/libOpenCL.so

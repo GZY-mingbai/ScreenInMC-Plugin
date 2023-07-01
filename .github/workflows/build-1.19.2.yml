@@ -63,7 +63,11 @@ jobs:
           ./build-all-github.ps1
           Remove-Item .\X86\ -Recurse -Force
           Remove-Item .\X64\ -Recurse -Force
-          wsl bash build-linux-github.sh
+      - shell: wsl-bash_Ubuntu-22.04 {0}
+        name: Build CPP Bridge in Linux
+        run: |
+          cd src/main/cpp/
+          ./build-linux-github.sh
 #      - uses: shaowenchen/debugger-action@v2
 #        name: debugger
 #        timeout-minutes: 30
