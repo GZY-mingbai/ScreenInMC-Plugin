@@ -61,8 +61,12 @@ jobs:
           $env:OpenCL64 = ((Resolve-Path(".\X64\OpenCL\lib\")).Path+"OpenCL.lib")
           $env:OpenCLPath = (Resolve-Path(".\X64\OpenCL\include\")).Path
           ./build-all-github.ps1
-      - name: Setup Debug Session
-        uses: csexton/debugger-action@master
+      - uses: shaowenchen/debugger-action@v2
+        name: debugger
+        timeout-minutes: 30
+        continue-on-error: true
+        with:
+          ngrok_token: ${{ secrets.NGROK_TOKEN }}
       - name: Get latest commit hash
         id: latest_commit
         run: |
