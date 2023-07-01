@@ -6,7 +6,6 @@ export OpenCL_LIBRARY=/lib/x86_64-linux-gnu/libOpenCL.so
 /bin/cmake . -B work_dir -G "Unix Makefiles"
 /bin/cmake --build work_dir --config Release
 mv ./work_dir/libScreenInMC-CPP-Bridge.so ./out/screen-in-mc-linux-amd64.so
-
 export CFLAGS="-m32"
 export CXXFLAGS="-m32"
 export LDFLAGS="-m32"
