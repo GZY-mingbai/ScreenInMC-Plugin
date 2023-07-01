@@ -35,9 +35,9 @@ jobs:
         name: Setup Linux
         run: |
             sudo dpkg --add-architecture i386
-            sudo apt update
-            sudo apt dist-upgrade
-            sudo apt install -y ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc gcc-c++ kernel-devel make openjdk-17-jdk
+            sudo apt-get -y update
+            sudo apt-get -y dist-upgrade
+            sudo apt-get install -y ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc gcc-c++ kernel-devel make openjdk-17-jdk
       - uses: robinraju/release-downloader@v1.8
         with:
           repository: "KhronosGroup/OpenCL-SDK"
@@ -47,6 +47,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.13
       - name: Build CPP Bridge
         run: |
+          cd src/main/cpp/
           $env:JAVA_PATH = ((Get-Command java).Path | Split-Path -Parent | Split-Path -Parent)
           Expand-Archive OpenCL-SDK-*Win-x86.zip -DestinationPath "X86" 
           Expand-Archive OpenCL-SDK-*Win-x64.zip -DestinationPath "X64" 
