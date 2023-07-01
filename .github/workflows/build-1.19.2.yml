@@ -23,7 +23,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 17
+      - name: Setup JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
@@ -32,11 +32,12 @@ jobs:
         with:
             distribution: Ubuntu-22.04
       - shell: wsl-bash_Ubuntu-22.04 {0}
+        name: Setup Linux
         run: |
             sudo dpkg --add-architecture i386
             sudo apt update
             sudo apt dist-upgrade
-            sudo apt install ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc gcc-c++ kernel-devel make openjdk-17-jdk
+            sudo apt install -y ocl-icd-opencl-dev ocl-icd-opencl-dev:i386 opencl-headers opencl-headers:i386 opencl-dev opencl-dev:i386 cmake gcc gcc-c++ kernel-devel make openjdk-17-jdk
       - uses: robinraju/release-downloader@v1.8
         with:
           repository: "KhronosGroup/OpenCL-SDK"
