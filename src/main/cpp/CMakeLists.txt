@@ -52,6 +52,7 @@ include_directories(${OpenCL_INCLUDE_DIRS})
 # include_directories(${FreeRDP_INCLUDE_DIRS}/winpr2)
 
 # link_directories(${FreeRDP_LIBRARIES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} 
   ${OpenCL_LIBRARY}
@@ -62,7 +63,6 @@ target_link_libraries(${PROJECT_NAME}
   ${Other_LIBRARIES}
 )
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 # 链接 OpenCL 库
 

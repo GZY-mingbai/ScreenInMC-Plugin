@@ -31,6 +31,7 @@ jobs:
       - uses: Vampire/setup-wsl@v2
         with:
             distribution: Ubuntu-22.04
+            use-cache: 'true'
       - shell: wsl-bash_Ubuntu-22.04 {0}
         name: Setup Linux
         run: |
@@ -60,8 +61,22 @@ jobs:
           $env:OpenCL64 = ((Resolve-Path(".\X64\OpenCL\lib\")).Path+"OpenCL.lib")
           $env:OpenCLPath = (Resolve-Path(".\X64\OpenCL\include\")).Path
           ./build-all-github.ps1
-
-      - name: Build Spigot
+      - name: Get latest commit hash
+        id: latest_commit
+        run: |
+          $url = "https://hub.spigotmc.org/stash/scm/spigot/spigot.git"
+          $hash = git ls-remote $url HEAD | foreach { $_.Split()[0] }
+          echo "::set-output name=hash::$hash"
+      - name: Cache Spigot
+        id: cache-spigot
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-spigot-files
+        with:
+          path: ~/.m2
+          key: 1.19.2-${{ steps.latest_commit.outputs.hash }}
+      - if: ${{ steps.cache-spigot.outputs.cache-hit != 'true' }}
+        name: Build Spigot
         run: |
           mkdir BuildTools
           cd BuildTools
