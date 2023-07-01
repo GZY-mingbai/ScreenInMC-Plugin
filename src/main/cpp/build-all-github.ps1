@@ -18,4 +18,3 @@ cmake --build .\work_dir\ --config Release
 Move-Item -Path .\work_dir\Release\ScreenInMC-CPP-Bridge.dll -Destination .\out\screen-in-mc-windows-amd64.dll
 
 Remove-Item .\work_dir\ -Recurse -Force -ErrorAction SilentlyContinue
-wsl bash build-linux-github.sh
