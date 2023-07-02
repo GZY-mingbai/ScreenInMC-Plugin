@@ -3,6 +3,8 @@ package cn.mingbai.ScreenInMC.MGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
+import java.awt.geom.Rectangle2D;
+
 public abstract class MGUICore extends Core {
     MContainer container;
 
@@ -14,7 +16,7 @@ public abstract class MGUICore extends Core {
 
     @Override
     public void onCreate() {
-        container = new MContainer(getScreen());
+        this.container = new MContainer(getScreen());
         onCreate(container);
         container.load();
     }
@@ -41,5 +43,13 @@ public abstract class MGUICore extends Core {
 
     public MContainer getContainer() {
         return container;
+    }
+
+    @Override
+    public void reRender() {
+        if(container!=null){
+            container.addReRender(new Rectangle2D.Double(0,0,container.getWidth(),container.getHeight()));
+            container.reRender();
+        }
     }
 }

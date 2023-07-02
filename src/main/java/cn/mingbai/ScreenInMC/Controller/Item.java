@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+
 import static cn.mingbai.ScreenInMC.Main.getGson;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getMaxScreenSize;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.itemBukkitToNMS;
@@ -129,6 +130,23 @@ public class Item {
                                                     world.spawnParticle(Particle.REDSTONE, (double) data.p2x, (double) data.p2y, (double) data.p2z, 0, 0, 0, 0, 0, new Particle.DustOptions(RED, 1));
                                                     spawnRectParticle(world, data.p1x, data.p1y, data.p1z, data.p2x, data.p2y, data.p2z, YELLOW);
                                                 }
+                                                break;
+                                            case EDIT_MODE:
+                                                for (Screen i : Screen.getAllScreens()) {
+                                                    Location screenLocation = i.getLocation().clone();
+                                                    Utils.ScreenClickResult result = Utils.getScreenClickAt(player.getEyeLocation(), screenLocation, i.getFacing(), i.getWidth(), i.getHeight(), 1024);
+                                                    if (result.isClicked()) {
+                                                        Utils.Pair<Location,Location> corners = getScreenCorners(i);
+                                                        spawnRectParticle(i.getLocation().getWorld(),
+                                                                corners.getKey().getBlockX(),corners.getKey().getBlockY(),corners.getKey().getBlockZ(),
+                                                                corners.getValue().getBlockX(),corners.getValue().getBlockY(),corners.getValue().getBlockZ(),
+                                                                YELLOW);
+                                                        break;
+                                                    }
+                                                }
+                                                break;
+
+
                                         }
                                         JsonText component = new JsonText(LangUtils.getText("controller-item-now-mode") + " " + getModeName(data.nowMode));
                                         component.addExtra(extra);
@@ -450,10 +468,104 @@ public class Item {
         data.p2y = null;
         data.p2z = null;
     }
+    private static Utils.Pair<Location,Location> getScreenCorners(Screen screen){
+        switch (screen.getFacing()){
+            case EAST:
+                return new Utils.Pair<>(
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX(),
+                                screen.getLocation().getBlockY()+1,
+                                screen.getLocation().getBlockZ()+1
+                        ),
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX(),
+                                screen.getLocation().getBlockY()-screen.getHeight()+1,
+                                screen.getLocation().getBlockZ()-screen.getWidth()+1
+                        )
+                );
+            case WEST:
+                return new Utils.Pair<>(
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()+1,
+                                screen.getLocation().getBlockY()+1,
+                                screen.getLocation().getBlockZ()
+                        ),
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()+1,
+                                screen.getLocation().getBlockY()-screen.getHeight()+1,
+                                screen.getLocation().getBlockZ()+screen.getWidth()
+                        )
+                );
+            case UP:
+                return new Utils.Pair<>(
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX(),
+                                screen.getLocation().getBlockY(),
+                                screen.getLocation().getBlockZ()
+                        ),
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()+screen.getWidth(),
+                                screen.getLocation().getBlockY(),
+                                screen.getLocation().getBlockZ()+screen.getHeight()
+                        )
+                );
+            case DOWN:
+                return new Utils.Pair<>(
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX(),
+                                screen.getLocation().getBlockY()+1,
+                                screen.getLocation().getBlockZ()+1
+                        ),
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()+screen.getWidth(),
+                                screen.getLocation().getBlockY()+1,
+                                screen.getLocation().getBlockZ()-screen.getHeight()+1
+                        )
+                );
+            case SOUTH:
+                return new Utils.Pair<>(
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX(),
+                                screen.getLocation().getBlockY()+1,
+                                screen.getLocation().getBlockZ()
+                        ),
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()+screen.getWidth(),
+                                screen.getLocation().getBlockY()-screen.getHeight()+1,
+                                screen.getLocation().getBlockZ()
+                        )
+                );
+            case NORTH:
+                return new Utils.Pair<>(
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()+1,
+                                screen.getLocation().getBlockY()+1,
+                                screen.getLocation().getBlockZ()+1
+                        ),
+                        new Location(
+                                screen.getLocation().getWorld(),
+                                screen.getLocation().getBlockX()-screen.getWidth()+1,
+                                screen.getLocation().getBlockY()-screen.getHeight()+1,
+                                screen.getLocation().getBlockZ()+1
+                        )
+                );
+        }
+        throw new RuntimeException("Unknown direction.");
+    }
 
     private static Utils.Pair<Utils.Pair<Screen.Facing, Location>, Utils.Pair<Screen.Facing, Location>> getScreenLocations(World world, int p1x, int p1y, int p1z, int p2x, int p2y, int p2z) {
         Utils.Pair<Screen.Facing, Location> l1 = null, l2 = null;
-        Integer sx = null, sy = null, sz = null;
         if (p1x == p2x) {
             l1 = new Utils.Pair<>(Screen.Facing.EAST,
                     new Location(

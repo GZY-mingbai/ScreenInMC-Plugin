@@ -179,6 +179,8 @@ public class Screen {
                     CraftUtils.sendPacket(player, packet2);
                 }
             }
+            getCore().reRender();
+
         } else {
             throw new RuntimeException("This Screen has not been placed.");
         }

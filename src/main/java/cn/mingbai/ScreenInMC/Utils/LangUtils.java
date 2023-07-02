@@ -1,15 +1,11 @@
 package cn.mingbai.ScreenInMC.Utils;
 
 import cn.mingbai.ScreenInMC.Main;
-import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.contents.KeybindContents;
 import net.minecraft.network.chat.contents.LiteralContents;
-import net.minecraft.network.chat.contents.NbtContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.ClickAction;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 

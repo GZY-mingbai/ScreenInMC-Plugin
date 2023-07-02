@@ -8,10 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -21,17 +18,26 @@ import static cn.mingbai.ScreenInMC.Controller.Item.onPlayerSwitchMode;
 public class EventListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
+        PacketListener.addGlobalListener(e.getPlayer());
         for (Screen i : Screen.getAllScreens()) {
-            i.sendPutScreenPacket(e.getPlayer());
+            if(i.getLocation().getWorld().equals(e.getPlayer().getWorld())){
+                i.sendPutScreenPacket(e.getPlayer());
+            }
         }
+    }
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e) {
     }
 
     @EventHandler
     public void onPlayerChangedWorldEvent(PlayerChangedWorldEvent e) {
         for (Screen i : Screen.getAllScreens()) {
-            i.sendPutScreenPacket(e.getPlayer());
+            if(i.getLocation().getWorld().equals(e.getPlayer().getWorld())){
+                i.sendPutScreenPacket(e.getPlayer());
+            }
         }
     }
+
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
@@ -96,5 +102,6 @@ public class EventListener implements Listener {
             }
         }
     }
+
 
 }

@@ -156,6 +156,9 @@ public abstract class DitheringProcessor {
                 nowPaletteColors = paletteColors;
                 processedPaletteColors = processPaletteColors(paletteColors,colorsCount);
             }
+            if(processedPaletteColors==null){
+                return new Utils.Pair<>(0,new Color(0,0,0,0));
+            }
             int index = processedPaletteColors
                     [color.getRed()*colorsCount/256]
                     [color.getGreen()*colorsCount/256]

@@ -1,0 +1,76 @@
+start-download-chromium-core: "開始下載Chromium核心"
+download-progress: "已下載 %%"
+download-success: "下載完成"
+decompress-progress: "已解壓縮 %%"
+decompress-success: "解壓縮完成"
+kb-basic: "基礎鍵盤:"
+controller-item-name: "ScreenInMC 控制器"
+controller-item-now-mode: "目前模式:"
+controller-item-select-mode: "框選模式"
+controller-item-place-mode: "放置模式"
+controller-item-edit-mode: "編輯模式"
+controller-item-unknown-mode: "未知模式"
+controller-block-not-found: "找不到可用的方塊"
+controller-selection-not-found: "找不到可用的區域"
+controller-set-point-start: "已設定顯示器起點 (%%)"
+controller-point-start: "起點 (%%)"
+controller-points-different-worlds: "起點和終點不在同一個世界"
+controller-set-point-end: "已設定顯示器終點 (%%)"
+controller-point-end: "終點 (%%)"
+controller-mode-info: |-
+  目前模式: %now-mode%
+  使用 %sneak%+滾輪 來切換模式
+controller-select-mode-info: |-
+  使用 %left-click% 來選取第一個角落
+  使用 %right-click% 來選取第二個角落
+  第一個角落和第二個角落必須在同一平面上
+  框選區域不能超過 %max-size%
+controller-place-mode-info: |-
+  先使用 框選模式 選擇一個區域
+  再在該模式下使用 %left-click% 點擊選擇的區域
+  即可放置一塊屏幕
+controller-place-start: "正在載入屏幕核心"
+controller-place-success: "已放置屏幕在 %location% 方向: %facing% 大小: %size%"
+controller-editor-gui-title: "ScreenInMC 編輯器"
+vnc-client-address: "位址"
+vnc-client-password: "密碼"
+vnc-client-connect: "連線"
+facing-up: "上"
+facing-down: "下"
+facing-east: "東"
+facing-south: "南"
+facing-west: "西"
+facing-north: "北"
+welcome-text: "歡迎使用ScreenInMC 請選擇一個核心"
+left-click: "左鍵"
+middle-click: "中鍵"
+right-click: "右鍵"
+current-selection: "目前選擇"
+controller-editor-title: "ScreenInMC 顯示器"
+controller-editor-id: "屏幕ID: "
+controller-editor-location: "屏幕位置: "
+controller-editor-facing: "屏幕方向: "
+controller-editor-size: "屏幕尺寸: "
+controller-editor-core: "屏幕核心: "
+controller-editor-clicked: "點擊屬性: "
+controller-editor-replace-core-title: "更換核心"
+controller-editor-replace-core-info: "點擊以更換顯示器核心"
+controller-editor-previous-page: "上一頁"
+controller-editor-next-page: "下一頁"
+controller-editor-all-page: "第%now%頁 (共%all%頁)"
+controller-editor-cores-vnc-name: "VNC 客戶端"
+controller-editor-cores-vnc-details: |-
+  可用於訪問和控制遠端計算機
+  透過VNC協議與遠端計算機進行通訊
+  只需要IP位址和密碼(可選)，即可連接VNC伺服器
+  支援VNC協議3.3-3.8 (使用Vernacular VNC庫)
+type: "類型:"
+type-int: "整數"
+type-double: "小數"
+type-boolean: "布尔(√/×)"
+type-string: "文字"
+type-string-array: "文字列表"
+type-location: "座標"
+type-list: "從列表中選擇"
+type-unknown: "未知"
+now-value: "目前值："

@@ -45,6 +45,7 @@ welcome-text: "欢迎使用ScreenInMC 请选择一个核心"
 left-click: "左键"
 middle-click: "中键"
 right-click: "左键"
+current-selection: "当前选择"
 controller-editor-title: "ScreenInMC 显示器"
 controller-editor-id: "屏幕ID: "
 controller-editor-location: "屏幕位置: "
@@ -52,3 +53,25 @@ controller-editor-facing: "屏幕方向: "
 controller-editor-size: "屏幕尺寸: "
 controller-editor-core: "屏幕内核: "
 controller-editor-clicked: "点击属性: "
+controller-editor-replace-core-title: "更换核心"
+controller-editor-replace-core-info: "点击以更换显示器核心"
+controller-editor-previous-page: "上一页"
+controller-editor-next-page: "下一页"
+controller-editor-all-page: "第%now%页 (共%all%页)"
+controller-editor-cores-vnc-name: "VNC 客户端"
+controller-editor-cores-vnc-details: |-
+  可用于访问和控制远程计算机
+  通过VNC协议与远程计算机进行通信
+  仅需IP地址和密码(可选)即可连接VNC服务器
+  支持VNC协议3.3-3.8 (采用Vernacular VNC库)
+type: "类型:"
+type-int: "整数"
+type-double: "小数"
+type-boolean: "布尔(√/×)"
+type-string: "文本"
+type-string-array: "文本列表"
+type-location: "坐标"
+type-list: "从列表中选择"
+type-unknown: "未知"
+now-value: "当前值:"
+

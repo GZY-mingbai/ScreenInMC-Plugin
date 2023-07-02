@@ -1,10 +1,13 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import org.bukkit.Material;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class Core implements Cloneable {
@@ -22,8 +25,12 @@ public abstract class Core implements Cloneable {
             throw new RuntimeException("This core has been loaded.");
         }
         allCores.add(core);
+        core.addToEditGUI();
     }
 
+    public void reRender(){
+
+    }
     public static Core[] getAllCore() {
         Core[] result = new Core[allCores.size()];
         for (int i = 0; i < allCores.size(); i++) {
@@ -93,6 +100,20 @@ public abstract class Core implements Cloneable {
     public abstract void onMouseClick(int x, int y, Utils.MouseClickType type);
 
     public abstract void onTextInput(String text);
+    public void addToEditGUI(){
+        EditGUI.registerCoreInfo(new EditGUI.EditGUICoreInfo(
+                this.coreName,
+                this,
+                this.getClass().getName(),
+                "gold",
+                Material.STRUCTURE_VOID,
+                new HashMap<>()));
+    }
+    public Object getEditGUISettingValue(String name){
+        return null;
+    }
+    public void setEditGUISettingValue(String name,Object value){
+    }
 
     @Override
     public Object clone() throws CloneNotSupportedException {

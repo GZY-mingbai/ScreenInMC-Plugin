@@ -13,21 +13,14 @@ import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
-import jdk.jfr.Event;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -158,23 +151,27 @@ public class Main extends JavaPlugin {
         }
         saveScreens();
         Item.onDisable();
+        for(Player i :  Bukkit.getOnlinePlayers()){
+            PacketListener.removeGlobalListener(i);
+        }
 //        Utils.unloadJars();
     }
 
     @Override
     public void onEnable() {
-        Browser.addBrowser(new Chromium());
-        Core.addCore(new Welcome());
-        Core.addCore(new ImageViewer());
-        Core.addCore(new VNCClient());
-        Core.addCore(new VideoPlayer());
-        Core.addCore(new WebBrowser());
+
         ImageUtils.initImageUtils(new GameCodePaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
         LangUtils.setLanguage(config.getString("language"));
+        Browser.addBrowser(new Chromium());
+        Core.addCore(new Welcome());
+        Core.addCore(new ImageViewer());
+        Core.addCore(new VNCClient());
+        Core.addCore(new VideoPlayer());
+        Core.addCore(new WebBrowser());
         Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
         Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
         int device = config.getInt("opencl-device");
@@ -204,5 +201,8 @@ public class Main extends JavaPlugin {
         readScreens();
         Item.onEnable();
         isEnabled = true;
+        for(Player i:Bukkit.getOnlinePlayers()){
+            PacketListener.addGlobalListener(i);
+        }
     }
 }

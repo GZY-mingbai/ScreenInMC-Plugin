@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
+import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MInput;
@@ -12,11 +13,13 @@ import com.shinyhut.vernacular.client.VernacularClient;
 import com.shinyhut.vernacular.client.VernacularConfig;
 import com.shinyhut.vernacular.client.exceptions.VncException;
 import com.shinyhut.vernacular.client.rendering.ColorDepth;
+import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 public class VNCClient extends MGUICore {
@@ -271,5 +274,16 @@ public class VNCClient extends MGUICore {
             this.IP = IP;
             this.password = password;
         }
+    }
+
+    @Override
+    public void addToEditGUI() {
+        EditGUI.registerCoreInfo(new EditGUI.EditGUICoreInfo(
+                LangUtils.getText("controller-editor-cores-vnc-name"),
+                this,
+                LangUtils.getText("controller-editor-cores-vnc-details"),
+                "blue",
+                Material.DIAMOND_BLOCK,
+                new HashMap<>()));
     }
 }
