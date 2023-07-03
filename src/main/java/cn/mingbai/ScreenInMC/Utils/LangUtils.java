@@ -139,6 +139,10 @@ public class LangUtils {
 
     public static class JsonText {
         public static class JsonTextForGSON{
+            public static class JsonTextForGSONClickEvent{
+                public String action;
+                public String value;
+            }
             public String text;
             public String color;
             public boolean bold;
@@ -149,6 +153,7 @@ public class LangUtils {
             public JsonText extra;
             public String translate;
             public String keybind;
+            public JsonTextForGSONClickEvent clickEvent;
         }
         public String text=null;
         public String color=null;
@@ -264,6 +269,12 @@ public class LangUtils {
             }
             if (keybind != null) {
                 jsonText.keybind = keybind;
+            }
+            if(clickEvent!=null){
+                jsonText.clickEvent = new JsonTextForGSON.JsonTextForGSONClickEvent();
+                jsonText.clickEvent.action = clickEvent.getAction().getName();
+                jsonText.clickEvent.value = clickEvent.getValue();
+
             }
             return jsonText;
         }

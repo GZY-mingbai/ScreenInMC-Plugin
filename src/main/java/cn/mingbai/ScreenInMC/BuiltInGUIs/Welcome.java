@@ -1,4 +1,5 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
+
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
@@ -8,9 +9,10 @@ import com.mojang.authlib.minecraft.client.MinecraftClient;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.util.Vector;
 
 import java.awt.*;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Welcome extends MGUICore {
     public Welcome() {
@@ -50,7 +52,7 @@ public class Welcome extends MGUICore {
                 this.getClass().getName(),
                 "gold",
                 Material.TNT,
-                new HashMap<>(){
+                new LinkedHashMap<>(){
                     {
                         put("\u2517|\uff40O\u2032|\u251b",Integer.class);
                         put("\u2267 \ufe4f \u2266",Double.class);
@@ -60,6 +62,10 @@ public class Welcome extends MGUICore {
                         put("(\uffe3_,\uffe3 )", Location.class);
                         put("(\u02c9\u25bd\u02c9\uff1b)...", WelcomeSettingsList.class);
                         put("(p\u2267w\u2266q)", MinecraftClient.class);
+                        put("?????", Vector.class);
+                        for(int i=0;i<1000;i++){
+                            put("i"+i,Boolean.class);
+                        }
                     }
                 }));
     }
@@ -81,7 +87,14 @@ public class Welcome extends MGUICore {
                 return new Location(Bukkit.getWorld("world"),11,45,14);
             case "(\u02c9\u25bd\u02c9\uff1b)...":
                 return new WelcomeSettingsList();
+            case "?????":
+                return new Vector(11,45,14);
         }
         return null;
+    }
+
+    @Override
+    public void setEditGUISettingValue(String name, Object value) {
+        Bukkit.broadcastMessage(name+" set to: "+value);
     }
 }

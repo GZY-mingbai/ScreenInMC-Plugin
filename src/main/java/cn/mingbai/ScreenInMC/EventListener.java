@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -35,6 +36,12 @@ public class EventListener implements Listener {
             if(i.getLocation().getWorld().equals(e.getPlayer().getWorld())){
                 i.sendPutScreenPacket(e.getPlayer());
             }
+        }
+    }
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent e){
+        if(e.getFrom().distance(e.getTo())>1){
+            EditGUI.forceClose(e.getPlayer());
         }
     }
 

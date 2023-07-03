@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
@@ -141,8 +142,17 @@ public class CommandListener implements TabExecutor {
             }
         }
         if (args[0].equalsIgnoreCase("controller")) {
-            if (sender instanceof Player) {
-                Item.giveItem(((Player) sender));
+            if(args.length>=3){
+                for(Screen i:Screen.getAllScreens()){
+                    if(i.getEditGUI().getOpenedPlayer().equals(sender)){
+                        String[] newArgs = Arrays.copyOfRange(args,2,args.length);
+                        i.getEditGUI().getControllerCommandCallback(UUID.fromString(args[1])).apply(String.join(" ",newArgs));
+                    }
+                }
+            }else{
+                if (sender instanceof Player) {
+                    Item.giveItem(((Player) sender));
+                }
             }
         }
         if (args[0].equalsIgnoreCase("installChromium")) {
