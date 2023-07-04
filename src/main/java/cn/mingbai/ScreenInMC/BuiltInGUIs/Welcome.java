@@ -34,15 +34,7 @@ public class Welcome extends MGUICore {
                     "2333","2334"
             };
         }
-        @Override
-        public int getNowValue() {
-            return 0;
-        }
 
-        @Override
-        public void setNowValue(int index) {
-
-        }
     }
     @Override
     public void addToEditGUI() {
@@ -86,7 +78,7 @@ public class Welcome extends MGUICore {
             case "(\uffe3_,\uffe3 )":
                 return new Location(Bukkit.getWorld("world"),11,45,14);
             case "(\u02c9\u25bd\u02c9\uff1b)...":
-                return new WelcomeSettingsList();
+                return 0;
             case "?????":
                 return new Vector(11,45,14);
         }
@@ -95,6 +87,13 @@ public class Welcome extends MGUICore {
 
     @Override
     public void setEditGUISettingValue(String name, Object value) {
+        if(value instanceof String[]){
+            Bukkit.broadcastMessage(name+" set to: [");
+            for(String i:(String[]) value){
+                Bukkit.broadcastMessage("   \""+i+"\",");
+            }
+            Bukkit.broadcastMessage("]");
+        }else
         Bukkit.broadcastMessage(name+" set to: "+value);
     }
 }

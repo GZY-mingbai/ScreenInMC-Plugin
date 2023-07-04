@@ -3,8 +3,11 @@ package cn.mingbai.ScreenInMC.Utils.ImageUtils;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Utils.IOUtils;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -23,6 +26,12 @@ public class ImageUtils {
 
     public static String[] getOpenCLPlatforms() {
         return platforms.clone();
+    }
+    public static BufferedImage byteArrayToImage(byte[] array) throws IOException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(array);
+        BufferedImage bufferedImage = ImageIO.read(bis);
+        bis.close();
+        return bufferedImage;
     }
 
     public static int getBestOpenCLDevice(){

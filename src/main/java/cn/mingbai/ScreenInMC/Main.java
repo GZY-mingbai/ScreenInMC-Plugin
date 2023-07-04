@@ -159,12 +159,16 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-
         ImageUtils.initImageUtils(new GameCodePaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
+        try{
+            new File(PluginFilesPath+"Files").mkdirs();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         LangUtils.setLanguage(config.getString("language"));
         Browser.addBrowser(new Chromium());
         Core.addCore(new Welcome());

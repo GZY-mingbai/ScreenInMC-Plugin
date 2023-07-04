@@ -279,9 +279,9 @@ public class VNCClient extends MGUICore {
     @Override
     public void addToEditGUI() {
         EditGUI.registerCoreInfo(new EditGUI.EditGUICoreInfo(
-                LangUtils.getText("controller-editor-cores-vnc-name"),
+                "@controller-editor-cores-vnc-name",
                 this,
-                LangUtils.getText("controller-editor-cores-vnc-details"),
+                "@controller-editor-cores-vnc-details",
                 "blue",
                 Material.DIAMOND_BLOCK,
                 new HashMap<>()));

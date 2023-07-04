@@ -64,6 +64,24 @@ controller-editor-cores-vnc-details: |-
   Communicates with remote computers through the VNC protocol
   Only requires IP address and password (optional) to connect to VNC server
   Supports VNC protocol 3.3-3.8 (using Vernacular VNC library)
+controller-editor-cores-browser-name: "Web Browser"
+controller-editor-cores-browser-details: |-
+  Used to access Internet pages or local pages
+  (URI: screen-in-mc://local-files/file_name can be used to
+  read files in plugins/ScreenInMC/Files/)
+controller-editor-cores-image-viewer-name: "Image Viewer"
+controller-editor-cores-image-viewer-details: |-
+  Used to view images (supports animated images)
+  (URI: screen-in-mc://local-files/file_name can be used to
+  read files in plugins/ScreenInMC/Files/)
+controller-editor-cores-image-viewer-uri: "Image URL (URI)"
+controller-editor-cores-image-viewer-scale-mode: "Scale Mode"
+controller-editor-cores-image-viewer-scale-modes: "Center|Fit"
+controller-editor-cores-image-viewer-scale-algorithm: "Scaling Algorithm"
+controller-editor-cores-image-viewer-scale-algorithms: "Smooth|Fast"
+controller-editor-cores-browser-uri: "Current URL (URI)"
+controller-editor-cores-browser-refresh: "Refresh (select true)"
+controller-editor-cores-browser-core: "Browser Core"
 type: "Type:"
 type-int: "Integer"
 type-double: "Decimal"
@@ -81,3 +99,6 @@ ask-world: "World: "
 set: "Set"
 use-now-player-location: "Use current player location"
 use-now-block-location: "Use current block location"
+insert: "Insert"
+click-to-set: "Click to modify"
+throw-to-remove: "Press %% to remove"

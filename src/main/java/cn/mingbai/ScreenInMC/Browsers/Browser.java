@@ -66,5 +66,6 @@ public abstract class Browser {
     public abstract void openURL(Screen screen, String url);
 
     public abstract void refreshPage(Screen screen);
+    public abstract String getNowURL(Screen screen);
 
 }

@@ -193,6 +193,11 @@ public class Chromium extends Browser {
         Chromium_.refreshPage(screen);
     }
 
+    @Override
+    public String getNowURL(Screen screen) {
+        return Chromium_.getNowURL(screen);
+    }
+
     private static class Chromium_ {
         private static org.cef.CefApp app;
         private static org.cef.CefClient client;
@@ -355,6 +360,13 @@ public class Chromium extends Browser {
 //            try {
 //                app.dispose();
 //            }catch (Exception e){}
+        }
+        private static String getNowURL(Screen screen) {
+            org.cef.browser.ScreenInMCChromiumBrowser browser = clients.get(screen);
+            if (browser != null) {
+                return browser.getURL();
+            }
+            return "";
         }
     }
 }

@@ -8,13 +8,15 @@ import org.bukkit.util.Vector;
 import sun.misc.Unsafe;
 
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -430,6 +432,36 @@ public class Utils {
 
         public boolean isClicked() {
             return clicked;
+        }
+    }
+    public static byte[] getDataFromURI(URI uri){
+        if(uri.getScheme().equals("screen-in-mc")&&"local-files".equals(uri.getHost())){
+            Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
+            if(path.startsWith(Paths.get(Main.PluginFilesPath+"Files"))){
+                try {
+                    FileInputStream inputStream = new FileInputStream(path.toFile());
+                    byte[] data = IOUtils.readInputStream(inputStream);
+                    inputStream.close();
+                    return data;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return new byte[0];
+                }
+            }else{
+                return new byte[0];
+            }
+        }
+        try {
+            URL url = uri.toURL();
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            InputStream inputStream = conn.getInputStream();
+            byte[] data = IOUtils.readInputStream(inputStream);
+            inputStream.close();
+            return data;
+        }catch (Exception e){
+            e.printStackTrace();
+            return new byte[0];
         }
     }
 }

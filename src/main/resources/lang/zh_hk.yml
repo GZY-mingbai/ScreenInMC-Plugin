@@ -64,6 +64,24 @@ controller-editor-cores-vnc-details: |-
   通過VNC協議與遠程計算機進行通信
   僅需IP地址和密碼(可選)即可連接VNC服務器
   支持VNC協議3.3-3.8 (採用Vernacular VNC庫)
+controller-editor-cores-browser-name: "網頁瀏覽器"
+controller-editor-cores-browser-details: |-
+  可用於訪問互聯網網頁或本地網頁。
+  (URI: screen-in-mc://local-files/文件名
+  可用於讀取 plugins/ScreenInMC/Files/ 中的檔案)
+controller-editor-cores-image-viewer-name: "圖片檢視器"
+controller-editor-cores-image-viewer-details: |-
+  可用於檢視圖片（支援動圖）
+  (URI: screen-in-mc://local-files/文件名
+  可用於讀取 plugins/ScreenInMC/Files/ 中的檔案)
+controller-editor-cores-image-viewer-uri: "圖片連結 (URI)"
+controller-editor-cores-image-viewer-scale-mode: "縮放模式"
+controller-editor-cores-image-viewer-scale-modes: "置中|填滿"
+controller-editor-cores-image-viewer-scale-algorithm: "縮放演算法"
+controller-editor-cores-image-viewer-scale-algorithms: "平滑|快速"
+controller-editor-cores-browser-uri: "當前網址 (URI)"
+controller-editor-cores-browser-refresh: "重新整理(選擇true)"
+controller-editor-cores-browser-core: "瀏覽器核心"
 type: "類型:"
 type-int: "整數"
 type-double: "小數"
@@ -81,3 +99,6 @@ ask-world: "世界："
 set: "設置"
 use-now-player-location: "使用現時玩家位置"
 use-now-block-location: "使用現時方塊位置"
+insert: "插入"
+click-to-set: "點擊來修改"
+throw-to-remove: "按下%%來刪除"

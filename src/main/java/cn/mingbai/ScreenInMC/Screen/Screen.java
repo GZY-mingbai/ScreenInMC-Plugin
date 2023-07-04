@@ -147,6 +147,10 @@ public class Screen {
     public Facing getFacing() {
         return facing;
     }
+    public void clearScreen(){
+        byte[] data = new byte[width*height*128*128];
+        sendView(data);
+    }
 
     public void sendPutScreenPacket(Player player) {
         if (placed) {

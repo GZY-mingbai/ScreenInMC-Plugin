@@ -17,6 +17,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -26,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -33,8 +35,6 @@ public class EditGUI {
     public static class EditGUICoreInfo{
         public interface EditGUICoreSettingsList{
             String[] getList();
-            int getNowValue();
-            void setNowValue(int index);
         }
         private String name = "Core";
         private String details = "Core";
@@ -203,9 +203,15 @@ public class EditGUI {
                 return;
             }
             if(openedWindows.containsKey(player)) {
-                while (openedWindows.get(player).size() > 0) {
-                    closeTopWindow(player);
-                }
+                try {
+                    List list;
+                    synchronized (openedWindows) {
+                        list = openedWindows.get(player);
+                    }
+                    while (list.size() > 0) {
+                        closeTopWindow(player);
+                    }
+                }catch (Exception e){}
             }
         }
         public static void closeTopWindow(Player player){
@@ -284,8 +290,13 @@ public class EditGUI {
         }
 
         boolean isDouble = false;
-        public NumberInputWindow(boolean isDouble){
+        public NumberInputWindow(Object originalValue,boolean isDouble){
             this.isDouble=isDouble;
+            if(isDouble){
+                nowDoubleValue = (double) originalValue;
+            }else{
+                nowIntValue = (int) originalValue;
+            }
         }
 
         UUID uuid = generateNewControllerCommandCallbackUUID();
@@ -302,7 +313,7 @@ public class EditGUI {
                         BukkitRunnable runnable = new BukkitRunnable() {
                             @Override
                             public void run() {
-                                String str = askForString();
+                                String str = askForString(String.valueOf(isDouble?nowDoubleValue:nowIntValue));
                                 try {
                                     if(isDouble) {
                                         nowDoubleValue = Double.parseDouble(str);
@@ -462,6 +473,21 @@ public class EditGUI {
             removeControllerCommandCallback(uuid);
         }
     }
+    private PacketListener addReOpenPacketListener(int containerID,Player player,Runnable setReOpen){
+        return PacketListener.addListener(new PacketListener(player, ServerboundContainerClosePacket.class, new PacketListener.PacketHandler() {
+            @Override
+            public boolean handle(PacketListener listener, Packet p) {
+                if(p instanceof ServerboundContainerClosePacket){
+                    ServerboundContainerClosePacket packet  = (ServerboundContainerClosePacket) p;
+                    if(packet.getContainerId()==containerID){
+                        setReOpen.run();
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }));
+    }
     private class BooleanInputWindow extends EditGUISubWindow{
         private static final int containerID = 85;
         private int stateID = 0;
@@ -476,6 +502,7 @@ public class EditGUI {
 
         @Override
         public void openWindow(Player player) {
+            reopen=true;
             listener1 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
                 public boolean handle(PacketListener listener, Packet p) {
@@ -498,19 +525,7 @@ public class EditGUI {
                     return false;
                 }
             }));
-            listener2 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClosePacket.class, new PacketListener.PacketHandler() {
-                @Override
-                public boolean handle(PacketListener listener, Packet p) {
-                    if(p instanceof ServerboundContainerClosePacket){
-                        ServerboundContainerClosePacket packet  = (ServerboundContainerClosePacket) p;
-                        if(packet.getContainerId()==containerID){
-                            reopen=true;
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }));
+            listener2 = addReOpenPacketListener(containerID,player,()->{reopen=true;});
             reopenWindow(player);
             resetItems(player);
         }
@@ -528,8 +543,8 @@ public class EditGUI {
                 );
                 CraftUtils.sendPacket(player,packet);
                 reopen=false;
+                resetItems(player);
             }
-            resetItems(player);
         }
         private void resetItems(Player player){
             stateID = stateID + 1 & 32767;
@@ -581,6 +596,9 @@ public class EditGUI {
         private PacketListener listener1;
         private PacketListener listener2;
         private PacketListener listener3;
+        public StringInputWindow(String originalValue){
+            this.nowStringValue = originalValue;
+        }
 
 
 
@@ -590,12 +608,16 @@ public class EditGUI {
         private boolean reopen =true;
         @Override
         public void openWindow(Player player) {
+            reopen=true;
             listener1 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
                 public boolean handle(PacketListener listener, Packet p) {
                     if(p instanceof ServerboundContainerClickPacket){
                         ServerboundContainerClickPacket packet  = (ServerboundContainerClickPacket) p;
                         if(packet.getContainerId()==containerID){
+                            if(packet.getSlotNum()==0){
+                                nowStringValue="";
+                            }
                             updateInventory();
                             resetItems(player);
                             if(packet.getSlotNum()==2){
@@ -607,19 +629,7 @@ public class EditGUI {
                     return false;
                 }
             }));
-            listener2 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClosePacket.class, new PacketListener.PacketHandler() {
-                @Override
-                public boolean handle(PacketListener listener, Packet p) {
-                    if(p instanceof ServerboundContainerClosePacket){
-                        ServerboundContainerClosePacket packet  = (ServerboundContainerClosePacket) p;
-                        if(packet.getContainerId()==containerID){
-                            reopen=true;
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }));
+            listener2 = addReOpenPacketListener(containerID,player,()->{reopen=true;});
             listener3 = PacketListener.addListener(new PacketListener(player, ServerboundRenameItemPacket.class, new PacketListener.PacketHandler() {
                 @Override
                 public boolean handle(PacketListener listener, Packet p) {
@@ -642,7 +652,7 @@ public class EditGUI {
             ItemStack itemStack = new ItemStack(Items.LIGHT_GRAY_STAINED_GLASS_PANE,1);
             CompoundTag tag = itemStack.getOrCreateTag();
             CompoundTag displayTag = new CompoundTag();
-            displayTag.putString("Name",new JsonText("").toJSONWithoutExtra());
+            displayTag.putString("Name",new JsonText(nowStringValue).toJSONWithoutExtra());
             tag.put("display",displayTag);
             list.set(0,itemStack);
             itemStack = new ItemStack(Items.LIME_STAINED_GLASS_PANE,1);
@@ -696,6 +706,7 @@ public class EditGUI {
         }
     }
     private class LocationInputWindow extends EditGUISubWindow{
+
         World world = Bukkit.getWorld("world");
         double x = 0;
         double y =0;
@@ -710,8 +721,20 @@ public class EditGUI {
         }
 
         boolean isVector = false;
-        public LocationInputWindow(boolean isVector){
+        public LocationInputWindow(Object originalValue,boolean isVector){
             this.isVector=isVector;
+            if(isVector){
+                Vector vector = (Vector) originalValue;
+                x=vector.getX();
+                y=vector.getY();
+                z=vector.getZ();
+            }else{
+                Location location = (Location) originalValue;
+                world = location.getWorld();
+                x=location.getX();
+                y=location.getY();
+                z=location.getZ();
+            }
         }
 
         UUID uuid = generateNewControllerCommandCallbackUUID();
@@ -756,20 +779,24 @@ public class EditGUI {
                                         openWindow(player);
                                     }
                                     if(command[1].equals("x")){
-                                        x = askForDouble();
+                                        x = askForDouble(x);
                                         openWindow(player);
                                     }
                                     if(command[1].equals("y")){
-                                        y = askForDouble();
+                                        y = askForDouble(y);
                                         openWindow(player);
                                     }
                                     if(command[1].equals("z")){
-                                        z = askForDouble();
+                                        z = askForDouble(z);
                                         openWindow(player);
                                     }
                                     if(command[1].equals("xyz")){
                                         try {
-                                            String[] xyz = askForString().split("[,\\s]+");
+                                            String[] xyz = askForString(
+                                                    String.format("%.4f",x)+" "
+                                                    +String.format("%.4f",y)+ " "
+                                                    +String.format("%.4f",z)
+                                            ).split("[,\\s]+");
                                             x = Double.parseDouble(xyz[0]);
                                             y = Double.parseDouble(xyz[1]);
                                             z = Double.parseDouble(xyz[2]);
@@ -864,17 +891,339 @@ public class EditGUI {
             removeControllerCommandCallback(uuid);
         }
     }
-
-    private int askForInteger(){
-        NumberInputWindow window = new NumberInputWindow(false){
-            @Override
-            public void closeWindow(Player player) {
-                super.closeWindow(player);
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
+    private abstract class PageWindow extends EditGUISubWindow{
+        public static abstract class PageWindowCallBackRunnable{
+            private ServerboundContainerClickPacket packet;
+            protected ServerboundContainerClickPacket getPacket(){
+                return packet;
             }
-        };
+            public abstract void run();
+        }
+        private boolean completeButton = true;
+
+        public void setCompleteButton(boolean completeButton) {
+            this.completeButton = completeButton;
+        }
+
+        private static final int containerID = 85;
+        private int stateID = 0;
+        private PacketListener listener1;
+        private PacketListener listener2;
+        boolean reopen = true;
+        public abstract List<ItemStack> getItems(Player player,int startIndex,int count);
+        public abstract List<PageWindowCallBackRunnable> getCallbacks(Player player,int startIndex,int count);
+
+        public abstract int getCount();
+        @Override
+        public void openWindow(Player player) {
+            reopen=true;
+            listener1 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
+                @Override
+                public boolean handle(PacketListener listener, Packet p) {
+                    if(p instanceof ServerboundContainerClickPacket){
+                        ServerboundContainerClickPacket packet  = (ServerboundContainerClickPacket) p;
+                        if(packet.getContainerId()==containerID){
+                            int count = getCount();
+                            if(completeButton&&packet.getSlotNum()==49){
+                                closeTopWindow(player);
+                                return true;
+                            }
+                            totalPage = calcPage(count,45);
+                            nowPage = calcNowPage(nowPage,totalPage);
+                            if(packet.getSlotNum()==45&&nowPage>0){
+                                nowPage--;
+                            }
+                            if(packet.getSlotNum()==53&&nowPage<totalPage-1){
+                                nowPage++;
+                            }
+                            List<PageWindowCallBackRunnable> callbacks = getCallbacks(player,nowPage*45,45);
+                            if(packet.getSlotNum()>=0&&packet.getSlotNum()<45&&
+                                    callbacks.size()>packet.getSlotNum()
+                            ){
+                                PageWindowCallBackRunnable runnable = callbacks.get(packet.getSlotNum());
+                                runnable.packet=packet;
+                                runnable.run();
+                            }
+                            updateInventory();
+                            resetItems(player);
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }));
+            listener2 = addReOpenPacketListener(containerID,player,()->{reopen=true;});
+            reopenWindow(player);
+            resetItems(player);
+        }
+        protected void reload(Player player){
+            updateInventory();
+            resetItems(player);
+        }
+
+        @Override
+        public void reopenWindow(Player player) {
+            if(reopen){
+                Packet packet = new ClientboundOpenScreenPacket(
+                        containerID,
+                        MenuType.GENERIC_9x6,
+                        title.toComponent()
+                );
+                CraftUtils.sendPacket(player,packet);
+                reopen=false;
+                resetItems(player);
+            }
+        }
+        private JsonText title = new JsonText("");
+
+        public void setTitle(JsonText title) {
+            this.title = title;
+        }
+
+        private int nowPage = 0;
+        private int totalPage = 0;
+
+        private void resetItems(Player player){
+            stateID = stateID + 1 & 32767;
+            NonNullList list = NonNullList.create();
+            for(int i=0;i<54;i++){
+                list.add(0,ItemStack.EMPTY);
+            }
+            totalPage = calcPage(getCount(),45);
+            nowPage = calcNowPage(nowPage,totalPage);
+            List<ItemStack> items = getItems(player,nowPage*45,45);
+            for(int i=0;i<45;i++){
+                if(i>items.size()-1){
+                    break;
+                }
+                list.set(i,items.get(i));
+            }
+            if(nowPage<totalPage-1){
+                list.set(53,getItemSwitchPage(true,nowPage,totalPage));
+            }
+            if(nowPage>0){
+                list.set(45,getItemSwitchPage(false,nowPage,totalPage));
+            }
+            if(completeButton){
+                ItemStack stack = new ItemStack(Items.LIME_WOOL);
+                CompoundTag tag = stack.getOrCreateTag();
+                CompoundTag displayTag = new CompoundTag();
+                displayTag.putString("Name",new JsonText(LangUtils.getText("complete"))
+                        .setColor("green")
+                        .toJSONWithoutExtra()
+                );
+                tag.put("display",displayTag);
+                list.set(49,stack);
+            }
+            Packet packet = new ClientboundContainerSetContentPacket(
+                    containerID,
+                    stateID,list,ItemStack.EMPTY
+            );
+            CraftUtils.sendPacket(player,packet);
+            packet = new ClientboundContainerSetDataPacket(containerID,0,0);
+            CraftUtils.sendPacket(player,packet);
+        }
+        @Override
+        public void closeWindow(Player player) {
+            if(listener1 !=null){
+                PacketListener.removeListener(listener1);
+            }
+            reopen=false;
+            if(listener2 !=null) {
+                PacketListener.removeListener(listener2);
+            }
+        }
+    }
+
+    private class StringArrayInputWindow extends PageWindow{
+        public StringArrayInputWindow(String[] originalValue){
+            for(int i=0;i<originalValue.length;i++){
+                strings.add(originalValue[i]);
+            }
+            setTitle(new JsonText(LangUtils.getText("ask-type")
+                    .replace("%%",
+                            LangUtils.getText("type-string-array")
+                    )).setColor("gold"));
+        }
+        List<String> strings = new ArrayList<>();
+
+        public String[] getNowValue() {
+            return strings.toArray(new String[0]);
+        }
+
+
+        private List<Utils.Pair<Integer,Integer>> getTypes(){
+            List<Utils.Pair<Integer,Integer>> types = new ArrayList<>();
+            int count = strings.size();
+            if(count==0){
+                types.add(new Utils.Pair<Integer,Integer>(-1,0));
+            }else{
+                for(int i=0;i<strings.size();i++){
+                    types.add(new Utils.Pair<Integer,Integer>(-1,i));
+                    types.add(new Utils.Pair<Integer,Integer>(i,null));
+                }
+                types.add(new Utils.Pair<Integer,Integer>(-1,strings.size()));
+            }
+            return types;
+        }
+
+
+        @Override
+        public List<ItemStack> getItems(Player player,int startIndex,int count) {
+            List<ItemStack> list = new ArrayList<>();
+            List<Utils.Pair<Integer,Integer>> types = getTypes();
+            for(int i=startIndex;i<startIndex+count;i++){
+                if(i>types.size()-1){
+                    break;
+                }
+                boolean isInsert = types.get(i).getKey()==-1;
+                ItemStack stack = new ItemStack(isInsert?Items.GOLD_BLOCK:Items.DIAMOND_BLOCK);
+                CompoundTag tag = stack.getOrCreateTag();
+                CompoundTag displayTag = new CompoundTag();
+                if(isInsert){
+                    displayTag.putString("Name",new JsonText(
+                            LangUtils.getText("insert"))
+                            .setColor("gold")
+                            .toJSONWithoutExtra()
+                    );
+                }else {
+                    String[] throwToRemoveStrings = LangUtils.getText("throw-to-remove").split("%%");
+                    displayTag.putString("Name", new JsonText(
+                            types.get(i).getKey() + " " + LangUtils.getText("click-to-set") + " " + throwToRemoveStrings[0])
+                            .addExtra(new JsonText().setKeybind("key.drop").setColor("dark_aqua"))
+                            .addExtra(new JsonText(throwToRemoveStrings[1]).setColor("blue"))
+                            .setColor("blue")
+                            .toJSONWithoutExtra()
+                    );
+                }
+                if(!isInsert){
+                    ListTag lore = new ListTag();
+                    try {
+                        lore.add(StringTag.valueOf(new JsonText(strings.get(types.get(i).getKey()))
+                                .setItalic(false)
+                                .setColor("white").toJSONWithoutExtra()));
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    displayTag.put("Lore",lore);
+                }
+                tag.put("display",displayTag);
+                list.add(stack);
+            }
+            return list;
+        }
+        @Override
+        public List<PageWindowCallBackRunnable> getCallbacks(Player player,int startIndex,int count) {
+            List<PageWindowCallBackRunnable> list = new ArrayList<>();
+            List<Utils.Pair<Integer,Integer>> types = getTypes();
+            for(int i=startIndex;i<startIndex+count;i++){
+                if(i>types.size()-1){
+                    break;
+                }
+                Utils.Pair<Integer,Integer> pair = types.get(i);
+               if(types.get(i).getKey()==-1){
+                   list.add(new PageWindowCallBackRunnable() {
+                       @Override
+                       public void run() {
+                           strings.add(pair.getValue(), "");
+                       }
+                   });
+               }else{
+                   list.add(new PageWindowCallBackRunnable() {
+                       @Override
+                       public void run() {
+                           if(getPacket().getClickType().equals(ClickType.THROW)) {
+                                strings.remove((int)pair.getKey());
+                           }else{
+                               BukkitRunnable runnable = new BukkitRunnable() {
+                                   @Override
+                                   public void run() {
+                                       String str = askForString(strings.get(pair.getKey()));
+                                       strings.set(pair.getKey(), str);
+                                       reload(player);
+                                   }
+                               };
+                               runnable.runTaskAsynchronously(Main.thisPlugin());
+                           }
+                       }
+                   });
+
+               }
+            }
+            return list;
+        }
+
+        @Override
+        public int getCount() {
+            return getTypes().size();
+        }
+    }
+    private class StringSelectWindow extends PageWindow{
+        String[] strings;
+        int index = 0;
+        public int getNowValue(){
+            return index;
+        }
+        public StringSelectWindow(String[] list){
+            if(list.length==0){
+                throw new RuntimeException("Array length cannot be zero.");
+            }
+            strings = list.clone();
+            setCompleteButton(false);
+            setTitle(new JsonText(LangUtils.getText("type-list")).setColor("gold"));
+        }
+
+        @Override
+        public List<ItemStack> getItems(Player player, int startIndex, int count) {
+            List<ItemStack> list = new ArrayList<>();
+            for(int i=startIndex;i<startIndex+count;i++){
+                if(i>strings.length-1){
+                    break;
+                }
+                ItemStack stack = new ItemStack(Items.DIAMOND_BLOCK);
+                CompoundTag tag = stack.getOrCreateTag();
+                CompoundTag displayTag = new CompoundTag();
+                displayTag.putString("Name",new JsonText(
+                        strings[i]
+                        )
+                        .setColor("blue")
+                        .toJSONWithoutExtra()
+                );
+                tag.put("display",displayTag);
+                list.add(stack);
+            }
+            return list;
+        }
+
+        @Override
+        public List<PageWindowCallBackRunnable> getCallbacks(Player player, int startIndex, int count) {
+            List<PageWindowCallBackRunnable> list = new ArrayList<>();
+            for(int i=startIndex;i<startIndex+count;i++){
+                if(i>strings.length-1){
+                    break;
+                }
+                final int finalIndex = i;
+                list.add(new PageWindowCallBackRunnable(){
+                    @Override
+                    public void run() {
+                        index = finalIndex;
+                        closeTopWindow(player);
+                    }
+                });
+
+            }
+            return list;
+        }
+
+        @Override
+        public int getCount() {
+            return strings.length;
+        }
+    }
+
+
+    private int askForInteger(int originalValue){
+        NumberInputWindow window = new NumberInputWindow(originalValue,false);
         openAndWaitWindowClose(window);
         return (int)window.getNowValue();
     }
@@ -883,42 +1232,18 @@ public class EditGUI {
         return openedPlayer;
     }
 
-    private double askForDouble(){
-        NumberInputWindow window = new NumberInputWindow(true){
-            @Override
-            public void closeWindow(Player player) {
-                super.closeWindow(player);
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
-            }
-        };
+    private double askForDouble(double originalValue){
+        NumberInputWindow window = new NumberInputWindow(originalValue,true);
         openAndWaitWindowClose(window);
         return (double)window.getNowValue();
     }
     private boolean askForBoolean(){
-        BooleanInputWindow window = new BooleanInputWindow(){
-            @Override
-            public void closeWindow(Player player) {
-                super.closeWindow(player);
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
-            }
-        };
+        BooleanInputWindow window = new BooleanInputWindow();
         openAndWaitWindowClose(window);
         return window.getNowBooleanValue();
     }
-    private String askForString(){
-        StringInputWindow window = new StringInputWindow(){
-            @Override
-            public void closeWindow(Player player) {
-                super.closeWindow(player);
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
-            }
-        };
+    private String askForString(String originalValue){
+        StringInputWindow window = new StringInputWindow(originalValue);
         openAndWaitWindowClose(window);
         return window.getNowStringValue();
     }
@@ -935,35 +1260,26 @@ public class EditGUI {
         }
 
     }
-    private String[] askForStringList(){
-        return new String[]{};
+    private String[] askForStringArray(String[] originalValue){
+        StringArrayInputWindow window = new StringArrayInputWindow(originalValue);
+        openAndWaitWindowClose(window);
+        return window.getNowValue();
     }
     private int askForStringFromList(String[] list){
-        return 0;
+        if(list.length==0){
+            return -1;
+        }
+        StringSelectWindow window = new StringSelectWindow(list);
+        openAndWaitWindowClose(window);
+        return window.getNowValue();
     }
-    private Location askForLocation(){
-        LocationInputWindow window = new LocationInputWindow(false){
-            @Override
-            public void closeWindow(Player player) {
-                super.closeWindow(player);
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
-            }
-        };
+    private Location askForLocation(Location originalValue){
+        LocationInputWindow window = new LocationInputWindow(originalValue,false);
         openAndWaitWindowClose(window);
         return (Location) window.getNowValue();
     }
-    private Vector askForVector(){
-        LocationInputWindow window = new LocationInputWindow(true){
-            @Override
-            public void closeWindow(Player player) {
-                super.closeWindow(player);
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
-            }
-        };
+    private Vector askForVector(Vector originalValue){
+        LocationInputWindow window = new LocationInputWindow(originalValue,true);
         openAndWaitWindowClose(window);
         return (Vector) window.getNowValue();
     }
@@ -980,36 +1296,92 @@ public class EditGUI {
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
             public void run() {
-                if(EditGUISubWindow.openedWindows.containsKey(openedPlayer)){
-                    List<EditGUISubWindow> windows = EditGUISubWindow.openedWindows.get(openedPlayer);
-                    synchronized (windows){
-                        windows.get(windows.size()-1).closeWindow(openedPlayer);
-                        windows.get(windows.size()-1).openWindow(openedPlayer);
+                synchronized (this){
+                    if(EditGUISubWindow.openedWindows.containsKey(openedPlayer)){
+                        List<EditGUISubWindow> windows = EditGUISubWindow.openedWindows.get(openedPlayer);
+                        synchronized (windows){
+                            windows.get(windows.size()-1).closeWindow(openedPlayer);
+                            windows.get(windows.size()-1).openWindow(openedPlayer);
+                        }
+                        return;
                     }
-                    return;
                 }
                 Utils.Pair<String,Class> item = list.get(index);
                 String key = item.getKey();
                 if (item.getValue().equals(Integer.class)) {
-                    int i = askForInteger();
+                    Integer originalValue = null;
+                    try {
+                        originalValue = (Integer) screen.getCore().getEditGUISettingValue(key);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(originalValue==null){
+                        originalValue=0;
+                    }
+                    int i = askForInteger(originalValue);
                     screen.getCore().setEditGUISettingValue(key,i);
                 } else if (item.getValue().equals(Double.class) || item.getValue().equals(Float.class)) {
-                    double d = askForDouble();
+                    Double originalValue = null;
+                    try {
+                        originalValue = (Double) screen.getCore().getEditGUISettingValue(key);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(originalValue==null){
+                        originalValue=0d;
+                    }
+                    double d = askForDouble(originalValue);
                     screen.getCore().setEditGUISettingValue(key,d);
                 } else if (item.getValue().equals(Boolean.class)) {
                     boolean b = askForBoolean();
                     screen.getCore().setEditGUISettingValue(key,b);
                 } else if (item.getValue().equals(String.class)) {
-                    String str = askForString();
+                    String originalValue = null;
+                    try {
+                        originalValue = (String) screen.getCore().getEditGUISettingValue(key);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(originalValue==null){
+                        originalValue="";
+                    }
+                    String str = askForString(originalValue);
                     screen.getCore().setEditGUISettingValue(key,str);
                 } else if (item.getValue().equals(String[].class)) {
-                    String[] a = askForStringList();
+                    String[] originalValue = null;
+                    try {
+                        originalValue = (String[]) screen.getCore().getEditGUISettingValue(key);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(originalValue==null){
+                        originalValue=new String[0];
+                    }
+                    String[] a = askForStringArray(originalValue);
                     screen.getCore().setEditGUISettingValue(key,a);
                 } else if (item.getValue().equals(Location.class)) {
-                    Location l = askForLocation();
+                    Location originalValue = null;
+                    try {
+                        originalValue = (Location) screen.getCore().getEditGUISettingValue(key);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(originalValue==null){
+                        originalValue=new Location(Bukkit.getWorld("world"),0,0,0);
+                    }
+                    Location l = askForLocation(originalValue);
                     screen.getCore().setEditGUISettingValue(key,l);
                 } else if (item.getValue().equals(Vector.class)) {
-                    Vector v = askForVector();
+                    Vector originalValue = null;
+                    try {
+                        originalValue = (Vector) screen.getCore().getEditGUISettingValue(key);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    if(originalValue==null){
+                        originalValue=new Vector(0,0,0);
+                    }
+                    Vector v = askForVector(originalValue);
                     screen.getCore().setEditGUISettingValue(key,v);
                 } else if (EditGUICoreSettingsList.class.isAssignableFrom(item.getValue())) {
                     try {
@@ -1020,6 +1392,9 @@ public class EditGUI {
                         throw new RuntimeException(e);
                     }
                 }
+                reOpenContainer();
+                setBaseItems();
+                updateInventory();
             }
         };
         runnable.runTaskAsynchronously(Main.thisPlugin());
@@ -1187,9 +1562,17 @@ public class EditGUI {
         ItemStack stack = CraftUtils.itemBukkitToNMS(new org.bukkit.inventory.ItemStack(info.icon));
         stack.setCount(1);
         CompoundTag displayTag = new CompoundTag();
-        JsonText jsonText = new JsonText(info.name).setColor(info.themeColor);
+        String name = info.name;
+        if(name.startsWith("@")){
+            name=LangUtils.getText(name.substring(1));
+        }
+        JsonText jsonText = new JsonText(name).setColor(info.themeColor);
         ListTag lore = new ListTag();
-        for(String i:info.details.split("\n")){
+        String details = info.details;
+        if(details.startsWith("@")){
+            details=LangUtils.getText(details.substring(1));
+        }
+        for(String i:details.split("\n")){
             lore.add(StringTag.valueOf(new JsonText(i)
                     .setItalic(false)
                     .setColor(info.themeColor).toJSONWithoutExtra()));
@@ -1227,7 +1610,7 @@ public class EditGUI {
         stack.getOrCreateTag().put("display",displayTag);
         return stack;
     }
-    private ItemStack getItemSwitchPage(boolean next){
+    private static ItemStack getItemSwitchPage(boolean next,int nowPage,int totalPage){
         ItemStack stack = new net.minecraft.world.item.ItemStack(Items.STONE_BUTTON);
         stack.setCount(1);
         CompoundTag displayTag = new CompoundTag();
@@ -1252,7 +1635,11 @@ public class EditGUI {
         ItemStack stack = new net.minecraft.world.item.ItemStack(Items.REDSTONE_BLOCK);
         stack.setCount(1);
         CompoundTag displayTag = new CompoundTag();
-        JsonText jsonText = new JsonText(settings.getKey()).setColor("red");
+        String settingName = settings.getKey();
+        if(settingName.startsWith("@")){
+            settingName = LangUtils.getText(settingName.substring(1));
+        }
+        JsonText jsonText = new JsonText(settingName).setColor("red");
         ListTag lore = new ListTag();
         String type;
         if (settings.getValue().equals(Integer.class)) {
@@ -1302,8 +1689,19 @@ public class EditGUI {
                     Vector vector = (Vector) nowValue;
                     texts.add("none X:"+vector.getX()+" Y:"+vector.getY()+" Z:"+vector.getZ());
                 } else if (EditGUICoreSettingsList.class.isAssignableFrom(settings.getValue())) {
-                    EditGUICoreSettingsList list = (EditGUICoreSettingsList) nowValue;
-                    texts.add(list.getList()[list.getNowValue()]);
+                    try {
+                        EditGUICoreSettingsList list = (EditGUICoreSettingsList) settings.getValue().getDeclaredConstructor().newInstance();
+                        String[] strings = list.getList();
+                        if(strings.length!=0) {
+                            if((int)nowValue!=-1) {
+                                texts.add(strings[(int)nowValue]);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
                 }
             }
             for(int i=0;i<texts.size();i++) {
@@ -1346,12 +1744,9 @@ public class EditGUI {
             EditGUICoreInfo coreInfo = getCoreInfoFromCore(screen.getCore());
             if(coreInfo!=null) {
                 List<Utils.Pair<String, Class>> settings = getSupportedSettings(coreInfo);
-                calcPage(settings.size());
-                for (int p = 0; p < nowPage; p++) {
-                    for (int i = 18; i < 45; i++) {
-                        settings.remove(0);
-                    }
-                }
+                totalPage = calcPage(settings.size(),27);
+                nowPage = calcNowPage(nowPage,totalPage);
+                removeByPage(nowPage,settings,27);
                 for (int i = 18; i < 45; i++) {
                     if (settings.size() > 0) {
                         list.set(i, getCoreSettingItem(settings.get(0)));
@@ -1362,10 +1757,10 @@ public class EditGUI {
                 }
             }
             if(nowPage>0){
-                list.set(45, getItemSwitchPage(false));
+                list.set(45, getItemSwitchPage(false,nowPage,totalPage));
             }
             if(nowPage<totalPage-1){
-                list.set(53,  getItemSwitchPage(true));
+                list.set(53,  getItemSwitchPage(true,nowPage,totalPage));
             }
         }
         if(nowMode==1){
@@ -1375,12 +1770,9 @@ public class EditGUI {
                     infos.add(i);
                 }
             }
-            calcPage(infos.size());
-            for(int p=0;p<nowPage;p++){
-                for (int i = 18; i < 45; i++) {
-                    infos.remove(0);
-                }
-            }
+            totalPage = calcPage(infos.size(),27);
+            nowPage = calcNowPage(nowPage,totalPage);
+            removeByPage(nowPage,infos,27);
             for (int i = 18; i < 45; i++) {
                 if (infos.size() > 0) {
                     list.set(i, getCoreInfoItem(infos.get(0)));
@@ -1390,10 +1782,10 @@ public class EditGUI {
                 }
             }
             if(nowPage>0){
-                list.set(45, getItemSwitchPage(false));
+                list.set(45, getItemSwitchPage(false,nowPage,totalPage));
             }
             if(nowPage<totalPage-1){
-                list.set(53,  getItemSwitchPage(true));
+                list.set(53,  getItemSwitchPage(true,nowPage,totalPage));
             }
         }
         ClientboundContainerSetContentPacket setContentPacket = new ClientboundContainerSetContentPacket(containerID,stateID,list, ItemStack.EMPTY);
@@ -1401,13 +1793,23 @@ public class EditGUI {
 
     }
 
-    private void calcPage(int size) {
-        totalPage = size %27==0? size /27: size /27+1;
+    private static int calcPage(int size,int eachPage) {
+        return size %eachPage==0? size /eachPage: size /eachPage+1;
+    }
+    private static int calcNowPage(int nowPage,int totalPage){
         if(nowPage>=totalPage){
             nowPage = totalPage-1;
         }
         if(nowPage<0){
             nowPage = 0;
+        }
+        return nowPage;
+    }
+    private static void removeByPage(int page,List list,int eachPage){
+        for(int p=0;p<page;p++){
+            for (int i = 0; i < eachPage; i++) {
+                list.remove(0);
+            }
         }
     }
 
