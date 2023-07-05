@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,6 +43,16 @@ public class EventListener implements Listener {
     public void onPlayerMove(PlayerMoveEvent e){
         if(e.getFrom().distance(e.getTo())>1){
             EditGUI.forceClose(e.getPlayer());
+        }
+    }
+    @EventHandler
+    public void onBlockRedstone(BlockRedstoneEvent e){
+        synchronized (RedstoneBridge.outputBlocks) {
+            for(Location i:RedstoneBridge.outputBlocks){
+                if(e.getBlock().getLocation().equals(i)){
+                    e.setNewCurrent(e.getOldCurrent());
+                }
+            }
         }
     }
 

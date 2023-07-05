@@ -48,8 +48,7 @@ public abstract class MGUICore extends Core {
     @Override
     public void reRender() {
         if(container!=null){
-            container.addReRender(new Rectangle2D.Double(0,0,container.getWidth(),container.getHeight()));
-            container.reRender();
+            container.reRenderAll();
         }
     }
 }

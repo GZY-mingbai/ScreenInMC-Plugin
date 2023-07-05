@@ -1,7 +1,9 @@
 package cn.mingbai.ScreenInMC.Controller;
 
 import cn.mingbai.ScreenInMC.BuiltInGUIs.Welcome;
+import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
@@ -32,6 +34,7 @@ public class Item {
     public static final int SELECT_MODE = 0; //框选模式
     public static final int PLACE_MODE = 1; //放置模式
     public static final int EDIT_MODE = 2; //编辑模式
+    public static final int CONNECT_MODE = -1; //连接模式
     public static final int FINAL_MODE = 2;
     public static final int FIRST_MODE = 0;
     private static BukkitRunnable runnable = null;
@@ -145,8 +148,31 @@ public class Item {
                                                     }
                                                 }
                                                 break;
-
-
+                                            case CONNECT_MODE:
+                                                boolean finish = false;
+                                                if(data.conn!=null){
+                                                    Screen[] screens = Screen.getAllScreens();
+                                                    if(data.conn.id<screens.length&&data.conn.id>=0) {
+                                                        Screen screen = screens[data.conn.id];
+                                                        if (screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
+                                                            if(data.conn.i>=0&&screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().size()> data.conn.i) {
+                                                                Location location = getClosestBlock(player.getEyeLocation(), Material.REDSTONE_WIRE);
+                                                                if (location != null) {
+                                                                    spawnRectParticle(player.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ(),
+                                                                            location.getBlockX() + 1, location.getBlockY(), location.getBlockZ() + 1,
+                                                                            Color.RED);
+                                                                }
+                                                                finish = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if(!finish){
+                                                    switchMode(player,FIRST_MODE);
+                                                }
+                                                break;
+                                            default:
+                                                switchMode(player,FIRST_MODE);
                                         }
                                         JsonText component = new JsonText(LangUtils.getText("controller-item-now-mode") + " " + getModeName(data.nowMode));
                                         component.addExtra(extra);
@@ -170,7 +196,38 @@ public class Item {
         };
         runnable.runTaskTimer(Main.thisPlugin(), 0L, 1L);
     }
-
+    public static ItemStack getItemFromPlayer(Player player){
+        ItemStack item =player.getInventory().getItemInMainHand();
+        if(item==null||!item.hasItemMeta()){
+            return null;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if(meta.hasCustomModelData()&&meta.getCustomModelData()!=CONTROLLER){
+            return null;
+        }
+        return item;
+    }
+    public static ItemData getData(ItemStack item){
+        return getGson().fromJson(item.getItemMeta().getLocalizedName(), ItemData.class);
+    }
+    public static void setData(ItemStack item,ItemData data){
+        ItemMeta meta = item.getItemMeta();
+        meta.setLocalizedName(getGson().toJson(data));
+        item.setItemMeta(meta);
+    }
+    public static void switchMode(Player player,int to){
+        ItemStack item = getItemFromPlayer(player);
+        if(item==null){
+            return;
+        }
+        ItemData data = getData(item);
+        data.nowMode=to;
+        if(to!=CONNECT_MODE){
+            data.conn=null;
+        }
+        setData(item,data);
+        setItemLore(item, data.nowMode);
+    }
     public static void onDisable() {
         if (runnable != null) {
             runnable.cancel();
@@ -205,6 +262,8 @@ public class Item {
                 return LangUtils.getText("controller-item-place-mode");
             case EDIT_MODE:
                 return LangUtils.getText("controller-item-edit-mode");
+            case CONNECT_MODE:
+                return LangUtils.getText("controller-item-connect-mode");
         }
         return LangUtils.getText("controller-item-unknown-mode");
     }
@@ -311,10 +370,20 @@ public class Item {
                         getLoreColorfulJsonText(modeLore[0], "gold")
                 )));
                 lore.add(StringTag.valueOf(JsonText.toJSON(
-                        replaceLoreKeybind(modeLore[1], "%left-click%", "key.attack", "gold", "yellow")
+                        replaceLoreKeybind(modeLore[1], "%right-click%", "key.use", "gold", "yellow")
                 )));
                 lore.add(StringTag.valueOf(JsonText.toJSON(
                         getLoreColorfulJsonText(modeLore[2], "gold")
+                )));
+                break;
+            case EDIT_MODE:
+            case CONNECT_MODE:
+                modeLore = LangUtils.getText(nowMode==EDIT_MODE?"controller-edit-mode-info":"controller-connect-mode-info").split("\n");
+                lore.add(StringTag.valueOf(JsonText.toJSON(
+                        replaceLoreKeybind(modeLore[0], "%right-click%", "key.use", "gold", "yellow")
+                )));
+                lore.add(StringTag.valueOf(JsonText.toJSON(
+                        getLoreColorfulJsonText(modeLore[1], "gold")
                 )));
                 break;
         }
@@ -426,7 +495,7 @@ public class Item {
                     clearPoints(data);
                     Main.sendMessage(player, LangUtils.getText("controller-place-start"));
                     Screen screen = new Screen(location, facing, data.w, data.h);
-                    screen.setCore(new Welcome());
+                    screen.setCore(Core.createCore("Welcome"));
                     screen.putScreen();
                     Main.sendMessage(player, "§a" + LangUtils.getText("controller-place-success")
                             .replace("%location%", "§9" + world.getName() + "(" + (int) location.getX() + "," + (int) location.getY() + "," + (int) location.getZ() + ")§a")
@@ -439,6 +508,39 @@ public class Item {
                     Main.sendMessage(player, LangUtils.getText("controller-selection-not-found"));
                     return true;
                 }
+            }
+            if(data.nowMode == CONNECT_MODE){
+                if(type.equals(Utils.MouseClickType.RIGHT)){
+                    if(data.conn!=null) {
+                        Screen[] screens = Screen.getAllScreens();
+                        if (data.conn.id < screens.length && data.conn.id >= 0) {
+                            Screen screen = screens[data.conn.id];
+                            if (screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
+                                if(data.conn.i>=0&&screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().size()> data.conn.i) {
+                                    Location location = getClosestBlock(player.getEyeLocation(), Material.REDSTONE_WIRE);
+                                    if (location!=null&&location.getBlock().getType().equals(Material.REDSTONE_WIRE)) {
+                                        Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> pair = screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().get(data.conn.i);
+                                        try {
+                                            pair.getValue().connect(location);
+                                            Main.sendMessage(player, LangUtils.getText("controller-connect-success"));
+                                        }catch (RedstoneBridge.RedstoneSignalInterface.ConnectException e){
+                                            if(e.getType()==0){
+                                                Main.sendMessage(player, LangUtils.getText("controller-connect-failed-output"));
+                                            }else
+                                            if(e.getType()==1){
+                                                Main.sendMessage(player, LangUtils.getText("controller-connect-failed-input"));
+                                            }
+                                        }
+                                        switchMode(player, EDIT_MODE);
+                                    }
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    switchMode(player,FIRST_MODE);
+                }
+                return true;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -617,6 +719,20 @@ public class Item {
         return new Utils.Pair<>(l1, l2);
     }
 
+    private static Location getClosestBlock(Location eyeLoc,Material type) {
+        for (int i = 1; i < 21; i++) {
+            Vector eyeVec = eyeLoc.toVector();
+            Vector direction = eyeLoc.getDirection();
+            direction.multiply(i * 0.25);
+            eyeVec.add(direction);
+            Location point = eyeVec.toLocation(eyeLoc.getWorld());
+            Block block = point.getBlock();
+            if (block != null && block.getType().equals(type)) {
+                return new Location(eyeLoc.getWorld(), block.getX(),block.getY(),block.getZ());
+            }
+        }
+        return null;
+    }
     private static Location getClosestBlock(Location eyeLoc) {
         for (int i = 1; i < 21; i++) {
             Vector eyeVec = eyeLoc.toVector();
@@ -686,5 +802,11 @@ public class Item {
         public Integer p1x = null, p1y = null, p1z = null;
         public Integer p2x = null, p2y = null, p2z = null;
         public Integer w = null, h = null;
+        public ConnectModeData conn;
+    }
+    public static class ConnectModeData{
+        public String core = null;
+        public int id = -1;
+        public int i = -1;
     }
 }

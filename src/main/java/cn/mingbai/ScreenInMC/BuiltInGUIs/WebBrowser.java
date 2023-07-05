@@ -3,6 +3,9 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 import cn.mingbai.ScreenInMC.Browsers.Browser;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
+import cn.mingbai.ScreenInMC.MGUI.Alignment;
+import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
+import cn.mingbai.ScreenInMC.MGUI.MContainer;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
@@ -12,12 +15,14 @@ import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 public class WebBrowser extends Core {
+    private MContainer installer=null;
     private Browser browser = null;
     private BukkitRunnable renderRunnable = null;
     private boolean unloaded = false;
@@ -29,25 +34,37 @@ public class WebBrowser extends Core {
     public Browser getBrowser() {
         return browser;
     }
-    private WebBrowserStoredData data = new WebBrowserStoredData();
-    public static class WebBrowserStoredData {
+    public static class WebBrowserStoredData implements StoredData {
         public String browser;
         public String uri;
+
+        @Override
+        public StoredData clone() {
+            WebBrowserStoredData data = new WebBrowserStoredData();
+            data.browser = this.browser;
+            data.uri = this.uri;
+            return data;
+        }
+
+        @Override
+        public Object getStorableObject() {
+            return this;
+        }
+
+
     }
 
-    public WebBrowserStoredData getData() {
-        return data;
+    @Override
+    public StoredData createStoredData() {
+        return new WebBrowserStoredData();
     }
 
     @Override
     public void onCreate() {
         try {
-            LinkedTreeMap map = (LinkedTreeMap) getStoredData();
-            if(map==null){
-                return;
-            }
-            data.browser = (String) map.get("browser");
-            if(data.browser==null){
+            WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
+            if(data.browser==null) {
+                createInstaller();
                 return;
             }
             browser = Browser.getBrowser(data.browser);
@@ -57,9 +74,30 @@ public class WebBrowser extends Core {
             e.printStackTrace();
         }
     }
+    public void createInstaller(){
+        if(installer!=null){
+            installer.reRenderAll();
+        }
+        installer = new MContainer(getScreen());
+        MTextBlock textBlock = new MTextBlock("404");
+        textBlock.setHorizontalAlignment(Alignment.HorizontalAlignment.Stretch);
+        textBlock.setVerticalAlignment(Alignment.VerticalAlignment.Stretch);
+        installer.addChildControl(textBlock);
+        installer.setBackground(Color.WHITE);
+        installer.load();
+    }
+    @Override
+    public void reRender() {
+        if(installer!=null){
+            installer.reRenderAll();
+        }
+    }
+
     private void loadBrowser(){
+        WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
         if(browser.getCoreState()==Browser.NOT_INSTALLED){
             Main.getPluginLogger().warning("Can't use "+browser.getName()+" browser because it is not installed.");
+            createInstaller();
             return;
         }
         if (browser.getCoreState() != Browser.LOADED) {
@@ -69,7 +107,13 @@ public class WebBrowser extends Core {
             }
         }
         if (browser.getCoreState() == Browser.LOADED) {
-            browser.createBrowser(getScreen(), getScreen().getWidth() * 128, getScreen().getHeight() * 128);
+            String defaultURI;
+            if(data!=null&&data.uri!=null&&data.uri.length()!=0){
+                defaultURI=data.uri;
+            }else{
+                defaultURI=Main.getConfiguration().getString("download-browser-core.main-page");
+            }
+            browser.createBrowser(getScreen(), getScreen().getWidth() * 128, getScreen().getHeight() * 128,defaultURI);
             renderRunnable = new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -92,7 +136,10 @@ public class WebBrowser extends Core {
                 }
             };
             renderRunnable.runTaskAsynchronously(Main.thisPlugin());
-            return;
+        }
+        if(installer!=null) {
+            installer.unload();
+            installer = null;
         }
     }
     @Override
@@ -190,10 +237,12 @@ public class WebBrowser extends Core {
 
     @Override
     public void setEditGUISettingValue(String name, Object value) {
+        WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
         switch (name){
             case "@controller-editor-cores-browser-uri":
                 if(browser!=null){
                     browser.openURL(getScreen(),(String) value);
+                    data.uri = (String) value;
                 }
                 break;
             case "@controller-editor-cores-browser-refresh":
@@ -204,7 +253,6 @@ public class WebBrowser extends Core {
             case "@controller-editor-cores-browser-core":
                 Browser newBrowser = Browser.getBrowser(new BrowserInstalledCoresList().getList()[(int) value]);
                 data.browser=newBrowser.getName();
-                setStoredData(data);
                 if(browser!=null) {
                     browser.destroyBrowser(getScreen());
                 }

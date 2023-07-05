@@ -434,7 +434,7 @@ public class Utils {
             return clicked;
         }
     }
-    public static byte[] getDataFromURI(URI uri){
+    public static byte[] getDataFromURI(URI uri,boolean throwException) {
         if(uri.getScheme().equals("screen-in-mc")&&"local-files".equals(uri.getHost())){
             Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
             if(path.startsWith(Paths.get(Main.PluginFilesPath+"Files"))){
@@ -444,7 +444,11 @@ public class Utils {
                     inputStream.close();
                     return data;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    if(throwException) {
+                        throw new RuntimeException(e);
+                    }else{
+                        e.printStackTrace();
+                    }
                     return new byte[0];
                 }
             }else{
@@ -460,9 +464,16 @@ public class Utils {
             inputStream.close();
             return data;
         }catch (Exception e){
-            e.printStackTrace();
+            if(throwException) {
+                throw new RuntimeException(e);
+            }else{
+                e.printStackTrace();
+            }
             return new byte[0];
         }
+    }
+    public static byte[] getDataFromURI(URI uri){
+        return getDataFromURI(uri,false);
     }
 }
 

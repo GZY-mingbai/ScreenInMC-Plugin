@@ -22,6 +22,7 @@ public abstract class Browser {
         allBrowsers.add(browser);
     }
 
+
     public static Browser getBrowser(String name) {
         for (Browser i : allBrowsers) {
             if (i.name.equals(name)) {
@@ -49,7 +50,7 @@ public abstract class Browser {
 
     public abstract int getCoreState();
 
-    public abstract void createBrowser(Screen screen, int width, int height);
+    public abstract void createBrowser(Screen screen, int width, int height,String defaultURI);
 
     public abstract void executeJavascript(Screen screen, String script);
 

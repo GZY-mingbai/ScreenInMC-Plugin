@@ -5,6 +5,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.chunk.LevelChunk;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_19_R1.CraftChunk;
 import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
@@ -26,5 +29,8 @@ public class CraftUtils {
 
     public static org.bukkit.inventory.ItemStack itemNMSToBukkit(ItemStack itemStack) {
         return CraftItemStack.asBukkitCopy(itemStack);
+    }
+    public static LevelChunk getChunk(Location location){
+        return ((CraftChunk)location.getChunk()).getHandle();
     }
 }

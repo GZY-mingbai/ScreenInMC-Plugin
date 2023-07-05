@@ -234,6 +234,10 @@ public class MContainer extends MControl {
     public void reRender() {
         rerender = true;
     }
+    public void reRenderAll(){
+        this.addReRender(new Rectangle2D.Double(0,0,this.getWidth(),this.getHeight()));
+        this.reRender();
+    }
 
     public void addReRender(Rectangle2D.Double rect) {
         synchronized (renderLock2) {

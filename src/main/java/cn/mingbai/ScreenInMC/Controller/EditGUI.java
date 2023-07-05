@@ -4,6 +4,7 @@ import cn.mingbai.ScreenInMC.Controller.EditGUI.EditGUICoreInfo.EditGUICoreSetti
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.PacketListener;
+import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
@@ -74,9 +75,6 @@ public class EditGUI {
         }
         return null;
     }
-
-
-
     public static void registerCoreInfo(EditGUICoreInfo info){
         synchronized (registeredCoreInfos){
             for(EditGUICoreInfo i : registeredCoreInfos){
@@ -122,6 +120,9 @@ public class EditGUI {
         }
     }
     private void sendSwitchModeSound(){
+        if(openedPlayer==null){
+            return;
+        }
         openedPlayer.playSound(openedPlayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS,10,2);
     }
     private static final String BookAuthor = "ScreenInMC";
@@ -1417,7 +1418,33 @@ public class EditGUI {
     }
     PacketListener listener1;
     PacketListener listener2;
-
+    private boolean startConnectRedstone(int index){
+        if(screen.getCore()==null){
+            return false;
+        }
+        List<Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface>> list = screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces();
+        if(list.size()<=index){
+            return false;
+        }
+        org.bukkit.inventory.ItemStack itemStack = Item.getItemFromPlayer(openedPlayer);
+        if(itemStack!=null){
+            Item.ItemData data = Item.getData(itemStack);
+            data.conn = new Item.ConnectModeData();
+            data.conn.core = screen.getCore().getCoreName();
+            data.conn.id = screen.getID();
+            data.conn.i = index;
+            Item.setData(itemStack,data);
+            Item.switchMode(openedPlayer,Item.CONNECT_MODE);
+            String[] message = LangUtils.getText("controller-connect-start").split("%right-click%");
+            Main.sendMessage(openedPlayer,new LangUtils.JsonText(message[0]).setColor("white")
+                    .addExtra(new JsonText().setKeybind("key.use").setColor("yellow"))
+                    .addExtra(new JsonText(message[1]).setColor("white"))
+            );
+        }
+        sendClosePacket();
+        onClose();
+        return true;
+    }
     private void openContainer(){
         listener1 = PacketListener.addListener(new PacketListener(openedPlayer, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
             @Override
@@ -1436,7 +1463,7 @@ public class EditGUI {
                             nowPage=0;
                             sendSwitchModeSound();
                         }
-                        if(nowMode==0||nowMode==1) {
+                        if(nowMode==0||nowMode==1||nowMode==2) {
                             if (packet.getSlotNum() == 45 && nowPage > 0) {
                                 nowPage--;
                                 sendSwitchModeSound();
@@ -1460,6 +1487,16 @@ public class EditGUI {
                                 sendSwitchModeSound();
                             }
                         }
+                        if(nowMode==2){
+                            if(packet.getSlotNum()>=18 && packet.getSlotNum()<=44) {
+                                int index = nowPage * 27 + packet.getSlotNum() - 18;
+                                if(startConnectRedstone(index)){
+                                    return true;
+                                }
+                                sendSwitchModeSound();
+                            }
+                        }
+
                         setBaseItems();
                         return true;
                     }
@@ -1492,6 +1529,10 @@ public class EditGUI {
                 CraftUtils.sendPacket(player,packet);
             }
         }
+    }
+    private void sendClosePacket(){
+        ClientboundContainerClosePacket closePacket = new ClientboundContainerClosePacket(containerID);
+        CraftUtils.sendPacket(openedPlayer,closePacket);
     }
     private void onClose(){
         PacketListener.removeListener(listener1);
@@ -1555,6 +1596,29 @@ public class EditGUI {
                 .setColor("light_purple").toJSONWithoutExtra()));
         displayTag.putString("Name",jsonText.toJSON());
         displayTag.put("Lore",lore);
+        stack.getOrCreateTag().put("display",displayTag);
+        return stack;
+    }
+    private ItemStack getItem2(){
+        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.RED_GLAZED_TERRACOTTA);
+        stack.setCount(1);
+        CompoundTag displayTag = new CompoundTag();
+        JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-title")).setColor("red");
+        ListTag lore = new ListTag();
+        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-redstone-connect-info"))
+                .setItalic(false)
+                .setColor("red").toJSONWithoutExtra()));
+        displayTag.putString("Name",jsonText.toJSON());
+        displayTag.put("Lore",lore);
+        stack.getOrCreateTag().put("display",displayTag);
+        return stack;
+    }
+    private ItemStack getItem2NotSupported(){
+        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.RED_STAINED_GLASS);
+        stack.setCount(1);
+        CompoundTag displayTag = new CompoundTag();
+        JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-not-supported")).setColor("red");
+        displayTag.putString("Name",jsonText.toJSON());
         stack.getOrCreateTag().put("display",displayTag);
         return stack;
     }
@@ -1729,6 +1793,19 @@ public class EditGUI {
         }
         return settings;
     }
+    private ItemStack getRedstoneConnectItem(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> info){
+        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.REDSTONE,1);
+        CompoundTag displayTag = new CompoundTag();
+        String text = info.getKey();
+        if(text.startsWith("@")){
+            text=LangUtils.getText(text.substring(1));
+        }
+        JsonText jsonText = new JsonText(text+" ("+(info.getValue().isInput()?LangUtils.getText("input"):LangUtils.getText("output"))+")").setColor("red");
+        displayTag.putString("Name",jsonText.toJSON());
+        stack.getOrCreateTag().put("display",displayTag);
+        return stack;
+    }
+
     private void setBaseItems(){
         stateID = stateID + 1 & 32767;
         NonNullList list = NonNullList.create();
@@ -1737,6 +1814,8 @@ public class EditGUI {
         }
         list.set(0,getItem0());
         list.set(1,getItem1());
+        list.set(2,getItem2());
+
         for(int i=9;i<18;i++){
             list.set(i,getItem9To17(i-9));
         }
@@ -1756,12 +1835,7 @@ public class EditGUI {
                     }
                 }
             }
-            if(nowPage>0){
-                list.set(45, getItemSwitchPage(false,nowPage,totalPage));
-            }
-            if(nowPage<totalPage-1){
-                list.set(53,  getItemSwitchPage(true,nowPage,totalPage));
-            }
+
         }
         if(nowMode==1){
             List<EditGUICoreInfo> infos = new ArrayList<>();
@@ -1781,6 +1855,36 @@ public class EditGUI {
                     break;
                 }
             }
+
+        }
+        if(nowMode==2){
+            List<Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface>> objects = new ArrayList<>();
+            if(screen.getCore()!=null){
+                RedstoneBridge bridge = screen.getCore().getRedstoneBridge();
+                List<Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface>> bridges = bridge.getRedstoneSignalInterfaces();
+                for(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> i:bridges){
+                    objects.add(i);
+                }
+            }
+            if(screen.getCore()==null||objects.size()==0){
+                totalPage=1;
+                nowPage=0;
+                list.set(18,getItem2NotSupported());
+            }else{
+                totalPage = calcPage(objects.size(),27);
+                nowPage = calcNowPage(nowPage,totalPage);
+                removeByPage(nowPage,objects,27);
+                for (int i = 18; i < 45; i++) {
+                    if (objects.size() > 0) {
+                        list.set(i, getRedstoneConnectItem(objects.get(0)));
+                        objects.remove(0);
+                    }else{
+                        break;
+                    }
+                }
+            }
+        }
+        if(nowMode==0||nowMode==1||nowMode==2){
             if(nowPage>0){
                 list.set(45, getItemSwitchPage(false,nowPage,totalPage));
             }
@@ -1816,6 +1920,9 @@ public class EditGUI {
     public void openGUI(Player player, Integer clickX, Integer clickY, Utils.MouseClickType clickType) {
         if(openedPlayer!=null&& !openedPlayer.isOnline()){
             openedPlayer=null;
+        }
+        if(openedPlayer!=null){
+            return;
         }
         if (player != openedPlayer) {
             openedPlayer = player;

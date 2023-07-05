@@ -37,6 +37,11 @@ public class VNCClient extends MGUICore {
     }
 
     @Override
+    public StoredData createStoredData() {
+        return new VNCClientStoredData();
+    }
+
+    @Override
     public void onUnload() {
         super.onUnload();
         if (isConnected) {
@@ -85,7 +90,9 @@ public class VNCClient extends MGUICore {
 
                     @Override
                     public void run() {
-                        setStoredData(new VNCClientStoredData(IPInput.getText(), Base64.getEncoder().encodeToString(passwordInput.getText().getBytes(StandardCharsets.UTF_8))));
+                        VNCClientStoredData storedData = ((VNCClientStoredData)getStoredData());
+                        storedData.IP = IPInput.getText();
+                        storedData.password = Base64.getEncoder().encodeToString(passwordInput.getText().getBytes(StandardCharsets.UTF_8));
                         connectServer(IPInput.getText(), passwordInput.getText());
                     }
                 };
@@ -115,8 +122,10 @@ public class VNCClient extends MGUICore {
         container.addChildControl(control);
         if (getStoredData() != null) {
             try {
-                LinkedTreeMap data = (LinkedTreeMap) getStoredData();
-                connectServer((String) data.get("IP"), new String(Base64.getDecoder().decode((String) data.get("password")), StandardCharsets.UTF_8));
+                VNCClientStoredData data = (VNCClientStoredData) getStoredData();
+                if(data.IP.length()!=0) {
+                    connectServer(data.IP, new String(Base64.getDecoder().decode(data.password), StandardCharsets.UTF_8));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -266,13 +275,25 @@ public class VNCClient extends MGUICore {
         }
     }
 
-    public static class VNCClientStoredData {
-        public String IP;
-        public String password;
+    public static class VNCClientStoredData implements StoredData {
+        public String IP="";
+        public String password="";
+        public VNCClientStoredData(){};
 
         public VNCClientStoredData(String IP, String password) {
             this.IP = IP;
             this.password = password;
+        }
+
+        @Override
+        public StoredData clone() {
+            VNCClientStoredData data = new VNCClientStoredData(this.IP,this.password);
+            return data;
+        }
+
+        @Override
+        public Object getStorableObject() {
+            return this;
         }
     }
 

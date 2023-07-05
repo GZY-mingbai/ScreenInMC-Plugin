@@ -28,46 +28,29 @@ public class ImageViewer extends Core {
     }
     private final static String defaultURI = "https://i1.hdslb.com/bfs/archive/360d6633673f1b403cbbeb9d33d02161eda3486a.jpg";
 
-    public static class ImageViewerStoredData{
+    public static class ImageViewerStoredData implements StoredData{
         public String uri = defaultURI;
         public int scaleMode=0;
         public int scaleAlgorithm=0;
-    }
-    private ImageViewerStoredData data = new ImageViewerStoredData();
 
-    public ImageViewerStoredData getData() {
-        return data;
-    }
+        @Override
+        public StoredData clone() {
+            ImageViewerStoredData storedData = new ImageViewerStoredData();
+            storedData.uri = this.uri;
+            storedData.scaleMode = this.scaleMode;
+            storedData.scaleAlgorithm = this.scaleAlgorithm;
+            return storedData;
+        }
 
+        @Override
+        public Object getStorableObject() {
+            return this;
+        }
+
+
+    }
     @Override
     public void onCreate() {
-        try {
-            LinkedTreeMap map = (LinkedTreeMap) getStoredData();
-            if(map!=null){
-                String uri = (String) map.get("uri");
-                Object scaleMode = (Object) map.get("scaleMode");
-                Object scaleAlgorithm = (Object) map.get("scaleAlgorithm");
-                if(uri!=null){
-                    this.data.uri = uri;
-                }else{
-                    this.data.uri = defaultURI;
-                }
-                if(scaleMode!=null){
-                    this.data.scaleMode = ((Double)scaleMode).intValue();
-                }else{
-                    this.data.scaleMode=0;
-                }
-                if(scaleAlgorithm!=null){
-                    this.data.scaleAlgorithm = ((Double)scaleAlgorithm).intValue();
-                }else{
-                    this.data.scaleAlgorithm=0;
-                }
-            }
-
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
         reRender();
     }
     @Override
@@ -76,6 +59,8 @@ public class ImageViewer extends Core {
             @Override
             public void run() {
                 try {
+                    ImageViewerStoredData data = (ImageViewerStoredData) getStoredData();
+
                     URI uri = new URI(data.uri);
                     image = ImageUtils.byteArrayToImage(Utils.getDataFromURI(uri));
                     int algorithm = 0;
@@ -88,9 +73,21 @@ public class ImageViewer extends Core {
                     if(data.scaleMode==1){
                         image = ImageUtils.imageToBufferedImage(image.getScaledInstance(getScreen().getWidth() * 128, getScreen().getHeight() * 128, algorithm));
                     }if(data.scaleMode==0){
-                        double scaleFactor = Math.min((double)(getScreen().getWidth() * 128 )/ (double)image.getWidth(), (double)(getScreen().getHeight() * 128) / (double)image.getHeight());
+                        int screenWidth = getScreen().getWidth() * 128;
+                        int screenHeight = getScreen().getHeight() * 128;
+                        double scaleFactor = Math.min((double)(screenWidth)/ (double)image.getWidth(), (double)(screenHeight) / (double)image.getHeight());
                         int newWidth = (int)(image.getWidth() * scaleFactor);
                         int newHeight = (int)(image.getHeight() * scaleFactor);
+                        int left = (int) ((screenWidth-newWidth)/2);
+                        int top = (int) ((screenHeight-newHeight)/2);
+                        left = left<0?0:left;
+                        top = top<0?0:top;
+                        if(newWidth+left>screenWidth){
+                            newWidth = screenWidth;
+                        }
+                        if(newHeight+top>screenHeight){
+                            newHeight = screenHeight;
+                        }
                         image = ImageUtils.imageToBufferedImage(image.getScaledInstance(newWidth, newHeight, algorithm));
                     }
                     new BukkitRunnable() {
@@ -113,6 +110,11 @@ public class ImageViewer extends Core {
                 }
             }
         }.runTaskAsynchronously(Main.thisPlugin());
+    }
+
+    @Override
+    public StoredData createStoredData() {
+        return new ImageViewerStoredData();
     }
 
     @Override
@@ -157,6 +159,8 @@ public class ImageViewer extends Core {
 
     @Override
     public Object getEditGUISettingValue(String name) {
+        ImageViewerStoredData data = (ImageViewerStoredData) getStoredData();
+
         switch (name){
             case "@controller-editor-cores-image-viewer-uri":
                 return data.uri;
@@ -170,18 +174,18 @@ public class ImageViewer extends Core {
 
     @Override
     public void setEditGUISettingValue(String name, Object value) {
+        ImageViewerStoredData data = (ImageViewerStoredData) getStoredData();
         switch (name){
             case "@controller-editor-cores-image-viewer-uri":
-                this.data.uri = (String) value;
+                data.uri = (String) value;
                 break;
             case "@controller-editor-cores-image-viewer-scale-mode":
-                this.data.scaleMode = (int)value;
+                data.scaleMode = (int)value;
                 break;
             case "@controller-editor-cores-image-viewer-scale-algorithm":
-                this.data.scaleAlgorithm = (int)value;
+                data.scaleAlgorithm = (int)value;
                 break;
         }
-        setStoredData(data);
         reRender();
     }
 

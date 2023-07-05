@@ -6,6 +6,7 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.*;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.GameCodePaletteLoader;
@@ -13,6 +14,8 @@ import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -34,6 +37,8 @@ public class Main extends JavaPlugin {
     private static Logger logger;
     private static FileConfiguration config;
     private static Gson gson = new Gson();
+    private static Gson saveGson = new GsonBuilder().setPrettyPrinting().create();
+
     private static Random random = new Random();
 
     static {
@@ -86,7 +91,7 @@ public class Main extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-        String json = gson.toJson(data);
+        String json = saveGson.toJson(data);
         try {
             FileOutputStream outputStream = new FileOutputStream(screensFile);
             OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
@@ -138,9 +143,15 @@ public class Main extends JavaPlugin {
     public static void sendMessage(Player player, String message) {
         player.sendMessage("§6[ScreenInMC] §f" + message);
     }
+    public static void sendMessage(Player player, LangUtils.JsonText message) {
+        LangUtils.JsonText jsonText = new LangUtils.JsonText("[ScreenInMC] ").setColor("gold").addExtra(message);
+        ClientboundSystemChatPacket packet = new ClientboundSystemChatPacket(jsonText.toComponent(),false);
+        CraftUtils.sendPacket(player,packet);
+    }
 
     @Override
     public void onDisable() {
+        saveScreens();
         for (Screen i : Screen.getAllScreens()) {
             i.getCore().unload();
         }
@@ -149,7 +160,6 @@ public class Main extends JavaPlugin {
                 i.unloadCore();
             }
         }
-        saveScreens();
         Item.onDisable();
         for(Player i :  Bukkit.getOnlinePlayers()){
             PacketListener.removeGlobalListener(i);

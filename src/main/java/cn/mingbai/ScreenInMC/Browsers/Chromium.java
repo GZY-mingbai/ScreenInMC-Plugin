@@ -6,9 +6,27 @@ import cn.mingbai.ScreenInMC.Utils.FileUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
+import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.callback.CefCallback;
+import org.cef.callback.CefSchemeHandlerFactory;
+import org.cef.callback.CefSchemeRegistrar;
+import org.cef.handler.CefAppHandlerAdapter;
+import org.cef.handler.CefResourceHandler;
+import org.cef.handler.CefResourceHandlerAdapter;
+import org.cef.misc.IntRef;
+import org.cef.misc.StringRef;
+import org.cef.network.CefRequest;
+import org.cef.network.CefResponse;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -149,8 +167,8 @@ public class Chromium extends Browser {
     }
 
     @Override
-    public void createBrowser(Screen screen, int width, int height) {
-        Chromium_.createBrowser(screen, width, height);
+    public void createBrowser(Screen screen, int width, int height,String defaultURI) {
+        Chromium_.createBrowser(screen, width, height,defaultURI);
     }
 
     @Override
@@ -256,6 +274,13 @@ public class Chromium extends Browser {
                             client = null;
                         }
                     }
+
+                    @Override
+                    public void onRegisterCustomSchemes(CefSchemeRegistrar registrar) {
+                        super.onRegisterCustomSchemes(registrar);
+                        registrar.addCustomScheme("screen-in-mc",false,true,true,true,true,true,true);
+                    }
+
                 });
             } catch (Exception e) {
             }
@@ -272,6 +297,65 @@ public class Chromium extends Browser {
             } catch (Exception e) {
                 app = ChromiumLibrariesLoader.getApp();
             }
+            app.registerSchemeHandlerFactory("screen-in-mc", "local-files", new CefSchemeHandlerFactory() {
+                @Override
+                public CefResourceHandler create(CefBrowser browser, CefFrame frame, String schemeName, CefRequest request) {
+                    return new CefResourceHandlerAdapter() {
+                        URI uri;
+                        byte[] data = new byte[0];
+                        int read = 0;
+                        @Override
+                        public boolean processRequest(CefRequest request, CefCallback callback) {
+                            if(request.getMethod().equalsIgnoreCase("get")){
+                                try {
+                                    uri = new URI(request.getURL());
+                                    data = Utils.getDataFromURI(uri,true);
+                                }catch (Throwable e){
+                                    uri=null;
+                                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                                    PrintStream ps = new PrintStream(outputStream);
+                                    e.printStackTrace(ps);
+                                    String message = outputStream.toString(StandardCharsets.US_ASCII);
+                                    ps.close();
+                                    data = ("<html><body style=\"background-color: white;\">"+message.replace("\n","<br>")+"</body></html>").getBytes(StandardCharsets.US_ASCII);
+                                }
+                                callback.Continue();
+                                return true;
+                            }
+                            callback.cancel();
+                            return false;
+                        }
+
+                        @Override
+                        public void getResponseHeaders(CefResponse response, IntRef responseLength, StringRef redirectUrl) {
+
+                            if(uri==null){
+                                response.setMimeType("text/html");
+                                response.setStatus(502);
+                            }else {
+                                response.setMimeType(URLConnection.getFileNameMap().getContentTypeFor(uri.getRawPath()));
+                                response.setStatus(200);
+                            }
+                            responseLength.set(data.length);
+                        }
+
+                        @Override
+                        public boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback callback) {
+                            int remainingBytes = data.length - read;
+                            int bytesToCopy = Math.min(bytesToRead, remainingBytes);
+                            System.arraycopy(data, read, dataOut, 0, bytesToCopy);
+                            this.read += bytesToCopy;
+                            bytesRead.set(bytesToCopy);
+                            return this.read == this.data.length;
+                        }
+
+                        @Override
+                        public void cancel() {
+                            super.cancel();
+                        }
+                    };
+                }
+            });
             client = app.createClient();
             client.addRequestHandler(new org.cef.handler.CefRequestHandlerAdapter() {
                 @Override
@@ -289,9 +373,10 @@ public class Chromium extends Browser {
             });
         }
 
-        private static void createBrowser(Screen screen, int width, int height) {
+
+        private static void createBrowser(Screen screen, int width, int height,String defaultURI) {
             if (client != null && app != null) {
-                org.cef.browser.ScreenInMCChromiumBrowser browser = new org.cef.browser.ScreenInMCChromiumBrowser(client, Main.getConfiguration().getString("download-browser-core.main-page"),
+                org.cef.browser.ScreenInMCChromiumBrowser browser = new org.cef.browser.ScreenInMCChromiumBrowser(client, defaultURI,
                         true);
                 browser.createImmediately();
                 browser.setSize(width, height);

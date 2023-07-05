@@ -9,6 +9,7 @@ controller-item-now-mode: "目前模式:"
 controller-item-select-mode: "框選模式"
 controller-item-place-mode: "放置模式"
 controller-item-edit-mode: "編輯模式"
+controller-item-connect-mode: "連接模式"
 controller-item-unknown-mode: "未知模式"
 controller-block-not-found: "找不到可用的方塊"
 controller-selection-not-found: "找不到可用的區域"
@@ -27,8 +28,18 @@ controller-select-mode-info: |-
   框選區域不能超過 %max-size%
 controller-place-mode-info: |-
   先使用 框選模式 選擇一個區域
-  再在該模式下使用 %left-click% 點擊選擇的區域
+  再在該模式下使用 %right-click% 點擊選擇的區域
   即可放置一塊屏幕
+controller-edit-mode-info: |-
+  在該模式下使用 %right-click% 點擊一塊屏幕
+  即可編輯屏幕設置
+controller-connect-mode-info: |-
+  在該模式下使用 %right-click% 點擊一塊紅石粉
+  即可將屏幕連接到該紅石粉
+controller-connect-start: "使用 %right-click% 點擊一塊紅石粉"
+controller-connect-success: "連接成功"
+controller-connect-failed-input: "連接失敗: 該紅石已被連接為輸入端"
+controller-connect-failed-output: "連接失敗: 該紅石已被連接為輸出端"
 controller-place-start: "正在載入屏幕核心"
 controller-place-success: "已放置屏幕在 %location% 方向: %facing% 大小: %size%"
 controller-editor-gui-title: "ScreenInMC 編輯器"
@@ -55,6 +66,9 @@ controller-editor-core: "屏幕核心: "
 controller-editor-clicked: "點擊屬性: "
 controller-editor-replace-core-title: "更換核心"
 controller-editor-replace-core-info: "點擊以更換顯示器核心"
+controller-editor-redstone-connect-title: "連接紅石"
+controller-editor-redstone-connect-info: "點擊來設置紅石與顯示器之間的連接"
+controller-editor-redstone-connect-not-supported: "此顯示器核心不支援紅石連接"
 controller-editor-previous-page: "上一頁"
 controller-editor-next-page: "下一頁"
 controller-editor-all-page: "第%now%頁 (共%all%頁)"
@@ -102,3 +116,5 @@ use-now-block-location: "使用目前方塊位置"
 insert: "插入"
 click-to-set: "點擊來修改"
 throw-to-remove: "按下%%來刪除"
+input: "輸入"
+output: "輸出"

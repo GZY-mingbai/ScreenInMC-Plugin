@@ -1,10 +1,12 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
-import cn.mingbai.ScreenInMC.MGUI.Alignment;
+import cn.mingbai.ScreenInMC.Core;
+import cn.mingbai.ScreenInMC.MGUI.*;
+import cn.mingbai.ScreenInMC.MGUI.Controls.MBorder;
+import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
-import cn.mingbai.ScreenInMC.MGUI.MContainer;
-import cn.mingbai.ScreenInMC.MGUI.MGUICore;
+import cn.mingbai.ScreenInMC.RedstoneBridge;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -18,13 +20,24 @@ public class Welcome extends MGUICore {
     public Welcome() {
         super("Welcome");
     }
-
     @Override
     public void onCreate(MContainer container) {
         container.setBackground(new Color(255, 255, 255));
-        MTextBlock textBlock = new MTextBlock("请在服务器关闭后修改ScreenInMC/screens.json");
+        MTextBlock textBlock= new MTextBlock("请在服务器关闭后修改ScreenInMC/screens.json");
         textBlock.setVerticalAlignment(Alignment.VerticalAlignment.Stretch);
         textBlock.setHorizontalAlignment(Alignment.HorizontalAlignment.Stretch);
+        final Core core = this;
+        MButton button = new MButton("点我同步红石信号"){
+            @Override
+            public void onClick(int x, int y, ClickType type) {
+                super.onClick(x, y, type);
+                core.getRedstoneBridge().getRedstoneSignalInterface("World").sendRedstoneSignal(strength);
+
+            }
+        };
+        button.setHeight(128);
+        button.setWidth(256);
+        container.addChildControl(button);
         container.addChildControl(textBlock);
     }
     public static class WelcomeSettingsList implements EditGUI.EditGUICoreInfo.EditGUICoreSettingsList {
@@ -95,5 +108,29 @@ public class Welcome extends MGUICore {
             Bukkit.broadcastMessage("]");
         }else
         Bukkit.broadcastMessage(name+" set to: "+value);
+    }
+
+    @Override
+    public StoredData createStoredData() {
+        return null;
+    }
+    private int strength = 0;
+    @Override
+    public void registerRedstoneBridge() {
+        getRedstoneBridge().addRedstoneSignalInterface("World", new RedstoneBridge.RedstoneSignalInterface(false) {
+
+        });
+        getRedstoneBridge().addRedstoneSignalInterface("Hello", new RedstoneBridge.RedstoneSignalInterface(true) {
+            @Override
+            public void onReceiveRedstoneSignal(Core core, int strength) {
+                ((Welcome) core).strength = strength;
+                for(MControl c:((Welcome)core).getContainer().getChildControls()) {
+                    if (c instanceof MTextBlock && !(c instanceof MButton)) {
+                        ((MTextBlock)c).setText("当前红石信号强度: " + strength);
+                    }
+                }
+            }
+        });
+
     }
 }

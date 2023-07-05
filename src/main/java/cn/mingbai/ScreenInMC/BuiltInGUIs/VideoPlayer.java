@@ -9,8 +9,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class VideoPlayer extends Core {
 
-    private String path;
-    private boolean loop;
     private boolean isPlaying;
     private VideoProcessor.DitheredVideo video;
     private BukkitRunnable playRunnable = null;
@@ -21,38 +19,51 @@ public class VideoPlayer extends Core {
     }
 
     public String getPath() {
-        return path;
+        VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
+        return data.path;
     }
 
     public void setPath(String path) {
-        this.path = path;
-        saveData();
+        VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
+        data.path = path;
     }
 
     public boolean isLoop() {
-        return loop;
+        VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
+        return data.loop;
     }
 
     public void setLoop(boolean loop) {
-        this.loop = loop;
-        saveData();
+        VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
+        data.loop = loop;
+    }
+    public static class VideoPlayerStoredData implements StoredData{
+        String path=null;
+        boolean loop=false;
+
+        @Override
+        public StoredData clone() {
+            return null;
+        }
+
+        @Override
+        public Object getStorableObject() {
+            return null;
+        }
     }
 
-    private void saveData() {
-        LinkedTreeMap data = new LinkedTreeMap();
-        data.put("path", path);
-        data.put("loop", loop);
-        setStoredData(data);
+
+    @Override
+    public StoredData createStoredData() {
+        return null;
     }
 
     @Override
     public void onCreate() {
         try {
-            LinkedTreeMap data = (LinkedTreeMap) getStoredData();
+            VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
             if (data != null) {
-                path = (String) data.get("path");
-                loop = (boolean) data.get("loop");
-                if (path != null) {
+                if (data.path != null) {
                     play();
                 }
             }
@@ -83,7 +94,8 @@ public class VideoPlayer extends Core {
         }
         stop();
         if (!isPlaying) {
-            video = VideoProcessor.readDitheredVideo(path, loop);
+            VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
+            video = VideoProcessor.readDitheredVideo(data.path, data.loop);
             isPlaying = true;
             isPause = false;
             playRunnable = new BukkitRunnable() {
