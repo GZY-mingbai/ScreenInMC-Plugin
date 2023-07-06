@@ -30,3 +30,5 @@ hs_err_pid*
 /build/
 /out/
 /.idea/
+/src/main/LibrariesLoader/build/
+/src/main/LibrariesLoader/out/

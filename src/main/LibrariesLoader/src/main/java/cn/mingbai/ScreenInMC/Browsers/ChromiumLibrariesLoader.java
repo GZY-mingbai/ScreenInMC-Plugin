@@ -27,6 +27,9 @@ public class ChromiumLibrariesLoader {
             }
         });
     }
+    public static void resetState(){
+        setState(CefApp.CefAppState.NONE);
+    }
     public static CefApp getApp(){
 //        setState(CefApp.CefAppState.NONE);
 //        clearSelf();

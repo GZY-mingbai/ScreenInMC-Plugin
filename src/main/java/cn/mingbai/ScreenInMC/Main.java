@@ -153,7 +153,7 @@ public class Main extends JavaPlugin {
     public void onDisable() {
         saveScreens();
         for (Screen i : Screen.getAllScreens()) {
-            i.getCore().unload();
+            i.disableScreen();
         }
         for (Browser i : Browser.getAllBrowsers()) {
             if(i.getCoreState()==Browser.LOADED) {

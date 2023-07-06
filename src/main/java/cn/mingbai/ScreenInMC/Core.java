@@ -144,18 +144,24 @@ public abstract class Core implements Cloneable {
     }
 
     public void create(Screen screen) {
+        isUnloaded=false;
         this.screen = screen;
         screen.setCore(this);
         onCreate();
     }
-
+    private boolean isUnloaded = false;
     public void unload() {
-        for(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> i: redstoneBridge.getRedstoneSignalInterfaces()){
-            i.getValue().disconnect();
-        }
         if (screen != null) {
+            isUnloaded=true;
+            for(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> i: redstoneBridge.getRedstoneSignalInterfaces()){
+                i.getValue().disconnect();
+            }
             onUnload();
         }
+    }
+
+    public boolean isUnloaded() {
+        return isUnloaded;
     }
 
     public abstract void onCreate();

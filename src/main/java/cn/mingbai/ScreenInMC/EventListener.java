@@ -4,15 +4,20 @@ import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockRedstoneEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static cn.mingbai.ScreenInMC.Controller.Item.CONTROLLER;
 import static cn.mingbai.ScreenInMC.Controller.Item.onPlayerSwitchMode;
@@ -55,8 +60,18 @@ public class EventListener implements Listener {
             }
         }
     }
-
-
+    private List<PacketListener> packetListeners = new ArrayList<>();
+    public void loadPacketListener(Player player){
+//        packetListeners.add(PacketListener.addListener())
+    }
+    public void unloadPacketListener() {
+        synchronized (packetListeners){
+            for(PacketListener i:packetListeners){
+                PacketListener.removeListener(i);
+                packetListeners.remove(i);
+            }
+        }
+    }
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
         Utils.MouseClickType type = Utils.MouseClickType.LEFT;
@@ -65,14 +80,16 @@ public class EventListener implements Listener {
         } else if (e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             type = Utils.MouseClickType.RIGHT;
         }
-        Player player = e.getPlayer();
+        e.setCancelled(handleClick(e.getPlayer(),type));
+
+    }
+    private boolean handleClick(Player player,Utils.MouseClickType type){
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item != null && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
             if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
                 if(Item.onPlayerClick(player, item, type)) {
-                    e.setCancelled(true);
-                    return;
+                    return true;
                 }
             }
         }
@@ -86,13 +103,14 @@ public class EventListener implements Listener {
                     ItemMeta meta = item.getItemMeta();
                     if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
                         Item.onPlayerClickScreen(player,item,type,x,y,i);
-                        return;
+                        return false;
                     }
                 }
                 i.getCore().onMouseClick(x,y, type);
-                return;
+                return false;
             }
         }
+        return false;
     }
 
     @EventHandler

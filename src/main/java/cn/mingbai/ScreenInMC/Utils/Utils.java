@@ -309,16 +309,16 @@ public class Utils {
     }
 
     //From javafx.utils.Pair
-    public static class Pair<K, V> implements Serializable {
+    public static class Pair<K, V> {
 
         /**
          * Key of this <code>Pair</code>.
          */
-        private final K key;
+        private K key;
         /**
          * Value of this this <code>Pair</code>.
          */
-        private final V value;
+        private V value;
 
         /**
          * Creates a new pair
@@ -338,6 +338,12 @@ public class Utils {
          */
         public K getKey() {
             return key;
+        }
+        public void setKey(K key){
+            this.key=key;
+        }
+        public void setValue(V value){
+            this.value=value;
         }
 
         /**

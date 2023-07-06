@@ -7,25 +7,22 @@ import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
 import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
-import cn.mingbai.ScreenInMC.Utils.LangUtils;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Material;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 public class WebBrowser extends Core {
     private MContainer installer=null;
     private Browser browser = null;
-    private BukkitRunnable renderRunnable = null;
+    private ImmediatelyCancellableBukkitRunnable renderRunnable = null;
     private boolean unloaded = false;
+    private Object setLock =null;
 
     public WebBrowser() {
         super("WebBrowser");
@@ -37,12 +34,14 @@ public class WebBrowser extends Core {
     public static class WebBrowserStoredData implements StoredData {
         public String browser;
         public String uri;
+        public int frameRateLimit=18;
 
         @Override
         public StoredData clone() {
             WebBrowserStoredData data = new WebBrowserStoredData();
             data.browser = this.browser;
             data.uri = this.uri;
+            data.frameRateLimit = this.frameRateLimit;
             return data;
         }
 
@@ -61,6 +60,7 @@ public class WebBrowser extends Core {
 
     @Override
     public void onCreate() {
+        setLock =new Object();
         try {
             WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
             if(data.browser==null) {
@@ -92,7 +92,6 @@ public class WebBrowser extends Core {
             installer.reRenderAll();
         }
     }
-
     private void loadBrowser(){
         WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
         if(browser.getCoreState()==Browser.NOT_INSTALLED){
@@ -111,12 +110,13 @@ public class WebBrowser extends Core {
             if(data!=null&&data.uri!=null&&data.uri.length()!=0){
                 defaultURI=data.uri;
             }else{
-                defaultURI=Main.getConfiguration().getString("download-browser-core.main-page");
+                defaultURI=Main.getConfiguration().getString("browser-main-page");
             }
             browser.createBrowser(getScreen(), getScreen().getWidth() * 128, getScreen().getHeight() * 128,defaultURI);
-            renderRunnable = new BukkitRunnable() {
+            renderRunnable = new ImmediatelyCancellableBukkitRunnable() {
                 @Override
                 public void run() {
+                    final WebBrowserStoredData storedData = (WebBrowserStoredData)getStoredData();
                     while (!this.isCancelled() && browser != null && !unloaded) {
                         long startTime = System.currentTimeMillis();
                         Utils.Pair<Utils.Pair<Integer, Integer>, int[]> image = browser.onRender(getScreen());
@@ -124,7 +124,13 @@ public class WebBrowser extends Core {
                             byte[] data = ImageUtils.imageToMapColors(image.getValue(), image.getKey().getKey(), image.getKey().getValue());
                             getScreen().sendView(data);
                         }
-                        long waitTime = 50 - (System.currentTimeMillis() - startTime);
+                        int fps = 20;
+                        if(setLock !=null&&storedData.frameRateLimit>=1&&storedData.frameRateLimit<=20) {
+                            synchronized (setLock) {
+                                fps=storedData.frameRateLimit;
+                            }
+                        }
+                        long waitTime = (long)((int)(1000/fps)) - (System.currentTimeMillis() - startTime);
                         if (waitTime > 0) {
                             try {
                                 Thread.sleep(waitTime);
@@ -207,6 +213,7 @@ public class WebBrowser extends Core {
                         put("@controller-editor-cores-browser-uri", String.class);
                         put("@controller-editor-cores-browser-refresh", Boolean.class);
                         put("@controller-editor-cores-browser-core", BrowserInstalledCoresList.class);
+                        put("@controller-editor-cores-browser-frame-rate-limit", Integer.class);
                     }
                 }));
     }
@@ -231,6 +238,9 @@ public class WebBrowser extends Core {
                     }
                 }
                 return -1;
+            case "@controller-editor-cores-browser-frame-rate-limit":
+                WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
+                return (int)data.frameRateLimit;
         }
         return null;
     }
@@ -259,6 +269,15 @@ public class WebBrowser extends Core {
                 browser = newBrowser;
                 loadBrowser();
                 break;
+            case "@controller-editor-cores-browser-frame-rate-limit":
+                int v = (int)value;
+                if(v>=1&&v<=20){
+                    if(setLock !=null) {
+                        synchronized (setLock) {
+                            data.frameRateLimit = v;
+                        }
+                    }
+                }
         }
 
     }

@@ -314,7 +314,7 @@ public class EditGUI {
                         BukkitRunnable runnable = new BukkitRunnable() {
                             @Override
                             public void run() {
-                                String str = askForString(String.valueOf(isDouble?nowDoubleValue:nowIntValue));
+                                String str = askForString(isDouble?String.valueOf(nowDoubleValue):String.valueOf(nowIntValue));
                                 try {
                                     if(isDouble) {
                                         nowDoubleValue = Double.parseDouble(str);
