@@ -81,12 +81,12 @@ controller-editor-cores-vnc-details: |-
 controller-editor-cores-browser-name: "網頁瀏覽器"
 controller-editor-cores-browser-details: |-
   可用於訪問互聯網網頁或本地網頁。
-  (URI: screen-in-mc://local-files/文件名
+  (URI: screen://local/文件名
   可用於讀取 plugins/ScreenInMC/Files/ 中的檔案)
 controller-editor-cores-image-viewer-name: "圖片檢視器"
 controller-editor-cores-image-viewer-details: |-
   可用於檢視圖片（支援動圖）
-  (URI: screen-in-mc://local-files/文件名
+  (URI: screen://local/文件名
   可用於讀取 plugins/ScreenInMC/Files/ 中的檔案)
 controller-editor-cores-image-viewer-uri: "圖片連結 (URI)"
 controller-editor-cores-image-viewer-scale-mode: "縮放模式"
@@ -96,7 +96,8 @@ controller-editor-cores-image-viewer-scale-algorithms: "平滑|快速"
 controller-editor-cores-browser-uri: "當前網址 (URI)"
 controller-editor-cores-browser-refresh: "重新整理(選擇true)"
 controller-editor-cores-browser-core: "瀏覽器核心"
-controller-editor-cores-browser-frame-rate-limit: "顯示幀率限制 1-20(可降低卡頓)"
+controller-editor-cores-browser-devtools: "啟用開發者模式 (DevTools)"
+controller-editor-cores-frame-rate-limit: "顯示幀率限制 1-20(可降低卡頓)"
 type: "類型:"
 type-int: "整數"
 type-double: "小數"

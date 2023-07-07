@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
@@ -61,30 +62,21 @@ public class CommandListener implements TabExecutor {
             }
         }
         if (args[0].equalsIgnoreCase("removeScreen")) {
-            Screen[] allScreens = Screen.getAllScreens();
-            if (Integer.parseInt(args[1]) <= allScreens.length) {
+            Screen screen = null;
+            try{
+                screen = Screen.getScreenFromUUID(UUID.fromString(args[1]));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            if (screen!=null) {
                 if (args.length == 2) {
-                    Screen.removeScreen(allScreens[Integer.parseInt(args[1])]);
+                    Screen.removeScreen(screen);
                     sender.sendMessage("Success");
                 } else {
                     sender.sendMessage("Failed");
                 }
             } else {
                 sender.sendMessage("Failed");
-            }
-        }
-        if (args[0].equalsIgnoreCase("download")) {
-            Browser initialization = new Chromium();
-            switch (Integer.parseInt(args[1])) {
-                case 0:
-                    initialization.installCore();
-                    break;
-                case 1:
-                    Main.getPluginLogger().info("State: " + initialization.getCoreState());
-                    break;
-                case 2:
-                    initialization.loadCore();
-                    break;
             }
         }
         if (args[0].equalsIgnoreCase("listDevices")) {
@@ -105,36 +97,33 @@ public class CommandListener implements TabExecutor {
             setPieceSize(Integer.parseInt(args[1]));
             sender.sendMessage("Success");
         }
-        if (args[0].equalsIgnoreCase("crash")) {
-            Screen[] allScreens = Screen.getAllScreens();
-            if (Integer.parseInt(args[1]) <= allScreens.length) {
-                Core core = allScreens[Integer.parseInt(args[1])].getCore();
-                if (core instanceof MGUICore) {
-                    ((MGUICore) core).crash();
-                    sender.sendMessage("Success");
-
-                } else {
-                    sender.sendMessage("Failed");
-                }
-            } else {
-                sender.sendMessage("Failed");
-            }
-        }
         if (args[0].equalsIgnoreCase("browser")) {
-            Screen screen = Screen.getAllScreens()[Integer.parseInt(args[1])];
-            if (args[2].equalsIgnoreCase("openurl")) {
-                ((WebBrowser) screen.getCore()).getBrowser().openURL(screen, args[3]);
-            } else if (args[2].equalsIgnoreCase("refresh")) {
-                ((WebBrowser) screen.getCore()).getBrowser().refreshPage(screen);
+            Screen screen = null;
+            try{
+                screen = Screen.getScreenFromUUID(UUID.fromString(args[1]));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            if(screen!=null&&screen.getCore() instanceof WebBrowser) {
+                if (args[2].equalsIgnoreCase("openurl")) {
+                    ((WebBrowser) screen.getCore()).getBrowser().openURL(screen, args[3]);
+                } else if (args[2].equalsIgnoreCase("refresh")) {
+                    ((WebBrowser) screen.getCore()).getBrowser().refreshPage(screen);
+                }
             }
         }
         if (args[0].equalsIgnoreCase("input")) {
-            Screen[] allScreens = Screen.getAllScreens();
-            if (Integer.parseInt(args[1]) <= allScreens.length) {
+            Screen screen = null;
+            try{
+                screen = Screen.getScreenFromUUID(UUID.fromString(args[1]));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            if (screen!=null) {
                 if (args.length == 3) {
-                    allScreens[Integer.parseInt(args[1])].getCore().onTextInput(args[2]);
+                    screen.getCore().onTextInput(args[2]);
                 } else {
-                    allScreens[Integer.parseInt(args[1])].getCore().onTextInput("");
+                    screen.getCore().onTextInput("");
                 }
                 sender.sendMessage("Success");
             } else {
@@ -146,7 +135,14 @@ public class CommandListener implements TabExecutor {
                 for(Screen i:Screen.getAllScreens()){
                     if(i.getEditGUI().getOpenedPlayer().equals(sender)){
                         String[] newArgs = Arrays.copyOfRange(args,2,args.length);
-                        i.getEditGUI().getControllerCommandCallback(UUID.fromString(args[1])).apply(String.join(" ",newArgs));
+                        UUID uuid = UUID.fromString(args[1]);
+                        Function<String,Boolean> function = i.getEditGUI().getControllerCommandCallback(uuid);
+                        try {
+                            function.apply(String.join(" ",newArgs));
+                        }catch (Exception e){
+                            i.getEditGUI().removeControllerCommandCallback(uuid);
+                            e.printStackTrace();
+                        }
                     }
                 }
             }else{
@@ -162,9 +158,6 @@ public class CommandListener implements TabExecutor {
                     new Chromium().installCore();
                 }
             }.start();
-        }
-        if(args[0].equalsIgnoreCase("loadCode")){
-            setCustomOpenCLCode(args[1]);
         }
         sender.sendMessage("Success");
         return true;
@@ -194,14 +187,14 @@ public class CommandListener implements TabExecutor {
                         break;
                     case "input":
                     case "removeScreen":
-                        for (int i = 0; i < Screen.getAllScreens().length; i++) {
-                            sub2.add(Integer.toString(i));
+                        for (Screen i:Screen.getAllScreens()) {
+                            sub2.add(i.getUUID().toString());
                         }
                         break;
                     case "browser":
-                        for (int i = 0; i < Screen.getAllScreens().length; i++) {
-                            if (Screen.getAllScreens()[i].getCore() instanceof WebBrowser) {
-                                sub2.add(Integer.toString(i));
+                        for (Screen i:Screen.getAllScreens()) {
+                            if (i.getCore() instanceof WebBrowser) {
+                                sub2.add(i.getUUID().toString());
                             }
                         }
                         break;

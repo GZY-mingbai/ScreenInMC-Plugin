@@ -9,9 +9,12 @@ public abstract class ImmediatelyCancellableBukkitRunnable extends BukkitRunnabl
     public abstract void run();
 
     @Override
-    public synchronized void cancel() throws IllegalStateException {
+    public synchronized void cancel(){
         cancelled=true;
-        super.cancel();
+        try {
+            super.cancel();
+        }catch (Exception e){
+        }
     }
 
     @Override

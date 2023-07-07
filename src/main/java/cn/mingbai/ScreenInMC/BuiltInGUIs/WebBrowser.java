@@ -213,7 +213,8 @@ public class WebBrowser extends Core {
                         put("@controller-editor-cores-browser-uri", String.class);
                         put("@controller-editor-cores-browser-refresh", Boolean.class);
                         put("@controller-editor-cores-browser-core", BrowserInstalledCoresList.class);
-                        put("@controller-editor-cores-browser-frame-rate-limit", Integer.class);
+                        put("@controller-editor-cores-frame-rate-limit", Integer.class);
+                        put("@controller-editor-cores-browser-devtools",Boolean.class);
                     }
                 }));
     }
@@ -238,9 +239,11 @@ public class WebBrowser extends Core {
                     }
                 }
                 return -1;
-            case "@controller-editor-cores-browser-frame-rate-limit":
+            case "@controller-editor-cores-frame-rate-limit":
                 WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
                 return (int)data.frameRateLimit;
+            case "@controller-editor-cores-browser-devtools":
+                return browser.isInDeveloperMode(getScreen());
         }
         return null;
     }
@@ -269,7 +272,7 @@ public class WebBrowser extends Core {
                 browser = newBrowser;
                 loadBrowser();
                 break;
-            case "@controller-editor-cores-browser-frame-rate-limit":
+            case "@controller-editor-cores-frame-rate-limit":
                 int v = (int)value;
                 if(v>=1&&v<=20){
                     if(setLock !=null) {
@@ -278,6 +281,10 @@ public class WebBrowser extends Core {
                         }
                     }
                 }
+                break;
+            case "@controller-editor-cores-browser-devtools":
+                browser.setDeveloperMode(getScreen(),(boolean)value);
+                break;
         }
 
     }

@@ -22,8 +22,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.UUID;
+
 import static cn.mingbai.ScreenInMC.Main.getGson;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getMaxScreenSize;
+import static cn.mingbai.ScreenInMC.Screen.Screen.getScreenFromUUID;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.itemBukkitToNMS;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.itemNMSToBukkit;
 import static cn.mingbai.ScreenInMC.Utils.LangUtils.EMPTY_JSON_TEXT;
@@ -151,10 +154,15 @@ public class Item {
                                             case CONNECT_MODE:
                                                 boolean finish = false;
                                                 if(data.conn!=null){
-                                                    Screen[] screens = Screen.getAllScreens();
-                                                    if(data.conn.id<screens.length&&data.conn.id>=0) {
-                                                        Screen screen = screens[data.conn.id];
-                                                        if (screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
+                                                    UUID uuid = null;
+                                                    try {
+                                                        uuid=UUID.fromString(data.conn.id);
+                                                    }catch (Exception e){
+                                                        e.printStackTrace();
+                                                    }
+                                                    if(uuid!=null) {
+                                                        Screen screen = getScreenFromUUID(uuid);
+                                                        if (screen!=null&&screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
                                                             if(data.conn.i>=0&&screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().size()> data.conn.i) {
                                                                 Location location = getClosestBlock(player.getEyeLocation(), Material.REDSTONE_WIRE);
                                                                 if (location != null) {
@@ -512,9 +520,15 @@ public class Item {
             if(data.nowMode == CONNECT_MODE){
                 if(type.equals(Utils.MouseClickType.RIGHT)){
                     if(data.conn!=null) {
-                        Screen[] screens = Screen.getAllScreens();
-                        if (data.conn.id < screens.length && data.conn.id >= 0) {
-                            Screen screen = screens[data.conn.id];
+                        UUID uuid = null;
+                        try {
+                            uuid=UUID.fromString(data.conn.id);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+
+                        if (uuid!=null) {
+                            Screen screen = getScreenFromUUID(uuid);
                             if (screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
                                 if(data.conn.i>=0&&screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().size()> data.conn.i) {
                                     Location location = getClosestBlock(player.getEyeLocation(), Material.REDSTONE_WIRE);
@@ -806,7 +820,7 @@ public class Item {
     }
     public static class ConnectModeData{
         public String core = null;
-        public int id = -1;
+        public String id = null;
         public int i = -1;
     }
 }

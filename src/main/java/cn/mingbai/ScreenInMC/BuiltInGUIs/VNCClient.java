@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
+import cn.mingbai.ScreenInMC.Browsers.Browser;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
@@ -20,6 +21,8 @@ import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class VNCClient extends MGUICore {
@@ -52,6 +55,7 @@ public class VNCClient extends MGUICore {
     //    private MControl VNCControl; }
     @Override
     public void onCreate(MContainer container) {
+        setLock=new Object();
 
         container.setBackground(new Color(255, 255, 255));
         MInput IPInput = new MInput(LangUtils.getText("vnc-client-address")) {
@@ -180,6 +184,7 @@ public class VNCClient extends MGUICore {
             runnable = new BukkitRunnable() {
                 @Override
                 public void run() {
+                    VNCClientStoredData data = (VNCClientStoredData)getStoredData();
                     while (getContainer().isLoaded() && isConnected) {
                         long timeStart = System.currentTimeMillis();
                         boolean send;
@@ -211,7 +216,13 @@ public class VNCClient extends MGUICore {
                                 update = false;
                             }
                         }
-                        int time = (int) (50 - (System.currentTimeMillis() - timeStart));
+                        int fps = 20;
+                        if(setLock !=null&&data.frameRateLimit>=1&&data.frameRateLimit<=20) {
+                            synchronized (setLock) {
+                                fps=data.frameRateLimit;
+                            }
+                        }
+                        int time = (int) ((int)(1000/fps) - (System.currentTimeMillis() - timeStart));
                         if (time > 0) {
                             try {
                                 Thread.sleep(time);
@@ -278,6 +289,7 @@ public class VNCClient extends MGUICore {
     public static class VNCClientStoredData implements StoredData {
         public String IP="";
         public String password="";
+        public int frameRateLimit=18;
         public VNCClientStoredData(){};
 
         public VNCClientStoredData(String IP, String password) {
@@ -305,6 +317,37 @@ public class VNCClient extends MGUICore {
                 "@controller-editor-cores-vnc-details",
                 "blue",
                 Material.DIAMOND_BLOCK,
-                new HashMap<>()));
+                new LinkedHashMap<>(){
+                    {
+                        put("@controller-editor-cores-frame-rate-limit", Integer.class);
+                    }
+                }));
     }
+    @Override
+    public Object getEditGUISettingValue(String name) {
+        switch (name){
+            case "@controller-editor-cores-frame-rate-limit":
+                VNCClientStoredData data = (VNCClientStoredData)getStoredData();
+                return (int)data.frameRateLimit;
+        }
+        return null;
+    }
+    private Object setLock =null;
+    @Override
+    public void setEditGUISettingValue(String name, Object value) {
+        VNCClientStoredData data = (VNCClientStoredData)getStoredData();
+        switch (name) {
+            case "@controller-editor-cores-frame-rate-limit":
+                int v = (int)value;
+                if(v>=1&&v<=20){
+                    if(setLock !=null) {
+                        synchronized (setLock) {
+                            data.frameRateLimit = v;
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
 }

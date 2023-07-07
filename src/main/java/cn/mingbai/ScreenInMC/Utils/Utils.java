@@ -441,7 +441,7 @@ public class Utils {
         }
     }
     public static byte[] getDataFromURI(URI uri,boolean throwException) {
-        if(uri.getScheme().equals("screen-in-mc")&&"local-files".equals(uri.getHost())){
+        if(uri.getScheme().equals("screen")&&"local".equals(uri.getHost())){
             Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
             if(path.startsWith(Paths.get(Main.PluginFilesPath+"Files"))){
                 try {

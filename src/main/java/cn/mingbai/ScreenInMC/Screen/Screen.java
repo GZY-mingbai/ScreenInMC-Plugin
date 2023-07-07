@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static cn.mingbai.ScreenInMC.Core.getCoreFromData;
 
@@ -43,25 +44,50 @@ public class Screen {
     private Core core;
     private EditGUI gui;
 //    private int id = 0;
-
-    public int getID() {
-        if(placed){
-            for(int i=0;i<allScreens.size();i++){
-                if(allScreens.get(i)==this){
-                    return i;
-                }
-            }
-        }else{
-            throw new RuntimeException("This screen hasn't been placed.");
-        }
-        return -1;
-    }
+    private UUID uuid;
+//    public UUID getID() {
+//        if(placed){
+//            for(int i=0;i<allScreens.size();i++){
+//                if(allScreens.get(i)==this){
+//                    return i;
+//                }
+//            }
+//        }else{
+//            throw new RuntimeException("This screen hasn't been placed.");
+//        }
+//        return -1;
+//    }
 
     public Screen(Location location, Facing facing, int width, int height) {
         this.location = location;
         this.facing = facing;
         this.height = height;
         this.width = width;
+
+    }
+
+    public UUID getUUID() {
+        if(!placed){
+            throw new RuntimeException("This screen hasn't been placed.");
+        }
+        return uuid;
+    }
+
+    private UUID generateUUID(){
+        UUID uuid;
+        boolean reGenerate = false;
+        while (true){
+            uuid = UUID.randomUUID();
+            for(Screen i:getAllScreens()){
+                if(i.uuid.equals(uuid)){
+                    reGenerate=true;
+                }
+            }
+            if(!reGenerate){
+                break;
+            }
+        }
+        return uuid;
     }
 
     public Screen(ScreenData data) {
@@ -69,6 +95,11 @@ public class Screen {
         this.facing = data.facing;
         this.height = data.height;
         this.width = data.width;
+        if(data.uuid==null) {
+            this.uuid = generateUUID();
+        }else{
+            this.uuid = UUID.fromString(data.uuid);
+        }
         if (data.core != null) {
             this.core = getCoreFromData(data.core);
         }
@@ -92,6 +123,14 @@ public class Screen {
             result[i] = allScreens.get(i);
         }
         return result;
+    }
+    public static Screen getScreenFromUUID(UUID uuid){
+        for(Screen i:getAllScreens()){
+            if(i.uuid.equals(uuid)){
+                return i;
+            }
+        }
+        return null;
     }
 
     public static Utils.Pair<Integer, Integer> getFacingPitchYaw(Facing facing) {
@@ -123,6 +162,7 @@ public class Screen {
         screenData.x = location.getBlockX();
         screenData.y = location.getBlockY();
         screenData.z = location.getBlockZ();
+        screenData.uuid = this.uuid.toString();
         screenData.facing = this.facing;
         screenData.width = this.width;
         screenData.height = this.height;
@@ -238,6 +278,9 @@ public class Screen {
                     break;
             }
             placed = true;
+            if(uuid==null) {
+                uuid = generateUUID();
+            }
             gui = new EditGUI(this);
             allScreens.add(this);
             for (Player player : location.getWorld().getPlayers()) {
@@ -267,6 +310,7 @@ public class Screen {
         for (Player player : location.getWorld().getPlayers()) {
             CraftUtils.sendPacket(player, packet);
         }
+        getEditGUI().forceClose();
     }
 
     public Core getCore() {
@@ -473,6 +517,7 @@ public class Screen {
 
     public static class ScreenData {
         public String world;
+        public String uuid;
         public int x = 0;
         public int y = 0;
         public int z = 0;

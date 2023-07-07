@@ -34,6 +34,7 @@ public class EventListener implements Listener {
     }
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
+        EditGUI.forceClose(e.getPlayer());
     }
 
     @EventHandler

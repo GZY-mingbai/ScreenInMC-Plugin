@@ -68,5 +68,7 @@ public abstract class Browser {
 
     public abstract void refreshPage(Screen screen);
     public abstract String getNowURL(Screen screen);
+    public abstract boolean isInDeveloperMode(Screen screen);
+    public abstract void setDeveloperMode(Screen screen,boolean enable);
 
 }

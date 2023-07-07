@@ -81,12 +81,12 @@ controller-editor-cores-vnc-details: |-
 controller-editor-cores-browser-name: "Web Browser"
 controller-editor-cores-browser-details: |-
   Used to access Internet pages or local pages
-  (URI: screen-in-mc://local-files/file_name can be used to
+  (URI: screen://local/file_name can be used to
   read files in plugins/ScreenInMC/Files/)
 controller-editor-cores-image-viewer-name: "Image Viewer"
 controller-editor-cores-image-viewer-details: |-
   Used to view images (supports animated images)
-  (URI: screen-in-mc://local-files/file_name can be used to
+  (URI: screen://local/file_name can be used to
   read files in plugins/ScreenInMC/Files/)
 controller-editor-cores-image-viewer-uri: "Image URL (URI)"
 controller-editor-cores-image-viewer-scale-mode: "Scale Mode"
@@ -96,7 +96,8 @@ controller-editor-cores-image-viewer-scale-algorithms: "Smooth|Fast"
 controller-editor-cores-browser-uri: "Current URL (URI)"
 controller-editor-cores-browser-refresh: "Refresh (select true)"
 controller-editor-cores-browser-core: "Browser Core"
-controller-editor-cores-browser-frame-rate-limit: "Display frame rate limit 1-20 (can reduce lag)"
+controller-editor-cores-browser-devtools: "Enable developer mode (DevTools)"
+controller-editor-cores-frame-rate-limit: "Display frame rate limit 1-20 (can reduce lag)"
 type: "Type:"
 type-int: "Integer"
 type-double: "Decimal"

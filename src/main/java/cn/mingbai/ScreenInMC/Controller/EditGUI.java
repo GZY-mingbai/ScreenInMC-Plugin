@@ -1431,7 +1431,7 @@ public class EditGUI {
             Item.ItemData data = Item.getData(itemStack);
             data.conn = new Item.ConnectModeData();
             data.conn.core = screen.getCore().getCoreName();
-            data.conn.id = screen.getID();
+            data.conn.id = screen.getUUID().toString();
             data.conn.i = index;
             Item.setData(itemStack,data);
             Item.switchMode(openedPlayer,Item.CONNECT_MODE);
@@ -1521,12 +1521,18 @@ public class EditGUI {
         reOpenContainer();
 
     }
+    public void forceClose() {
+        Player player = openedPlayer;
+        onClose();
+        if(player!=null&&player.isOnline()) {
+            Packet packet = new ClientboundContainerClosePacket(containerID);
+            CraftUtils.sendPacket(player, packet);
+        }
+    }
     public static void forceClose(Player player){
         for(Screen i:Screen.getAllScreens()){
             if(player.equals(i.getEditGUI().openedPlayer)){
-                i.getEditGUI().onClose();
-                Packet packet = new ClientboundContainerClosePacket(i.getEditGUI().containerID);
-                CraftUtils.sendPacket(player,packet);
+                i.getEditGUI().forceClose();
             }
         }
     }
@@ -1535,11 +1541,15 @@ public class EditGUI {
         CraftUtils.sendPacket(openedPlayer,closePacket);
     }
     private void onClose(){
-        PacketListener.removeListener(listener1);
-        PacketListener.removeListener(listener2);
-        List<EditGUISubWindow> list = EditGUISubWindow.openedWindows.get(openedPlayer);
-        if(list!=null){
-            EditGUISubWindow.closeAllWindows(openedPlayer);
+        try {
+            PacketListener.removeListener(listener1);
+            PacketListener.removeListener(listener2);
+            List<EditGUISubWindow> list = EditGUISubWindow.openedWindows.get(openedPlayer);
+            if(list!=null){
+                EditGUISubWindow.closeAllWindows(openedPlayer);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
         openedPlayer=null;
     }
@@ -1550,7 +1560,7 @@ public class EditGUI {
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-title")).setColor("gold");
         ListTag lore = new ListTag();
         lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-id"))
-                .addExtra(new JsonText(String.valueOf(screen.getID())).setColor("yellow").setItalic(false))
+                .addExtra(new JsonText(screen.getUUID().toString()).setColor("yellow").setItalic(false))
                 .setItalic(false)
                 .setColor("gold").toJSONWithoutExtra()));
         lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-location"))

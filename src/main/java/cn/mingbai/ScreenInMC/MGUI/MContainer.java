@@ -160,12 +160,18 @@ public class MContainer extends MControl {
                     continue;
                 }
                 try {
-                    if (x == 0 && y == 0 && w == (int) getWidth() && h == (int) getHeight()) {
-                        if (loaded) {
+                    if (loaded) {
+                        if (x == 0 && y == 0 && w == (int) getWidth() && h == (int) getHeight()) {
                             screen.sendView(ImageUtils.imageToMapColors(image));
-                        }
-                    } else {
-                        if (loaded) {
+                        } else {
+                            if(x+w>image.getWidth()){
+                                x=0;
+                                w= image.getWidth();
+                            }
+                            if(y+h>image.getHeight()){
+                                y=0;
+                                h= image.getHeight();
+                            }
                             screen.sendView(ImageUtils.imageToMapColors(image.getSubimage(x, y, w, h)), x, y, w, h);
                         }
                     }

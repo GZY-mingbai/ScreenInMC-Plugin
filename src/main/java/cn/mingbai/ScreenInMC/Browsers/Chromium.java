@@ -5,10 +5,12 @@ import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.cef.CefApp;
 import org.cef.CefSettings;
 import org.cef.browser.CefBrowser;
@@ -18,10 +20,7 @@ import org.cef.callback.CefCallback;
 import org.cef.callback.CefQueryCallback;
 import org.cef.callback.CefSchemeHandlerFactory;
 import org.cef.callback.CefSchemeRegistrar;
-import org.cef.handler.CefAppHandlerAdapter;
-import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.cef.handler.CefResourceHandler;
-import org.cef.handler.CefResourceHandlerAdapter;
+import org.cef.handler.*;
 import org.cef.misc.IntRef;
 import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
@@ -224,6 +223,16 @@ public class Chromium extends Browser {
         return Chromium_.getNowURL(screen);
     }
 
+    @Override
+    public boolean isInDeveloperMode(Screen screen) {
+        return Chromium_.isInDeveloperMode(screen);
+    }
+
+    @Override
+    public void setDeveloperMode(Screen screen, boolean enable) {
+        Chromium_.setDeveloperMode(screen,enable);
+    }
+
     private static class Chromium_ {
         private static org.cef.CefApp app;
         private static org.cef.CefClient client;
@@ -271,6 +280,7 @@ public class Chromium extends Browser {
                     new File(Main.PluginFilesPath + "Chromium/bin/lib/" + systemName + "/").getAbsolutePath());
             cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.load(Main.PluginFilesPath, systemName, Utils.getLibraryPrefix(system.getKey()));
             org.cef.CefSettings settings = new org.cef.CefSettings();
+
             settings.windowless_rendering_enabled = true;
             List<String> argsList = new ArrayList<>();
             if(!Main.getConfiguration().getBoolean("jcef-transparent")){
@@ -278,6 +288,7 @@ public class Chromium extends Browser {
                 argsList.add("--transparent-painting-disabled");
                 argsList.add("--off-screen-rendering-enabled");
                 argsList.add("--off-screen-frame-rate=20");
+                argsList.add("--universal-access-from-file-urls-allowed");
             }
             argsList.addAll(Arrays.asList(Main.getConfiguration().getString("jcef-extra-args").split(" ")));
             String[] args = argsList.toArray(new String[0]);
@@ -293,8 +304,7 @@ public class Chromium extends Browser {
 
                     @Override
                     public void onRegisterCustomSchemes(CefSchemeRegistrar registrar) {
-                        super.onRegisterCustomSchemes(registrar);
-                        registrar.addCustomScheme("screen-in-mc",true, false, false, true, true, false, false);
+                        registrar.addCustomScheme("screen",false, true, true, false, false, true, true);
                     }
 
                 });
@@ -307,22 +317,28 @@ public class Chromium extends Browser {
 //            } catch (Exception e) {
 //                e.printStackTrace();
 //            }
+
             try {
                 app = org.cef.CefApp.getInstance(args, settings);
                 app = ChromiumLibrariesLoader.getApp();
             } catch (Exception e) {
                 app = ChromiumLibrariesLoader.getApp();
             }
-            app.registerSchemeHandlerFactory("screen-in-mc", "local-files", new CefSchemeHandlerFactory() {
+
+            client = app.createClient();
+
+            app.registerSchemeHandlerFactory("screen", "local", new CefSchemeHandlerFactory() {
                 @Override
                 public CefResourceHandler create(CefBrowser browser, CefFrame frame, String schemeName, CefRequest request) {
                     return new CefResourceHandlerAdapter() {
                         URI uri;
                         byte[] data = new byte[0];
                         int read = 0;
+                        int remain;
                         @Override
                         public boolean processRequest(CefRequest request, CefCallback callback) {
                             if(request.getMethod().equalsIgnoreCase("get")){
+                                request.setHeaderByName("Accept","*/*",true);
                                 try {
                                     uri = new URI(request.getURL());
                                     data = Utils.getDataFromURI(uri,true);
@@ -331,10 +347,12 @@ public class Chromium extends Browser {
                                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                                     PrintStream ps = new PrintStream(outputStream);
                                     e.printStackTrace(ps);
-                                    String message = outputStream.toString(StandardCharsets.US_ASCII);
+                                    String message = outputStream.toString(StandardCharsets.UTF_8);
                                     ps.close();
                                     data = ("<html><body style=\"background-color: white;\">"+message.replace("\n","<br>")+"</body></html>").getBytes(StandardCharsets.US_ASCII);
                                 }
+                                read=0;
+                                remain=data.length;
                                 callback.Continue();
                                 return true;
                             }
@@ -347,32 +365,39 @@ public class Chromium extends Browser {
 
                             if(uri==null){
                                 response.setMimeType("text/html");
-                                response.setStatus(502);
+                                response.setHeaderByName("Content-Type","text/html; charset=utf-8",true);
+                                response.setStatus(500);
+                                response.setStatusText("Internal Server Error");
                             }else {
                                 response.setMimeType(URLConnection.getFileNameMap().getContentTypeFor(uri.getRawPath()));
                                 response.setStatus(200);
+                                response.setStatusText("OK");
                             }
+                            response.setError(CefLoadHandler.ErrorCode.ERR_NONE);
+
                             responseLength.set(data.length);
                         }
 
                         @Override
                         public boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback callback) {
-                            int remainingBytes = data.length - read;
-                            int bytesToCopy = Math.min(bytesToRead, remainingBytes);
+                            int bytesToCopy = Math.min(bytesToRead, remain);
                             System.arraycopy(data, read, dataOut, 0, bytesToCopy);
                             this.read += bytesToCopy;
+                            this.remain -= bytesToCopy;
                             bytesRead.set(bytesToCopy);
-                            return this.read == this.data.length;
+                            if(bytesToCopy==0){
+                                return false;
+                            }
+                            return true;
                         }
 
                         @Override
                         public void cancel() {
-                            super.cancel();
                         }
                     };
                 }
             });
-            client = app.createClient();
+
             client.addRequestHandler(new org.cef.handler.CefRequestHandlerAdapter() {
                 @Override
                 public boolean onOpenURLFromTab(org.cef.browser.CefBrowser browser, org.cef.browser.CefFrame frame, String target_url, boolean user_gesture) {
@@ -392,19 +417,17 @@ public class Chromium extends Browser {
             message.addHandler(new CefMessageRouterHandlerAdapter() {
                 @Override
                 public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
-                    if(browser.getURL().startsWith("screen-in-mc://")){
+                    if(browser.getURL().startsWith("screen://")){
                         for(Screen screen:clients.keySet()){
                             if(browser.equals(clients.get(screen))){
                                 LinkedTreeMap map;
                                 try{
                                     map = Main.getGson().fromJson(request, LinkedTreeMap.class);
                                 }catch (Exception e){
-                                    callback.failure(-3,Main.getGson().toJson(new LinkedHashMap() {
-                                        {
-                                            put("error", "The requested content could not be parsed. " +
-                                                    "It should be in JSON format. \n"+e.getMessage());
-                                        }
-                                    }));
+                                    LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                    messageMap.put("error", "The requested content could not be parsed. " +
+                                            "It should be in JSON format. \n"+e.getMessage());
+                                    callback.failure(-3,Main.getGson().toJson(messageMap));
                                     return true;
                                 }
 
@@ -414,62 +437,68 @@ public class Chromium extends Browser {
                                             case "run_command":
                                                 if(map.containsKey("command")){
                                                     try {
-                                                        if(!Bukkit.dispatchCommand(Bukkit.getConsoleSender(), (String) map.get("command"))){
-                                                            throw new Exception("");
+                                                        String command = (String) map.get("command");
+                                                        final Object[] success = new Object[]{true,null};
+                                                        BukkitRunnable runnable = new BukkitRunnable() {
+
+                                                            @Override
+                                                            public void run() {
+                                                                try{
+                                                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                                                }catch (Exception e){
+                                                                    success[0] = false;
+                                                                    success[1] =e;
+                                                                }
+                                                            }
+                                                        };
+                                                        runnable.runTask(Main.thisPlugin());
+                                                        if((Boolean) success[0]){
+                                                            LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                            messageMap.put("result",0);
+                                                            callback.success(Main.getGson().toJson(messageMap));
+                                                        }else if(success[1]!=null){
+                                                            throw (Exception) success[1];
                                                         }
                                                     }catch (Exception e){
-                                                        callback.failure(-7,Main.getGson().toJson(new LinkedHashMap() {
-                                                            {
-                                                                put("error", "Command dispatch error. "+e.getMessage());
-                                                            }
-                                                        }));
+                                                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                        messageMap.put("error", "Command dispatch error. "+e.getMessage());
+                                                        callback.failure(-7,Main.getGson().toJson(messageMap));
                                                     }
                                                 }else{
-                                                    callback.failure(-6,Main.getGson().toJson(new LinkedHashMap() {
-                                                        {
-                                                            put("error", "Command key not found.");
-                                                        }
-                                                    }));
+                                                    LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                    messageMap.put("error", "Command key not found.");
+                                                    callback.failure(-6,Main.getGson().toJson(messageMap));
                                                 }
                                                 break;
                                             default:
-                                                callback.failure(-5,Main.getGson().toJson(new LinkedHashMap() {
-                                                    {
-                                                        put("error", "Unknown action: "+map.get("action"));
-                                                    }
-                                                }));
+                                                LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                messageMap.put("error", "Unknown action: "+map.get("action"));
+                                                callback.failure(-5,Main.getGson().toJson(messageMap));
                                         }
+                                        return true;
                                     }catch (Exception e){
-                                        callback.failure(-999,Main.getGson().toJson(new LinkedHashMap() {
-                                            {
-                                                put("error", "Unknown error: "+e.getMessage());
-                                            }
-                                        }));
+                                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                        messageMap.put("error", "Unknown error: "+e.getMessage());
+                                        callback.failure(-999,Main.getGson().toJson(messageMap));
                                     }
                                 }else{
-                                    callback.failure(-4,Main.getGson().toJson(new LinkedHashMap() {
-                                        {
-                                            put("error", "Action key not found.");
-                                        }
-                                    }));
+                                    LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                    messageMap.put("error", "Action key not found.");
+                                    callback.failure(-4,Main.getGson().toJson(messageMap));
                                     return true;
                                 }
                             }
                         }
-                        callback.failure(-2,Main.getGson().toJson(new LinkedHashMap() {
-                            {
-                                put("error", "The corresponding screen for this webpage cannot be found. " +
-                                        "Perhaps this screen has already been removed.");
-                            }
-                        }));
+                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                        messageMap.put("error", "The corresponding screen for this webpage cannot be found. " +
+                                "Perhaps this screen has already been removed.");
+                        callback.failure(-2,Main.getGson().toJson(messageMap));
                     }else{
-                        callback.failure(-1,Main.getGson().toJson(new LinkedHashMap(){
-                            {
-                                put("error","You don't have permission to call this API. " +
-                                        "Please place the webpages in the plugins/ScreenInMC/Files/ directory, " +
-                                        "and open it using screen-in-mc://local-files/(file-name).");
-                            }
-                        }));
+                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                        messageMap.put("error","You don't have permission to call this API. " +
+                                "Please place the webpages in the plugins/ScreenInMC/Files/ directory, " +
+                                "and open it using screen://local/(file-name).");
+                        callback.failure(-1,Main.getGson().toJson(messageMap));
                     }
                     return true;
                 }
@@ -544,11 +573,12 @@ public class Chromium extends Browser {
                 try {
                     synchronized (browser) {
                         int[] newImage = new int[browser.imageWidth * browser.imageHeight];
+                        byte[] imageData =  browser.getImageData();
                         for (int i = 0; i < newImage.length; i++) {
-                            newImage[i] = browser.imageData[i * 4] & 0xFF |
-                                    (browser.imageData[i * 4 + 1] & 0xFF) << 8 |
-                                    (browser.imageData[i * 4 + 2] & 0xFF) << 16 |
-                                    (browser.imageData[i * 4 + 3] & 0xFF) << 24;
+                            newImage[i] =imageData[i * 4] & 0xFF |
+                                    (imageData[i * 4 + 1] & 0xFF) << 8 |
+                                    (imageData[i * 4 + 2] & 0xFF) << 16 |
+                                    (imageData[i * 4 + 3] & 0xFF) << 24;
                         }
                         image = new Utils.Pair<>(new Utils.Pair<>(browser.imageWidth, browser.imageHeight), newImage);
                     }
@@ -576,6 +606,21 @@ public class Chromium extends Browser {
                 return browser.getURL();
             }
             return "";
+        }
+
+        public static boolean isInDeveloperMode(Screen screen) {
+            org.cef.browser.ScreenInMCChromiumBrowser browser = clients.get(screen);
+            if (browser != null) {
+                return browser.isInDevTools();
+            }
+            return false;
+        }
+
+        public static void setDeveloperMode(Screen screen, boolean enable) {
+            org.cef.browser.ScreenInMCChromiumBrowser browser = clients.get(screen);
+            if (browser != null) {
+                browser.setDevTools(enable);
+            }
         }
     }
 }
