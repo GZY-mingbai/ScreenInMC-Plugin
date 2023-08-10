@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC.Browsers;
 
+import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
@@ -9,10 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.cef.CefApp;
-import org.cef.CefSettings;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
@@ -20,13 +18,15 @@ import org.cef.callback.CefCallback;
 import org.cef.callback.CefQueryCallback;
 import org.cef.callback.CefSchemeHandlerFactory;
 import org.cef.callback.CefSchemeRegistrar;
-import org.cef.handler.*;
+import org.cef.handler.CefLoadHandler;
+import org.cef.handler.CefMessageRouterHandlerAdapter;
+import org.cef.handler.CefResourceHandler;
+import org.cef.handler.CefResourceHandlerAdapter;
 import org.cef.misc.IntRef;
 import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
 import org.cef.network.CefResponse;
 
-import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -35,7 +35,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.List;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -347,7 +346,7 @@ public class Chromium extends Browser {
                                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                                     PrintStream ps = new PrintStream(outputStream);
                                     e.printStackTrace(ps);
-                                    String message = outputStream.toString(StandardCharsets.UTF_8);
+                                    String message = outputStream.toString();
                                     ps.close();
                                     data = ("<html><body style=\"background-color: white;\">"+message.replace("\n","<br>")+"</body></html>").getBytes(StandardCharsets.US_ASCII);
                                 }
@@ -470,11 +469,87 @@ public class Chromium extends Browser {
                                                     callback.failure(-6,Main.getGson().toJson(messageMap));
                                                 }
                                                 break;
-                                            default:
+                                            case "listen_redstone_input":
+                                                if(map.containsKey("id")){
+                                                    int id=-1;
+                                                    try {
+                                                        id = ((Number)map.get("id")).intValue();
+                                                    }catch (Exception e){
+                                                    }
+                                                    if(id>=1&&id<=54){
+                                                        RedstoneInputCallback cb = addRedstoneInputListener(new RedstoneInputCallback(screen,id) {
+                                                            @Override
+                                                            public void onInput(int value) {
+                                                                LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                                messageMap.put("type", "redstone_input");
+                                                                messageMap.put("id", getID());
+                                                                messageMap.put("value",value);
+                                                                messageMap.put("callback_id",getCallbackID());
+                                                                browser.executeJavaScript("window.postMessage("+Main.getGson().toJson(messageMap)+")","",0);
+                                                            }
+                                                        });
+                                                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                        messageMap.put("result",0);
+                                                        messageMap.put("callback_id",cb.getCallbackID());
+                                                        callback.success(Main.getGson().toJson(messageMap));
+
+                                                        break;
+                                                    }
+                                                }
                                                 LinkedHashMap messageMap = Maps.newLinkedHashMap();
+                                                messageMap.put("error", "id key not found or is wrong. Should be in 1-54.");
+                                                callback.failure(-8,Main.getGson().toJson(messageMap));
+                                                break;
+                                            case "stop_listen_redstone_input":
+                                                if(map.containsKey("callback_id")){
+                                                    long id=-1;
+                                                    try {
+                                                        id = ((Number)map.get("callback_id")).longValue();
+                                                    }catch (Exception e){
+                                                    }
+                                                    if(id!=-1){
+                                                        removeRedstoneInputListener(id);
+                                                        messageMap = Maps.newLinkedHashMap();
+                                                        messageMap.put("result",0);
+                                                        callback.success(Main.getGson().toJson(messageMap));
+                                                        break;
+                                                    }
+                                                }
+                                                messageMap = Maps.newLinkedHashMap();
+                                                messageMap.put("error", "callback_id key not found or is wrong.");
+                                                callback.failure(-9,Main.getGson().toJson(messageMap));
+                                                break;
+                                            case "redstone_output":
+                                                if(map.containsKey("id")&&map.containsKey("value")){
+                                                    int id=-1;
+                                                    int value = -1;
+                                                    try {
+                                                        id = ((Number)map.get("id")).intValue();
+                                                        value = ((Number)map.get("value")).intValue();
+                                                    }catch (Exception e){
+                                                    }
+                                                    if(id>=1&&id<=54&&value>=0&&value<=15){
+                                                        if(screen.getCore() instanceof WebBrowser){
+                                                            WebBrowser webBrowser = (WebBrowser) screen.getCore();
+                                                            webBrowser.redstoneOutput(id,value);
+                                                        }
+                                                        messageMap = Maps.newLinkedHashMap();
+                                                        messageMap.put("result",0);
+                                                        callback.success(Main.getGson().toJson(messageMap));
+                                                        break;
+                                                    }
+                                                }
+                                                messageMap = Maps.newLinkedHashMap();
+                                                messageMap.put("error", "id, value key not found or is wrong. id should be in 1-54, value should be in 0-15.");
+                                                callback.failure(-10,Main.getGson().toJson(messageMap));
+                                                break;
+                                            default:
+                                                messageMap = Maps.newLinkedHashMap();
                                                 messageMap.put("error", "Unknown action: "+map.get("action"));
                                                 callback.failure(-5,Main.getGson().toJson(messageMap));
                                         }
+
+
                                         return true;
                                     }catch (Exception e){
                                         LinkedHashMap messageMap = Maps.newLinkedHashMap();
@@ -550,6 +625,13 @@ public class Chromium extends Browser {
                     clients.remove(browser);
                 }
             }
+            synchronized (Browser.getRedstoneInputListenersMap()) {
+                for (Screen i : Browser.getRedstoneInputListenersMap().keySet()) {
+                    if (i.equals(screen)) {
+                        Browser.getRedstoneInputListenersMap().remove(screen);
+                    }
+                }
+            }
         }
 
         private static void clickAt(Screen screen, int x, int y, Utils.MouseClickType type) {
@@ -572,7 +654,8 @@ public class Chromium extends Browser {
                 Utils.Pair image;
                 try {
                     synchronized (browser) {
-                        int[] newImage = new int[browser.imageWidth * browser.imageHeight];
+                        int[] size = browser.getImageSize();
+                        int[] newImage = new int[size[0] * size[1]];
                         byte[] imageData =  browser.getImageData();
                         for (int i = 0; i < newImage.length; i++) {
                             newImage[i] =imageData[i * 4] & 0xFF |
@@ -580,7 +663,7 @@ public class Chromium extends Browser {
                                     (imageData[i * 4 + 2] & 0xFF) << 16 |
                                     (imageData[i * 4 + 3] & 0xFF) << 24;
                         }
-                        image = new Utils.Pair<>(new Utils.Pair<>(browser.imageWidth, browser.imageHeight), newImage);
+                        image = new Utils.Pair<>(new Utils.Pair<>(size[0], size[1]), newImage);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

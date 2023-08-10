@@ -17,12 +17,7 @@ public abstract class ImmediatelyCancellableBukkitRunnable extends BukkitRunnabl
         }
     }
 
-    @Override
     public boolean isCancelled() {
-        if(cancelled||super.isCancelled()){
-            return true;
-        }else{
-            return false;
-        }
+        return cancelled;
     }
 }

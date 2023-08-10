@@ -3,8 +3,6 @@ package cn.mingbai.ScreenInMC.MGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
-import java.awt.geom.Rectangle2D;
-
 public abstract class MGUICore extends Core {
     MContainer container;
 

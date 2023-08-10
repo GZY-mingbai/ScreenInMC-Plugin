@@ -2,24 +2,9 @@ package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import io.netty.buffer.Unpooled;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
-import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
-import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -91,6 +76,9 @@ public class Screen {
     }
 
     public Screen(ScreenData data) {
+        if(Bukkit.getWorld(data.world)==null){
+            throw new RuntimeException("World not exist.");
+        }
         this.location = new Location(Bukkit.getWorld(data.world), data.x, data.y, data.z);
         this.facing = data.facing;
         this.height = data.height;
@@ -203,23 +191,14 @@ public class Screen {
                     ScreenPiece piece = screenPieces[x][y];
                     Location loc = piece.getLocation();
                     int entityID = piece.getEntityId();
-                    ClientboundAddEntityPacket packet1 = new ClientboundAddEntityPacket(
+                    Object packet1 = OutAddMapEntityPacket.create(
                             entityID, piece.getUUID(),
-                            loc.getX(), loc.getY(), loc.getZ(),
-                            pitchYaw.getKey(), pitchYaw.getValue(), EntityType.ITEM_FRAME,
-                            facing.ordinal(), new Vec3(0, 0, 0), 0
+                            loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
+                            pitchYaw.getKey(), pitchYaw.getValue(),
+                            facing.ordinal()
                     );
                     CraftUtils.sendPacket(player, packet1);
-                    ItemStack mapItem = new ItemStack(Items.FILLED_MAP);
-                    mapItem.getOrCreateTag().putInt("map", entityID);
-                    SynchedEntityData.DataItem dataItem = new SynchedEntityData.DataItem(new EntityDataAccessor<>(8, EntityDataSerializers.ITEM_STACK), mapItem);
-                    FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.buffer());
-                    byteBuf.writeVarInt(entityID);
-                    List<SynchedEntityData.DataItem<?>> dataItemList = new ArrayList<>();
-                    dataItemList.add(dataItem);
-                    dataItemList.add(new SynchedEntityData.DataItem<>(new EntityDataAccessor<>(0, EntityDataSerializers.BYTE), (byte) 0x20));
-                    SynchedEntityData.pack(dataItemList, byteBuf);
-                    ClientboundSetEntityDataPacket packet2 = new ClientboundSetEntityDataPacket(byteBuf);
+                    Object packet2 = OutSetMapEntityPacket.create(entityID,entityID);
                     CraftUtils.sendPacket(player, packet2);
                 }
             }
@@ -306,7 +285,7 @@ public class Screen {
         for (int i = 0; i < array.length; i++) {
             array[i] = ids.get(i);
         }
-        ClientboundRemoveEntitiesPacket packet = new ClientboundRemoveEntitiesPacket(array);
+        Object packet = OutRemoveMapEntityPacket.create(array);
         for (Player player : location.getWorld().getPlayers()) {
             CraftUtils.sendPacket(player, packet);
         }
@@ -322,18 +301,18 @@ public class Screen {
     }
 
     public void sendView(byte[] colors) {
-        List<Packet> packets = getPackets(colors);
+        List<Object> packets = getPackets(colors);
         for (Player player : location.getWorld().getPlayers()) {
-            for (Packet i : packets) {
+            for (Object i : packets) {
                 CraftUtils.sendPacket(player, i);
             }
         }
     }
 
     public void sendView(byte[] colors, int x, int y, int w, int h) {
-        List<Packet> packets = getPackets(colors, x, y, w, h);
+        List<Object> packets = getPackets(colors, x, y, w, h);
         for (Player player : location.getWorld().getPlayers()) {
-            for (Packet i : packets) {
+            for (Object i : packets) {
                 CraftUtils.sendPacket(player, i);
             }
         }
@@ -346,13 +325,13 @@ public class Screen {
         if (location.distance(player.getLocation()) > displayDistance) {
             return;
         }
-        for (Packet i : getPackets(colors)) {
+        for (Object i : getPackets(colors)) {
             CraftUtils.sendPacket(player, i);
         }
     }
 
-    public List<Packet> getPackets(byte[] colors) {
-        List<Packet> packets = new ArrayList<>();
+    public List<Object> getPackets(byte[] colors) {
+        List<Object> packets = new ArrayList<>();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 byte[] result = new byte[16384];
@@ -360,15 +339,14 @@ public class Screen {
                 for (int i = 0; i < 128; i++) {
                     System.arraycopy(colors, (p + i * width) * 128, result, i * 128, 128);
                 }
-                MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(0, 0, 128, 128, result);
-                packets.add(new ClientboundMapItemDataPacket(screenPieces[x][y].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
+                packets.add(OutMapPacket.create(screenPieces[x][y].getEntityId(), result,0,0,128,128));
             }
         }
         return packets;
     }
 
-    public List<Packet> getPackets(byte[] colors, int x, int y, int w, int h) {
-        List<Packet> packets = new ArrayList<>();
+    public List<Object> getPackets(byte[] colors, int x, int y, int w, int h) {
+        List<Object> packets = new ArrayList<>();
         int a = x / 128;
         int b = y / 128;
         int c = x % 128;
@@ -388,8 +366,7 @@ public class Screen {
         for (int i = 0; i < f; i++) {
             System.arraycopy(colors, i * w, r1, i * e, e);
         }
-        MapItemSavedData.MapPatch mapPatch = new MapItemSavedData.MapPatch(c, d, e, f, r1);
-        packets.add(new ClientboundMapItemDataPacket(screenPieces[a][b].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
+        packets.add(OutMapPacket.create(screenPieces[a][b].getEntityId(),r1,c,d,e,f));
         int k = (c + w) / 128 + 1;
         int l = (d + h) / 128 + 1;
         for (int i = 0; i < l; i++) {
@@ -447,8 +424,7 @@ public class Screen {
                 for (int r = 0; r < p; r++) {
                     System.arraycopy(colors, (r + s) * w + q, r2, r * o, o);
                 }
-                mapPatch = new MapItemSavedData.MapPatch(m, n, o, p, r2);
-                packets.add(new ClientboundMapItemDataPacket(screenPieces[a + j][b + i].getEntityId(), (byte) 0, true, new ArrayList<>(), mapPatch));
+                packets.add(OutMapPacket.create(screenPieces[a + j][b + i].getEntityId(),r2,m,n,o,p));
             }
         }
         return packets;
@@ -464,7 +440,7 @@ public class Screen {
         if (w * h != colors.length) {
             return;
         }
-        for (Packet i : getPackets(colors, x, y, w, h)) {
+        for (Object i : getPackets(colors, x, y, w, h)) {
             CraftUtils.sendPacket(player, i);
         }
     }

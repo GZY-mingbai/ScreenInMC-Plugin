@@ -35,7 +35,7 @@ public class CLI {
             System.load(file.getAbsolutePath());
         } catch (Exception e) {
         }
-        PaletteLoader paletteLoader = new ConfigPaletteLoader("1.19");
+        PaletteLoader paletteLoader = new ConfigPaletteLoader();
         try {
             ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
         } catch (Throwable e) {

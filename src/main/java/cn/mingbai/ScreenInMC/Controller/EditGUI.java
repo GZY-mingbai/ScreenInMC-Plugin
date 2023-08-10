@@ -3,34 +3,23 @@ package cn.mingbai.ScreenInMC.Controller;
 import cn.mingbai.ScreenInMC.Controller.EditGUI.EditGUICoreInfo.EditGUICoreSettingsList;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.PacketListener;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.InWindowClickPacket.ClickType;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.*;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ItemLike;
+
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.Function;
+
+import static cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText.*;
 
 public class EditGUI {
     public static class EditGUICoreInfo{
@@ -126,24 +115,20 @@ public class EditGUI {
         openedPlayer.playSound(openedPlayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS,10,2);
     }
     private static final String BookAuthor = "ScreenInMC";
-    private Utils.Pair<ItemStack, CompoundTag> getBasicBook(){
-        ItemStack itemStack = new ItemStack(Items.WRITTEN_BOOK,1);
-        CompoundTag tag = itemStack.getOrCreateTag();
-        tag.putString("author",BookAuthor);
-        tag.putString("title",LangUtils.getText("controller-editor-gui-title"));
-        tag.putInt("generation",0);
-        tag.putBoolean("resolved",true);
-        CompoundTag displayTag = new CompoundTag();
-        displayTag.putString("Name",
+    private NMSBook getBasicBook(){
+        NMSBook book = new NMSBook();
+        book.setAuthor(BookAuthor);
+        book.setTitle(LangUtils.getText("controller-editor-gui-title"));
+        book.setGeneration(0);
+        book.setResolved(true);
+        book.setName(
                 new JsonText(LangUtils.getText("controller-editor-gui-title"))
                         .setColor("gold")
-                        .toJSONWithoutExtra()
         );
-        tag.put("display",displayTag);
-        return new Utils.Pair<>(itemStack,tag);
+        return book;
     }
 
-    public abstract class EditGUISubWindow{
+    public static abstract class EditGUISubWindow{
         private static Map<Player,List<EditGUISubWindow>> openedWindows = new HashMap<>();
         private BukkitRunnable runnable;
         private boolean opened;
@@ -370,102 +355,97 @@ public class EditGUI {
                     return true;
                 }
             });
-            Utils.Pair<ItemStack, CompoundTag> itemAndTag = getBasicBook();
-            ItemStack item = itemAndTag.getKey();
-            CompoundTag tag = itemAndTag.getValue();
-            ListTag pages = new ListTag();
+            NMSBook book = getBasicBook();
             String[] levels;
             if(isDouble){
                 levels = new String[]{"1","0.1","0.01"};
             }else{
                 levels = new String[]{"100","10","1"};
             }
-            pages.add(StringTag.valueOf(
-                    new JsonText(
-                            LangUtils.getText("ask-type")
-                                    .replace("%%",
-                                            isDouble?LangUtils.getText("type-double"):LangUtils.getText("type-int")
-                                    )+ "\n"
-                    ).setColor("black")
-                            .addExtra(
-                                    new JsonText("[-"+levels[0]+"]")
+            book.setContent(new JsonText[]{
+                            new JsonText(
+                                    LangUtils.getText("ask-type")
+                                            .replace("%%",
+                                                    isDouble ? LangUtils.getText("type-double") : LangUtils.getText("type-int")
+                                            ) + "\n"
+                            ).setColor("black")
+                                    .addExtra(
+                                            new JsonText("[-" + levels[0] + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " remove " + levels[0]
+                                                    ))
+                                                    .setColor("dark_purple")
+                                    ).addExtra(
+                                            new JsonText("[-" + levels[1] + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " remove " + levels[1]
+                                                    ))
+                                                    .setColor("light_purple")
+                                    )
+                                    .addExtra(
+                                            new JsonText("[-" + levels[2] + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " remove " + levels[2]
+                                                    ))
+                                                    .setColor("blue")
+                                    )
+                                    .addExtra(
+                                            new JsonText("\n" + (isDouble ? (String.format("%.4f", getNowValue())) : (getNowValue())) + "\n")
+                                                    .setColor("dark_red")
+                                    )
+                                    .addExtra(
+                                            new JsonText("[+" + levels[2] + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " add " + levels[2]
+                                                    ))
+                                                    .setColor("blue")
+                                    ).addExtra(
+                                            new JsonText("[+" + levels[1] + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " add " + levels[1]
+                                                    ))
+                                                    .setColor("light_purple")
+                                    )
+                                    .addExtra(
+                                            new JsonText("[+" + levels[0] + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " add " + levels[0]
+                                                    ))
+                                                    .setColor("dark_purple")
+                                    )
+                                    .addExtra(new JsonText("\n"))
+                                    .addExtra(
+                                            new JsonText("[" + LangUtils.getText("input-by-hand") + "]")
+                                                    .setClickEvent(new ClickEvent(
+                                                            "run_command",
+                                                            "/screen controller " + uuid.toString() + " input"
+                                                    ))
+                                                    .setColor("dark_purple")
+                                    )
+                                    .addExtra(new JsonText("\n"))
+                                    .addExtra(
+                                    new JsonText("[" + LangUtils.getText("complete") + "]")
                                             .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" remove "+levels[0]
+                                                    "run_command",
+                                                    "/screen controller " + uuid.toString() + " close"
                                             ))
                                             .setColor("dark_purple")
-                            ).addExtra(
-                                    new JsonText("[-"+levels[1]+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" remove "+levels[1]
-                                            ))
-                                            .setColor("light_purple")
                             )
-                            .addExtra(
-                                    new JsonText("[-"+levels[2]+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" remove "+levels[2]
-                                            ))
-                                            .setColor("blue")
-                            )
-                            .addExtra(
-                                    new JsonText("\n" + (isDouble?(String.format("%.4f",getNowValue())):(getNowValue())) + "\n")
-                                            .setColor("dark_red")
-                            )
-                            .addExtra(
-                                    new JsonText("[+"+levels[2]+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" add "+levels[2]
-                                            ))
-                                            .setColor("blue")
-                            ).addExtra(
-                                    new JsonText("[+"+levels[1]+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" add "+levels[1]
-                                            ))
-                                            .setColor("light_purple")
-                            )
-                            .addExtra(
-                                    new JsonText("[+"+levels[0]+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" add "+levels[0]
-                                            ))
-                                            .setColor("dark_purple")
-                            )
-                            .addExtra(new JsonText("\n"))
-                            .addExtra(
-                                    new JsonText("["+LangUtils.getText("input-by-hand")+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" input"
-                                            ))
-                                            .setColor("dark_purple")
-                            )
-                            .addExtra(new JsonText("\n"))
-                            .addExtra(
-                                    new JsonText("["+LangUtils.getText("complete")+"]")
-                                            .setClickEvent(new ClickEvent(
-                                                    ClickEvent.Action.RUN_COMMAND,
-                                                    "/screen controller "+uuid.toString()+" close"
-                                            ))
-                                            .setColor("dark_purple")
-                            )
-                            .toJSONWithoutExtra()
-
-            ));
-            tag.put("pages", pages);
-            ClientboundContainerSetSlotPacket packet1 = new ClientboundContainerSetSlotPacket(-2, 0, openedPlayer.getInventory().getHeldItemSlot(), item);
+                    }
+            );
+            Object packet1 = OutSetSlotPacket.create(-2, openedPlayer.getInventory().getHeldItemSlot(), book.getItemStack());
             CraftUtils.sendPacket(player,packet1);
         }
 
         @Override
         public void reopenWindow(Player player) {
-            ClientboundOpenBookPacket packet = new ClientboundOpenBookPacket(InteractionHand.MAIN_HAND);
+            Object packet = OutOpenBookPacket.create();
             CraftUtils.sendPacket(player,packet);
     }
 
@@ -475,11 +455,11 @@ public class EditGUI {
         }
     }
     private PacketListener addReOpenPacketListener(int containerID,Player player,Runnable setReOpen){
-        return PacketListener.addListener(new PacketListener(player, ServerboundContainerClosePacket.class, new PacketListener.PacketHandler() {
+        return PacketListener.addListener(new PacketListener(player, InWindowClosePacket.class, new PacketListener.PacketHandler() {
             @Override
-            public boolean handle(PacketListener listener, Packet p) {
-                if(p instanceof ServerboundContainerClosePacket){
-                    ServerboundContainerClosePacket packet  = (ServerboundContainerClosePacket) p;
+            public boolean handle(PacketListener listener, InPacket p) {
+                if(p instanceof InWindowClosePacket){
+                    InWindowClosePacket packet  = (InWindowClosePacket) p;
                     if(packet.getContainerId()==containerID){
                         setReOpen.run();
                         return true;
@@ -504,11 +484,11 @@ public class EditGUI {
         @Override
         public void openWindow(Player player) {
             reopen=true;
-            listener1 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
+            listener1 =PacketListener.addListener(new PacketListener(player, InWindowClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, Packet p) {
-                    if(p instanceof ServerboundContainerClickPacket){
-                        ServerboundContainerClickPacket packet  = (ServerboundContainerClickPacket) p;
+                public boolean handle(PacketListener listener, InPacket p) {
+                    if(p instanceof InWindowClickPacket){
+                        InWindowClickPacket packet  = (InWindowClickPacket) p;
                         if(packet.getContainerId()==containerID){
                             updateInventory();
                             resetItems(player);
@@ -534,9 +514,9 @@ public class EditGUI {
         @Override
         public void reopenWindow(Player player) {
             if(reopen){
-                Packet packet = new ClientboundOpenScreenPacket(
+                Object packet = OutOpenWindowPacket.create(
                         containerID,
-                        MenuType.HOPPER,
+                        "hopper",
                         new JsonText(LangUtils.getText("ask-type")
                                 .replace("%%",
                                         LangUtils.getText("type-boolean")+"(×/√)"
@@ -549,34 +529,28 @@ public class EditGUI {
         }
         private void resetItems(Player player){
             stateID = stateID + 1 & 32767;
-            NonNullList list = NonNullList.create();
-            list.add(0);
-            list.add(0);
-            list.add(0);
-            list.add(0);
-            list.add(0);
-            ItemStack itemStack = new ItemStack(Items.RED_WOOL,1);
-            CompoundTag tag = itemStack.getOrCreateTag();
-            CompoundTag displayTag = new CompoundTag();
-            displayTag.putString("Name",new JsonText("false (×)").setColor("red").toJSONWithoutExtra());
-            tag.put("display",displayTag);
+            List<NMSItemStack> list = new ArrayList<>();
+            list.add(0,NMSItemStack.EMPTY);
+            list.add(0,NMSItemStack.EMPTY);
+            list.add(0,NMSItemStack.EMPTY);
+            list.add(0,NMSItemStack.EMPTY);
+            list.add(0,NMSItemStack.EMPTY);
+            NMSItemStack itemStack = new NMSItemStack(new String[]{"red_wool"},1);
+            itemStack.setName(new JsonText("false (×)").setColor("red"));
             list.set(0,itemStack);
-            itemStack = new ItemStack(Items.LIME_WOOL,1);
-            tag = itemStack.getOrCreateTag();
-            displayTag = new CompoundTag();
-            displayTag.putString("Name",new JsonText("true (√)")
-                    .setColor("green").toJSONWithoutExtra());
-            tag.put("display",displayTag);
-            list.set(1,ItemStack.EMPTY);
-            list.set(2,ItemStack.EMPTY);
-            list.set(3,ItemStack.EMPTY);
+            itemStack = new NMSItemStack(new String[]{"lime_wool"},1);
+            itemStack.setName(new JsonText("true (√)")
+                    .setColor("green"));
+            list.set(1,NMSItemStack.EMPTY);
+            list.set(2,NMSItemStack.EMPTY);
+            list.set(3,NMSItemStack.EMPTY);
             list.set(4,itemStack);
-            Packet packet = new ClientboundContainerSetContentPacket(
+            Object packet = OutWindowItemsPacket.create(
                     containerID,
-                    stateID,list,ItemStack.EMPTY
+                    stateID,list
             );
             CraftUtils.sendPacket(player,packet);
-            packet = new ClientboundContainerSetDataPacket(containerID,0,0);
+            packet = OutWindowDataPacket.create(containerID,0,0);
             CraftUtils.sendPacket(player,packet);
         }
         @Override
@@ -610,11 +584,11 @@ public class EditGUI {
         @Override
         public void openWindow(Player player) {
             reopen=true;
-            listener1 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
+            listener1 =PacketListener.addListener(new PacketListener(player, InWindowClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, Packet p) {
-                    if(p instanceof ServerboundContainerClickPacket){
-                        ServerboundContainerClickPacket packet  = (ServerboundContainerClickPacket) p;
+                public boolean handle(PacketListener listener, InPacket p) {
+                    if(p instanceof InWindowClickPacket){
+                        InWindowClickPacket packet  = (InWindowClickPacket) p;
                         if(packet.getContainerId()==containerID){
                             if(packet.getSlotNum()==0){
                                 nowStringValue="";
@@ -631,11 +605,11 @@ public class EditGUI {
                 }
             }));
             listener2 = addReOpenPacketListener(containerID,player,()->{reopen=true;});
-            listener3 = PacketListener.addListener(new PacketListener(player, ServerboundRenameItemPacket.class, new PacketListener.PacketHandler() {
+            listener3 = PacketListener.addListener(new PacketListener(player, InAnvilRenamePacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, Packet p) {
-                    if(p instanceof ServerboundRenameItemPacket){
-                        ServerboundRenameItemPacket packet  = (ServerboundRenameItemPacket) p;
+                public boolean handle(PacketListener listener, InPacket p) {
+                    if(p instanceof InAnvilRenamePacket){
+                        InAnvilRenamePacket packet  = (InAnvilRenamePacket) p;
                         nowStringValue = packet.getName();
                     }
                     return false;
@@ -646,30 +620,24 @@ public class EditGUI {
         }
         private void resetItems(Player player){
             stateID = stateID + 1 & 32767;
-            NonNullList list = NonNullList.create();
-            list.add(0);
-            list.add(0);
-            list.add(0);
-            ItemStack itemStack = new ItemStack(Items.LIGHT_GRAY_STAINED_GLASS_PANE,1);
-            CompoundTag tag = itemStack.getOrCreateTag();
-            CompoundTag displayTag = new CompoundTag();
-            displayTag.putString("Name",new JsonText(nowStringValue).toJSONWithoutExtra());
-            tag.put("display",displayTag);
+            List<NMSItemStack> list = new ArrayList<>();
+            list.add(0,NMSItemStack.EMPTY);
+            list.add(0,NMSItemStack.EMPTY);
+            list.add(0,NMSItemStack.EMPTY);
+            NMSItemStack itemStack = new NMSItemStack(new String[]{"light_gray_stained_glass_pane"},1);
+            itemStack.setName(new JsonText(nowStringValue));
             list.set(0,itemStack);
-            itemStack = new ItemStack(Items.LIME_STAINED_GLASS_PANE,1);
-            tag = itemStack.getOrCreateTag();
-            displayTag = new CompoundTag();
-            displayTag.putString("Name",new JsonText(LangUtils.getText("complete"))
-                    .setColor("green").toJSONWithoutExtra());
-            tag.put("display",displayTag);
-            list.set(1,ItemStack.EMPTY);
+            itemStack = new NMSItemStack(new String[]{"lime_stained_glass_pane"},1);
+            itemStack.setName(new JsonText(LangUtils.getText("complete"))
+                    .setColor("green"));
+            list.set(1,NMSItemStack.EMPTY);
             list.set(2,itemStack);
-            Packet packet = new ClientboundContainerSetContentPacket(
+            Object packet = OutWindowItemsPacket.create(
                     containerID,
-                    stateID,list,ItemStack.EMPTY
+                    stateID,list
             );
             CraftUtils.sendPacket(player,packet);
-            packet = new ClientboundContainerSetDataPacket(containerID,0,0);
+            packet = OutWindowDataPacket.create(containerID,0,0);
             CraftUtils.sendPacket(player,packet);
 
         }
@@ -677,9 +645,9 @@ public class EditGUI {
         @Override
         public void reopenWindow(Player player) {
             if(reopen){
-                Packet packet = new ClientboundOpenScreenPacket(
+                Object packet = OutOpenWindowPacket.create(
                         containerID,
-                        MenuType.ANVIL,
+                        "anvil",
                         new JsonText(LangUtils.getText("ask-type")
                                 .replace("%%",
                                         LangUtils.getText("type-string")
@@ -814,10 +782,7 @@ public class EditGUI {
                     return true;
                 }
             });
-            Utils.Pair<ItemStack, CompoundTag> itemAndTag = getBasicBook();
-            ItemStack item = itemAndTag.getKey();
-            CompoundTag tag = itemAndTag.getValue();
-            ListTag pages = new ListTag();
+            NMSBook book = getBasicBook();
             JsonText jsonText = new JsonText(
                     LangUtils.getText("ask-type")
                             .replace("%%",
@@ -828,7 +793,7 @@ public class EditGUI {
                 jsonText.addExtra(new JsonText(LangUtils.getText("ask-world")+" ").setColor("dark_blue"));
                 jsonText.addExtra(new JsonText(world.getName()+" ").setColor("blue"));
                 jsonText.addExtra(new JsonText("["+LangUtils.getText("set")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                        ClickEvent.Action.RUN_COMMAND,
+                        "run_command",
                         "/screen controller "+uuid.toString()+" set world"
                 )));
                 jsonText.addExtra(new JsonText("\n"));
@@ -836,54 +801,51 @@ public class EditGUI {
             jsonText.addExtra(new JsonText("X: ").setColor("dark_red"));
             jsonText.addExtra(new JsonText(String.format("%.4f",x)+" ").setColor("red"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("set")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" set x"
             )));
             jsonText.addExtra(new JsonText("\n"));
             jsonText.addExtra(new JsonText("Y: ").setColor("dark_red"));
             jsonText.addExtra(new JsonText(String.format("%.4f",y)+" ").setColor("red"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("set")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" set y"
             )));
             jsonText.addExtra(new JsonText("\n"));
             jsonText.addExtra(new JsonText("Z: ").setColor("dark_red"));
             jsonText.addExtra(new JsonText(String.format("%.4f",z)+" ").setColor("red"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("set")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" set z"
             )));
             jsonText.addExtra(new JsonText("\n"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("set")+" XYZ]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" set xyz"
             )));
             jsonText.addExtra(new JsonText("\n"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("use-now-player-location")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" now player"
             )));
             jsonText.addExtra(new JsonText("\n"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("use-now-block-location")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" now block"
             )));
             jsonText.addExtra(new JsonText("\n"));
             jsonText.addExtra(new JsonText("["+LangUtils.getText("complete")+"]").setColor("gold").setClickEvent(new ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
+                    "run_command",
                     "/screen controller "+uuid.toString()+" close"
             )));
-            pages.add(StringTag.valueOf(
-                    jsonText.toJSONWithoutExtra()
-            ));
-            tag.put("pages", pages);
-            ClientboundContainerSetSlotPacket packet1 = new ClientboundContainerSetSlotPacket(-2, 0, openedPlayer.getInventory().getHeldItemSlot(), item);
+            book.setContent(new JsonText[]{jsonText});
+            Object packet1 = OutSetSlotPacket.create(-2, openedPlayer.getInventory().getHeldItemSlot(), book.getItemStack());
             CraftUtils.sendPacket(player,packet1);
         }
 
         @Override
         public void reopenWindow(Player player) {
-            ClientboundOpenBookPacket packet = new ClientboundOpenBookPacket(InteractionHand.MAIN_HAND);
+            Object packet = OutOpenBookPacket.create();
             CraftUtils.sendPacket(player,packet);
         }
 
@@ -893,9 +855,9 @@ public class EditGUI {
         }
     }
     private abstract class PageWindow extends EditGUISubWindow{
-        public static abstract class PageWindowCallBackRunnable{
-            private ServerboundContainerClickPacket packet;
-            protected ServerboundContainerClickPacket getPacket(){
+        public abstract class PageWindowCallBackRunnable{
+            private InWindowClickPacket packet;
+            protected InWindowClickPacket getPacket(){
                 return packet;
             }
             public abstract void run();
@@ -911,18 +873,18 @@ public class EditGUI {
         private PacketListener listener1;
         private PacketListener listener2;
         boolean reopen = true;
-        public abstract List<ItemStack> getItems(Player player,int startIndex,int count);
+        public abstract List<NMSItemStack> getItems(Player player,int startIndex,int count);
         public abstract List<PageWindowCallBackRunnable> getCallbacks(Player player,int startIndex,int count);
 
         public abstract int getCount();
         @Override
         public void openWindow(Player player) {
             reopen=true;
-            listener1 =PacketListener.addListener(new PacketListener(player, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
+            listener1 =PacketListener.addListener(new PacketListener(player, InWindowClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, Packet p) {
-                    if(p instanceof ServerboundContainerClickPacket){
-                        ServerboundContainerClickPacket packet  = (ServerboundContainerClickPacket) p;
+                public boolean handle(PacketListener listener, InPacket p) {
+                    if(p instanceof InWindowClickPacket){
+                        InWindowClickPacket packet  = (InWindowClickPacket) p;
                         if(packet.getContainerId()==containerID){
                             int count = getCount();
                             if(completeButton&&packet.getSlotNum()==49){
@@ -965,9 +927,9 @@ public class EditGUI {
         @Override
         public void reopenWindow(Player player) {
             if(reopen){
-                Packet packet = new ClientboundOpenScreenPacket(
+                Object packet = OutOpenWindowPacket.create(
                         containerID,
-                        MenuType.GENERIC_9x6,
+                        "generic_9x6",
                         title.toComponent()
                 );
                 CraftUtils.sendPacket(player,packet);
@@ -986,13 +948,13 @@ public class EditGUI {
 
         private void resetItems(Player player){
             stateID = stateID + 1 & 32767;
-            NonNullList list = NonNullList.create();
+            List<NMSItemStack> list = new ArrayList<>();
             for(int i=0;i<54;i++){
-                list.add(0,ItemStack.EMPTY);
+                list.add(0,NMSItemStack.EMPTY);
             }
             totalPage = calcPage(getCount(),45);
             nowPage = calcNowPage(nowPage,totalPage);
-            List<ItemStack> items = getItems(player,nowPage*45,45);
+            List<NMSItemStack> items = getItems(player,nowPage*45,45);
             for(int i=0;i<45;i++){
                 if(i>items.size()-1){
                     break;
@@ -1006,22 +968,18 @@ public class EditGUI {
                 list.set(45,getItemSwitchPage(false,nowPage,totalPage));
             }
             if(completeButton){
-                ItemStack stack = new ItemStack(Items.LIME_WOOL);
-                CompoundTag tag = stack.getOrCreateTag();
-                CompoundTag displayTag = new CompoundTag();
-                displayTag.putString("Name",new JsonText(LangUtils.getText("complete"))
+                NMSItemStack stack = new NMSItemStack(new String[]{"lime_wool"},1);
+                stack.setName(new JsonText(LangUtils.getText("complete"))
                         .setColor("green")
-                        .toJSONWithoutExtra()
                 );
-                tag.put("display",displayTag);
                 list.set(49,stack);
             }
-            Packet packet = new ClientboundContainerSetContentPacket(
+            Object packet = OutWindowItemsPacket.create(
                     containerID,
-                    stateID,list,ItemStack.EMPTY
+                    stateID,list
             );
             CraftUtils.sendPacket(player,packet);
-            packet = new ClientboundContainerSetDataPacket(containerID,0,0);
+            packet = OutWindowDataPacket.create(containerID,0,0);
             CraftUtils.sendPacket(player,packet);
         }
         @Override
@@ -1070,45 +1028,39 @@ public class EditGUI {
 
 
         @Override
-        public List<ItemStack> getItems(Player player,int startIndex,int count) {
-            List<ItemStack> list = new ArrayList<>();
+        public List<NMSItemStack> getItems(Player player,int startIndex,int count) {
+            List<NMSItemStack> list = new ArrayList<>();
             List<Utils.Pair<Integer,Integer>> types = getTypes();
             for(int i=startIndex;i<startIndex+count;i++){
                 if(i>types.size()-1){
                     break;
                 }
                 boolean isInsert = types.get(i).getKey()==-1;
-                ItemStack stack = new ItemStack(isInsert?Items.GOLD_BLOCK:Items.DIAMOND_BLOCK);
-                CompoundTag tag = stack.getOrCreateTag();
-                CompoundTag displayTag = new CompoundTag();
+                NMSItemStack stack = new NMSItemStack(new String[]{isInsert?"gold_block":"diamond_block"},1);
                 if(isInsert){
-                    displayTag.putString("Name",new JsonText(
+                    stack.setName(new JsonText(
                             LangUtils.getText("insert"))
-                            .setColor("gold")
-                            .toJSONWithoutExtra()
-                    );
+                            .setColor("gold"));
                 }else {
                     String[] throwToRemoveStrings = LangUtils.getText("throw-to-remove").split("%%");
-                    displayTag.putString("Name", new JsonText(
+                    stack.setName(new JsonText(
                             types.get(i).getKey() + " " + LangUtils.getText("click-to-set") + " " + throwToRemoveStrings[0])
                             .addExtra(new JsonText().setKeybind("key.drop").setColor("dark_aqua"))
                             .addExtra(new JsonText(throwToRemoveStrings[1]).setColor("blue"))
                             .setColor("blue")
-                            .toJSONWithoutExtra()
                     );
                 }
                 if(!isInsert){
-                    ListTag lore = new ListTag();
+                    JsonText[] lore = new JsonText[1];
                     try {
-                        lore.add(StringTag.valueOf(new JsonText(strings.get(types.get(i).getKey()))
+                        lore[0]=new JsonText(strings.get(types.get(i).getKey()))
                                 .setItalic(false)
-                                .setColor("white").toJSONWithoutExtra()));
+                                .setColor("white");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
-                    displayTag.put("Lore",lore);
+                    stack.setLore(lore);
                 }
-                tag.put("display",displayTag);
                 list.add(stack);
             }
             return list;
@@ -1175,22 +1127,17 @@ public class EditGUI {
         }
 
         @Override
-        public List<ItemStack> getItems(Player player, int startIndex, int count) {
-            List<ItemStack> list = new ArrayList<>();
+        public List<NMSItemStack> getItems(Player player, int startIndex, int count) {
+            List<NMSItemStack> list = new ArrayList<>();
             for(int i=startIndex;i<startIndex+count;i++){
                 if(i>strings.length-1){
                     break;
                 }
-                ItemStack stack = new ItemStack(Items.DIAMOND_BLOCK);
-                CompoundTag tag = stack.getOrCreateTag();
-                CompoundTag displayTag = new CompoundTag();
-                displayTag.putString("Name",new JsonText(
+                NMSItemStack stack = new NMSItemStack(new String[]{"diamond_block"},1);
+                stack.setName(new JsonText(
                         strings[i]
-                        )
-                        .setColor("blue")
-                        .toJSONWithoutExtra()
-                );
-                tag.put("display",displayTag);
+                )
+                        .setColor("blue"));
                 list.add(stack);
             }
             return list;
@@ -1404,7 +1351,7 @@ public class EditGUI {
     private void reOpenContainer() {
         if (openedPlayer != null) {
             JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-gui-title"));
-            ClientboundOpenScreenPacket packet = new ClientboundOpenScreenPacket(containerID, MenuType.GENERIC_9x6, jsonText.toComponent());
+            Object packet = OutOpenWindowPacket.create(containerID, "generic_9x6", jsonText.toComponent());
             CraftUtils.sendPacket(openedPlayer, packet);
         }
     }
@@ -1413,7 +1360,7 @@ public class EditGUI {
     private Utils.MouseClickType clickType;
     private void updateInventory(){
         openedPlayer.updateInventory();
-        ClientboundContainerSetSlotPacket setSlotPacket = new ClientboundContainerSetSlotPacket(-1,0,-1, CraftUtils.itemBukkitToNMS(openedPlayer.getItemOnCursor()));
+        Object setSlotPacket = OutSetSlotPacket.create(-1,-1, NMSItemStack.bukkitToNmsItemStack(openedPlayer.getItemOnCursor()));
         CraftUtils.sendPacket(openedPlayer,setSlotPacket);
     }
     PacketListener listener1;
@@ -1446,11 +1393,11 @@ public class EditGUI {
         return true;
     }
     private void openContainer(){
-        listener1 = PacketListener.addListener(new PacketListener(openedPlayer, ServerboundContainerClickPacket.class, new PacketListener.PacketHandler() {
+        listener1 = PacketListener.addListener(new PacketListener(openedPlayer, InWindowClickPacket.class, new PacketListener.PacketHandler() {
             @Override
-            public boolean handle(PacketListener listener, Packet p) {
-                if (p instanceof ServerboundContainerClickPacket) {
-                    ServerboundContainerClickPacket packet = (ServerboundContainerClickPacket) p;
+            public boolean handle(PacketListener listener, InPacket p) {
+                if (p instanceof InWindowClickPacket) {
+                    InWindowClickPacket packet = (InWindowClickPacket) p;
                     if (packet.getContainerId() == containerID) {
                         updateInventory();
                         if(packet.getSlotNum()>=0&&packet.getSlotNum()<=8){
@@ -1505,11 +1452,11 @@ public class EditGUI {
             }
 
         }));
-        listener2 =  PacketListener.addListener(new PacketListener(openedPlayer, ServerboundContainerClosePacket.class, new PacketListener.PacketHandler() {
+        listener2 =  PacketListener.addListener(new PacketListener(openedPlayer, InWindowClosePacket.class, new PacketListener.PacketHandler() {
             @Override
-            public boolean handle(PacketListener listener, Packet p) {
-                if (p instanceof ServerboundContainerClosePacket) {
-                    ServerboundContainerClosePacket packet = (ServerboundContainerClosePacket) p;
+            public boolean handle(PacketListener listener, InPacket p) {
+                if (p instanceof InWindowClosePacket) {
+                    InWindowClosePacket packet = (InWindowClosePacket) p;
                     if (packet.getContainerId() == containerID) {
                         onClose();
                         return true;
@@ -1525,7 +1472,7 @@ public class EditGUI {
         Player player = openedPlayer;
         onClose();
         if(player!=null&&player.isOnline()) {
-            Packet packet = new ClientboundContainerClosePacket(containerID);
+            Object packet = OutCloseWindowPacket.create(containerID);
             CraftUtils.sendPacket(player, packet);
         }
     }
@@ -1537,7 +1484,7 @@ public class EditGUI {
         }
     }
     private void sendClosePacket(){
-        ClientboundContainerClosePacket closePacket = new ClientboundContainerClosePacket(containerID);
+        Object closePacket = OutCloseWindowPacket.create(containerID);
         CraftUtils.sendPacket(openedPlayer,closePacket);
     }
     private void onClose(){
@@ -1553,168 +1500,148 @@ public class EditGUI {
         }
         openedPlayer=null;
     }
-    private ItemStack getItem0(){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.BLACK_GLAZED_TERRACOTTA);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    private NMSItemStack getItem0(){
+        NMSItemStack stack = new NMSItemStack(new String[]{"black_glazed_terracotta","black_wool"},1);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-title")).setColor("gold");
-        ListTag lore = new ListTag();
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-id"))
-                .addExtra(new JsonText(screen.getUUID().toString()).setColor("yellow").setItalic(false))
-                .setItalic(false)
-                .setColor("gold").toJSONWithoutExtra()));
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-location"))
-                .addExtra(
-                        new JsonText(screen.getLocation().getWorld().getName()+" X:"+
-                                screen.getLocation().getBlockX()+" Y:"+
-                                screen.getLocation().getBlockY()+" Z:"+
-                                screen.getLocation().getBlockZ()
-                        ).setColor("yellow").setItalic(false)
-                )
-                .setItalic(false)
-                .setColor("gold").toJSONWithoutExtra()));
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-facing"))
-                .addExtra(new JsonText(screen.getFacing().getTranslatedFacingName()).setColor("yellow").setItalic(false))
-                .setItalic(false)
-                .setColor("gold").toJSONWithoutExtra()));
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-size"))
-                .addExtra(new JsonText(screen.getWidth()+"x"+screen.getHeight()).setColor("yellow").setItalic(false))
-                .setItalic(false)
-                .setColor("gold").toJSONWithoutExtra()));
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-core"))
-                .addExtra(new JsonText(screen.getCore().getCoreName()).setColor("yellow").setItalic(false))
-                .setItalic(false)
-                .setColor("gold").toJSONWithoutExtra()));
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-clicked"))
-                .addExtra(new JsonText(clickType.getTranslatedName()+" X:"+clickX+" Y:"+clickY).setColor("yellow").setItalic(false))
-                .setItalic(false)
-                .setColor("gold").toJSONWithoutExtra()));
-        displayTag.putString("Name",jsonText.toJSON());
-        displayTag.put("Lore",lore);
-
-        stack.getOrCreateTag().put("display",displayTag);
+        JsonText[] lore = new JsonText[]{
+            new JsonText(LangUtils.getText("controller-editor-id"))
+                    .addExtra(new JsonText(screen.getUUID().toString()).setColor("yellow").setItalic(false))
+                    .setItalic(false)
+                    .setColor("gold"),
+            new JsonText(LangUtils.getText("controller-editor-location"))
+                    .addExtra(
+                            new JsonText(screen.getLocation().getWorld().getName() + " X:" +
+                                    screen.getLocation().getBlockX() + " Y:" +
+                                    screen.getLocation().getBlockY() + " Z:" +
+                                    screen.getLocation().getBlockZ()
+                            ).setColor("yellow").setItalic(false)
+                    )
+                    .setItalic(false)
+                    .setColor("gold"),
+            new JsonText(LangUtils.getText("controller-editor-facing"))
+                    .addExtra(new JsonText(screen.getFacing().getTranslatedFacingName()).setColor("yellow").setItalic(false))
+                    .setItalic(false)
+                    .setColor("gold"),
+            new JsonText(LangUtils.getText("controller-editor-size"))
+                    .addExtra(new JsonText(screen.getWidth() + "x" + screen.getHeight()).setColor("yellow").setItalic(false))
+                    .setItalic(false)
+                    .setColor("gold"),
+            new JsonText(LangUtils.getText("controller-editor-core"))
+                    .addExtra(new JsonText(screen.getCore().getCoreName()).setColor("yellow").setItalic(false))
+                    .setItalic(false)
+                    .setColor("gold"),
+            new JsonText(LangUtils.getText("controller-editor-clicked"))
+                    .addExtra(new JsonText(clickType.getTranslatedName() + " X:" + clickX + " Y:" + clickY).setColor("yellow").setItalic(false))
+                    .setItalic(false)
+                    .setColor("gold")
+        };
+        stack.setName(jsonText);
+        stack.setLore(lore);
         return stack;
     }
-    private ItemStack getItem1(){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.MAGENTA_GLAZED_TERRACOTTA);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    private NMSItemStack getItem1(){
+        NMSItemStack stack = new NMSItemStack(new String[]{"magenta_glazed_terracotta","magenta_wool"},1);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-replace-core-title")).setColor("light_purple");
-        ListTag lore = new ListTag();
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-replace-core-info"))
+        JsonText[] lore = new JsonText[]{
+            new JsonText(LangUtils.getText("controller-editor-replace-core-info"))
                 .setItalic(false)
-                .setColor("light_purple").toJSONWithoutExtra()));
-        displayTag.putString("Name",jsonText.toJSON());
-        displayTag.put("Lore",lore);
-        stack.getOrCreateTag().put("display",displayTag);
+                .setColor("light_purple")
+        };
+        stack.setName(jsonText);
+        stack.setLore(lore);
         return stack;
     }
-    private ItemStack getItem2(){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.RED_GLAZED_TERRACOTTA);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    private NMSItemStack getItem2(){
+        NMSItemStack stack = new NMSItemStack(new String[]{"red_glazed_terracotta","red_wool"},1);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-title")).setColor("red");
-        ListTag lore = new ListTag();
-        lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("controller-editor-redstone-connect-info"))
-                .setItalic(false)
-                .setColor("red").toJSONWithoutExtra()));
-        displayTag.putString("Name",jsonText.toJSON());
-        displayTag.put("Lore",lore);
-        stack.getOrCreateTag().put("display",displayTag);
+        JsonText[] lore = new JsonText[]{
+            new JsonText(LangUtils.getText("controller-editor-redstone-connect-info"))
+                    .setItalic(false)
+                    .setColor("red")
+        };
+        stack.setName(jsonText);
+        stack.setLore(lore);
         return stack;
     }
-    private ItemStack getItem2NotSupported(){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.RED_STAINED_GLASS);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    private NMSItemStack getItem2NotSupported(){
+        NMSItemStack stack = new NMSItemStack(new String[]{"red_stained_glass"},1);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-not-supported")).setColor("red");
-        displayTag.putString("Name",jsonText.toJSON());
-        stack.getOrCreateTag().put("display",displayTag);
+        stack.setName(jsonText);
         return stack;
     }
-    private ItemStack getCoreInfoItem(EditGUICoreInfo info){
-        ItemStack stack = CraftUtils.itemBukkitToNMS(new org.bukkit.inventory.ItemStack(info.icon));
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    private NMSItemStack getCoreInfoItem(EditGUICoreInfo info){
+        NMSItemStack stack = new NMSItemStack(new String[]{info.icon.name().toLowerCase()},1);
         String name = info.name;
         if(name.startsWith("@")){
             name=LangUtils.getText(name.substring(1));
         }
         JsonText jsonText = new JsonText(name).setColor(info.themeColor);
-        ListTag lore = new ListTag();
+        List<JsonText> lore = new ArrayList<>();
         String details = info.details;
         if(details.startsWith("@")){
             details=LangUtils.getText(details.substring(1));
         }
         for(String i:details.split("\n")){
-            lore.add(StringTag.valueOf(new JsonText(i)
+            lore.add(new JsonText(i)
                     .setItalic(false)
-                    .setColor(info.themeColor).toJSONWithoutExtra()));
+                    .setColor(info.themeColor));
         }
         try {
             if(info.core.getClass().equals(screen.getCore().getClass())){
-                lore.add(StringTag.valueOf(new JsonText("").toJSONWithoutExtra()));
-                lore.add(StringTag.valueOf(new JsonText(LangUtils.getText("current-selection"))
+                lore.add(new JsonText(""));
+                lore.add(new JsonText(LangUtils.getText("current-selection"))
                         .setItalic(false)
-                        .setColor("gold").toJSONWithoutExtra()));
+                        .setColor("gold"));
             }
         }catch (Exception e){}
-        displayTag.putString("Name",jsonText.toJSON());
-        displayTag.put("Lore",lore);
-        stack.getOrCreateTag().put("display",displayTag);
+        stack.setName(jsonText);
+        stack.setLore(lore.toArray(new JsonText[0]));
         return stack;
     }
     private short nowMode=0; //0=Info Mode //1=Select Core Mode
     private int nowPage=0;
     private int totalPage = 0;
-    private ItemStack getItem9To17(int i){
-        ItemLike type = Items.WHITE_STAINED_GLASS_PANE;
+    private NMSItemStack getItem9To17(int i){
+        String type = "white_stained_glass_pane";
         if(i==nowMode){
             if(nowMode==0){
-                type = Items.YELLOW_STAINED_GLASS_PANE;
+                type = "yellow_stained_glass_pane";
             }else{
-                type = Items.LIME_STAINED_GLASS_PANE;
+                type = "lime_stained_glass_pane";
             }
         }
-        ItemStack stack = new net.minecraft.world.item.ItemStack(type);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
-        JsonText jsonText = new JsonText(" ");
-        displayTag.putString("Name",jsonText.toJSON());
-        stack.getOrCreateTag().put("display",displayTag);
+        NMSItemStack stack = new NMSItemStack(new String[]{type},1);
+        JsonText jsonText = new JsonText("");
+        stack.setName(jsonText);
         return stack;
     }
-    private static ItemStack getItemSwitchPage(boolean next,int nowPage,int totalPage){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.STONE_BUTTON);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    private static NMSItemStack getItemSwitchPage(boolean next,int nowPage,int totalPage){
+        NMSItemStack stack = new NMSItemStack(new String[]{"stone_button"},1);
         JsonText jsonText = new JsonText(next?
                 LangUtils.getText("controller-editor-next-page"):
                 LangUtils.getText("controller-editor-previous-page")
                 ).setColor("gold");
-        ListTag lore = new ListTag();
-        lore.add(StringTag.valueOf(new JsonText(
+        JsonText[] lore = new JsonText[]{
+                new JsonText(
                 LangUtils.getText("controller-editor-all-page")
                         .replace("%now%",String.valueOf(nowPage+1))
                         .replace("%all%",String.valueOf(totalPage))
                 )
                 .setItalic(false)
-                .setColor("yellow").toJSONWithoutExtra()));
-        displayTag.putString("Name",jsonText.toJSON());
-        displayTag.put("Lore",lore);
-        stack.getOrCreateTag().put("display",displayTag);
+                .setColor("yellow")
+        };
+        stack.setName(jsonText);
+        stack.setLore(lore);
         return stack;
     }
-    public ItemStack getCoreSettingItem(Utils.Pair<String, Class> settings){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.REDSTONE_BLOCK);
-        stack.setCount(1);
-        CompoundTag displayTag = new CompoundTag();
+    public NMSItemStack getCoreSettingItem(Utils.Pair<String, Class> settings){
+        NMSItemStack stack = new NMSItemStack(new String[]{"redstone_block"},1);
         String settingName = settings.getKey();
         if(settingName.startsWith("@")){
             settingName = LangUtils.getText(settingName.substring(1));
         }
         JsonText jsonText = new JsonText(settingName).setColor("red");
-        ListTag lore = new ListTag();
+        List<JsonText> lore = new ArrayList<>();
         String type;
         if (settings.getValue().equals(Integer.class)) {
             type = LangUtils.getText("type-int");
@@ -1733,11 +1660,11 @@ public class EditGUI {
         } else {
             type = LangUtils.getText("type-unknown");
         }
-        lore.add(StringTag.valueOf(new JsonText(
+        lore.add(new JsonText(
                 LangUtils.getText("type")+" "+type
                 )
                 .setItalic(false)
-                .setColor("yellow").toJSONWithoutExtra()));
+                .setColor("yellow"));
         try{
             Object nowValue = screen.getCore().getEditGUISettingValue(settings.getKey());
             List<String> texts = new ArrayList<>();
@@ -1779,19 +1706,18 @@ public class EditGUI {
                 }
             }
             for(int i=0;i<texts.size();i++) {
-                lore.add(StringTag.valueOf(
+                lore.add(
                         new JsonText(i==0?
                                 LangUtils.getText("now-value")+" "+texts.get(i):
                                 texts.get(i)
-                        ).setColor("yellow").setItalic(false).toJSONWithoutExtra()
-                ));
+                        ).setColor("yellow").setItalic(false)
+                );
             }
         }catch (RuntimeException e){
             e.printStackTrace();
         }
-        displayTag.putString("Name",jsonText.toJSON());
-        displayTag.put("Lore",lore);
-        stack.getOrCreateTag().put("display",displayTag);
+        stack.setName(jsonText);
+        stack.setLore(lore.toArray(new JsonText[0]));
         return stack;
     }
     private List<Utils.Pair<String, Class>> getSupportedSettings(EditGUICoreInfo coreInfo){
@@ -1803,24 +1729,22 @@ public class EditGUI {
         }
         return settings;
     }
-    private ItemStack getRedstoneConnectItem(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> info){
-        ItemStack stack = new net.minecraft.world.item.ItemStack(Items.REDSTONE,1);
-        CompoundTag displayTag = new CompoundTag();
+    private NMSItemStack getRedstoneConnectItem(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> info){
+        NMSItemStack stack = new NMSItemStack(new String[]{"redstone_wire"},1);
         String text = info.getKey();
         if(text.startsWith("@")){
             text=LangUtils.getText(text.substring(1));
         }
         JsonText jsonText = new JsonText(text+" ("+(info.getValue().isInput()?LangUtils.getText("input"):LangUtils.getText("output"))+")").setColor("red");
-        displayTag.putString("Name",jsonText.toJSON());
-        stack.getOrCreateTag().put("display",displayTag);
+        stack.setName(jsonText);
         return stack;
     }
 
     private void setBaseItems(){
         stateID = stateID + 1 & 32767;
-        NonNullList list = NonNullList.create();
+        List<NMSItemStack> list = new ArrayList<>();
         for(int i=0;i<54;i++){
-            list.add(0,new ItemStack(Items.AIR,1));
+            list.add(0,NMSItemStack.EMPTY);
         }
         list.set(0,getItem0());
         list.set(1,getItem1());
@@ -1902,7 +1826,7 @@ public class EditGUI {
                 list.set(53,  getItemSwitchPage(true,nowPage,totalPage));
             }
         }
-        ClientboundContainerSetContentPacket setContentPacket = new ClientboundContainerSetContentPacket(containerID,stateID,list, ItemStack.EMPTY);
+        Object setContentPacket = OutWindowItemsPacket.create(containerID,stateID,list);
         CraftUtils.sendPacket(openedPlayer,setContentPacket);
 
     }

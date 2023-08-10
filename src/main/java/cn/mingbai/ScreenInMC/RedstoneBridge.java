@@ -1,11 +1,8 @@
 package cn.mingbai.ScreenInMC;
 
-import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.RedstoneWire;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,14 +17,13 @@ public class RedstoneBridge implements Cloneable {
     public RedstoneBridge(Core core){
         this.core = core;
     }
-    public static List<Location> outputBlocks = new ArrayList<>();
-    public static List<Location> inputBlocks = new ArrayList<>();
+    public static List<RedstoneSignalInterface> outputBlocks = new ArrayList<>();
+    public static List<RedstoneSignalInterface> inputBlocks = new ArrayList<>();
 
-    public abstract static class RedstoneSignalInterface implements Cloneable{
+    public static class RedstoneSignalInterface implements Cloneable{
         private Location block = null; //Must be redstone_wire.
         private boolean isConnected = false;
         private boolean isInput = false;
-        private BukkitRunnable listener = null;
         private RedstoneBridge bridge;
 
         public Location getBlockLocation() {
@@ -68,61 +64,55 @@ public class RedstoneBridge implements Cloneable {
                 if (wire != null) {
                     this.block = block;
                     isConnected = true;
-                    final RedstoneSignalInterface signalInterface = this;
                     if (isInput) {
                         synchronized (outputBlocks){
-                            for(Location loc:outputBlocks){
-                                if(loc.equals(block)){
+                            for(RedstoneSignalInterface loc:outputBlocks){
+                                if(loc.getBlockLocation().equals(block)){
                                     throw new ConnectException(ConnectException.SET_OUTPUT);
                                 }
                             }
                         }
                         synchronized (inputBlocks) {
-                            inputBlocks.add(block);
+                            inputBlocks.add(this);
                         }
                     } else {
                         synchronized (outputBlocks){
-                            for(Location loc:outputBlocks){
-                                if(loc.equals(block)){
+                            for(RedstoneSignalInterface loc:outputBlocks){
+                                if(loc.getBlockLocation().equals(block)){
                                     throw new ConnectException(ConnectException.SET_OUTPUT);
                                 }
                             }
                         }
                         synchronized (inputBlocks){
-                            for(Location loc:inputBlocks){
-                                if(loc.equals(block)){
+                            for(RedstoneSignalInterface loc:inputBlocks){
+                                if(loc.getBlockLocation().equals(block)){
                                     throw new ConnectException(ConnectException.SET_INPUT);
                                 }
                             }
                         }
                         synchronized (outputBlocks) {
-                            outputBlocks.add(block);
+                            outputBlocks.add(this);
                         }
                     }
-                    listener = new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            boolean disconnect = false;
-                            synchronized (signalInterface) {
-                                RedstoneWire wire = checkRedstone(signalInterface.block);
-                                if(wire==null){
-                                    disconnect=true;
-                                }else {
-                                    if (isInput) {
-                                        onReceiveRedstoneSignal(bridge.core,wire.getPower());
-                                    }
-                                }
-                            }
-                            if(disconnect){
-                                disconnect();
-                            }
-                        }
-                    };
-                    listener.runTaskTimer(Main.thisPlugin(),0,1L);
                 }
             }
         }
-
+        public void tryReceiveRedstoneSignal(int value){
+            boolean disconnect = false;
+            synchronized (this) {
+                RedstoneWire wire = checkRedstone(block);
+                if(wire==null){
+                    disconnect=true;
+                }else {
+                    if (isInput) {
+                        onReceiveRedstoneSignal(bridge.core,value);
+                    }
+                }
+            }
+            if(disconnect){
+                disconnect();
+            }
+        }
         public boolean isInput() {
             return isInput;
         }
@@ -134,18 +124,15 @@ public class RedstoneBridge implements Cloneable {
             synchronized (this) {
                 if(isInput){
                     synchronized (inputBlocks) {
-                        inputBlocks.remove(block);
+                        inputBlocks.remove(this);
                     }
                 }else{
                     synchronized (outputBlocks) {
-                        outputBlocks.remove(block);
+                        outputBlocks.remove(this);
                     }
                 }
                 this.block = null;
                 isConnected = false;
-                if(listener!=null){
-                    listener.cancel();
-                }
             }
         }
         private BukkitRunnable resetRunnable = null;
@@ -207,13 +194,12 @@ public class RedstoneBridge implements Cloneable {
         @Override
         protected Object clone() throws CloneNotSupportedException {
             RedstoneSignalInterface newInterface = (RedstoneSignalInterface) super.clone();
-            newInterface.listener=null;
             newInterface.isConnected=false;
             return newInterface;
         }
     }
     private Map<String,RedstoneSignalInterface> interfaces = new LinkedHashMap<>();
-    public void addRedstoneSignalInterface(String id,RedstoneSignalInterface signalInterface){
+    public RedstoneSignalInterface addRedstoneSignalInterface(String id,RedstoneSignalInterface signalInterface){
         if(interfaces.containsKey(id)){
             throw new RuntimeException("Interface with id: "+id+" is existed.");
         }
@@ -224,6 +210,7 @@ public class RedstoneBridge implements Cloneable {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return signalInterface;
     }
     public List<Utils.Pair<String,RedstoneSignalInterface>> getRedstoneSignalInterfaces(){
         List<Utils.Pair<String,RedstoneSignalInterface>> list = new ArrayList<>();

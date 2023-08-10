@@ -1,9 +1,7 @@
-package cn.mingbai.ScreenInMC;
+package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
-import cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import net.minecraft.network.protocol.Packet;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -12,12 +10,12 @@ import java.util.List;
 public class PacketListener {
     public static void removeGlobalListener(Player player) {
         try {
-            CraftUtils.getConnection(player).connection.channel.pipeline().remove(ScreenInMCPacketHandlerName);
+            CraftUtils.getChannel(player).pipeline().remove(ScreenInMCPacketHandlerName);
         }catch (Exception e){}
     }
 
     public interface PacketHandler{
-        boolean handle(PacketListener listener,Packet packet);
+        boolean handle(PacketListener listener,InPacket packet);
     }
     private final static String ScreenInMCPacketHandlerName = "screen_in_mc_packet_handler";
     private static List<PacketListener> listeners = new ArrayList<>();
@@ -52,29 +50,32 @@ public class PacketListener {
         }
     }
     public static void addGlobalListener(Player player){
-        CraftUtils.getConnection(player).connection.channel.pipeline().addBefore("packet_handler", ScreenInMCPacketHandlerName, new ChannelInboundHandlerAdapter() {
+        CraftUtils.getChannel(player).pipeline().addBefore("packet_handler", ScreenInMCPacketHandlerName, new ChannelInboundHandlerAdapter() {
             @Override
             public void channelRead(ChannelHandlerContext ctx, Object packet) throws Exception {
-                if(packet instanceof Packet) {
-                    List<PacketListener> listenersToHandle = new ArrayList<>();
-                    synchronized (listeners) {
-                        for (PacketListener i : listeners) {
-                            if (i.getPlayer().equals(player)) {
-                                if (i.getType().equals(packet.getClass())) {
-                                    listenersToHandle.add(i);
-                                }
+                List<PacketListener> listenersToHandle = new ArrayList<>();
+                InPacket inPacket = InPacket.create(packet);
+                if(inPacket==null) {
+                    super.channelRead(ctx, packet);
+                    return;
+                }
+                synchronized (listeners) {
+                    for (PacketListener i : listeners) {
+                        if (i.getPlayer().equals(player)) {
+                            if (i.getType().equals(inPacket.getClass())) {
+                                listenersToHandle.add(i);
                             }
                         }
                     }
-                    boolean result = false;
-                    for(PacketListener i:listenersToHandle){
-                        if(i.getHandler().handle(i,(Packet) packet)&&!result){
-                            result = true;
-                        }
+                }
+                boolean result = false;
+                for(PacketListener i:listenersToHandle){
+                    if(i.getHandler().handle(i,inPacket)&&!result){
+                        result = true;
                     }
-                    if(result){
-                        return;
-                    }
+                }
+                if(result){
+                    return;
                 }
                 super.channelRead(ctx, packet);
             }
@@ -84,5 +85,8 @@ public class PacketListener {
         this.player=player;
         this.type=type;
         this.handler=handler;
+    }
+    protected static void init() throws Exception{
+
     }
 }

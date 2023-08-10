@@ -48,6 +48,7 @@ public class ConfigPaletteLoader extends PaletteLoader{
         setConfigName(configName);
     }
     public ConfigPaletteLoader(){
+        this("1.17");
     }
 
     @Override

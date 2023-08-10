@@ -1,12 +1,22 @@
 plugins {
     id 'java'
+    id "de.undercouch.download" version "5.4.0"
 }
+import de.undercouch.gradle.tasks.download.Download
 
 group 'cn.mingbai'
 version '1.0-SNAPSHOT'
 
 repositories {
     mavenLocal()
+    maven {
+        url 'https://libraries.minecraft.net/'
+        metadataSources {
+            mavenPom()
+            artifact()
+            ignoreGradleMetadataRedirection()
+        }
+    }
     maven { url 'https://maven.aliyun.com/repository/public/' }
     maven { url 'https://maven.aliyun.com/repository/jcenter/' }
     maven { url 'https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/content/' }
@@ -20,34 +30,42 @@ dependencies {
     implementation project(path: ':src:main:LibrariesLoader')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    compileOnly 'org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT'
-    compileOnly 'org.spigotmc:spigot:1.19.2-R0.1-SNAPSHOT:remapped-mojang'
+    compileOnly 'org.spigotmc:spigot-api:1.13-R0.1-SNAPSHOT'
+    compileOnly 'io.netty:netty-all:4.0.23.Final'
     implementation 'com.shinyhut:vernacular:1.14'
     implementation 'org.apache.commons:commons-compress:1.22'
     implementation 'me.friwi:jcef-api:jcef-87476e9+cef-110.0.25+g75b1c96+chromium-110.0.5481.78'
 }
+
+
 tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
+    options.encoding = 'UTF-8'
 }
-task remappingJar{
-    doLast {
-        def path = new File('build/libs/remapped/')
-        if (!path.exists()) {
-            path.mkdirs()
-        }
-        def out = new ByteArrayOutputStream()
-        exec {
-            ExecSpec execSpec ->
-                executable 'cmd'
-                args '/c', "remapping.bat"
-                standardOutput = out
-        }
-        println(out.toString())
-        out.close()
-    }
+
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
 }
+
+//task buildScreenInMC{
+//    doLast {
+////        def a = isDependencyExist('org.spigotmc:spigot:1.19.2-R0.1-SNAPSHOT:remapped-mojang')
+////        System.out.println(a);
+//        def path = new File('build/libs/remapped/')
+//        if (!path.exists()) {
+//            path.mkdirs()
+//        }
+//        def out = new ByteArrayOutputStream()
+//        exec {
+//            ExecSpec execSpec ->
+//                executable 'cmd'
+//                args '/c', "remapping.bat"
+//                standardOutput = out
+//        }
+//        println(out.toString())
+//        out.close()
+//    }
+//}
 jar.dependsOn ":src:main:LibrariesLoader:jar"
-remappingJar.dependsOn jar
 jar {
     archiveBaseName = 'ScreenInMC'
     archiveVersion = ''

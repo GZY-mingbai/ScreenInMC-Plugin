@@ -2,16 +2,16 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import cn.mingbai.ScreenInMC.VideoProcessor;
-import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class VideoPlayer extends Core {
 
     private boolean isPlaying;
     private VideoProcessor.DitheredVideo video;
-    private BukkitRunnable playRunnable = null;
+    private ImmediatelyCancellableBukkitRunnable playRunnable = null;
     private boolean isPause = false;
 
     public VideoPlayer() {
@@ -98,7 +98,7 @@ public class VideoPlayer extends Core {
             video = VideoProcessor.readDitheredVideo(data.path, data.loop);
             isPlaying = true;
             isPause = false;
-            playRunnable = new BukkitRunnable() {
+            playRunnable = new ImmediatelyCancellableBukkitRunnable() {
                 @Override
                 public void run() {
                     while (isPlaying && !playRunnable.isCancelled()) {

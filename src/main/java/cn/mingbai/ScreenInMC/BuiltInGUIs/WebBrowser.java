@@ -7,6 +7,7 @@ import cn.mingbai.ScreenInMC.MGUI.Alignment;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
 import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -208,7 +209,7 @@ public class WebBrowser extends Core {
                 "@controller-editor-cores-browser-details",
                 "green",
                 Material.GLASS,
-                new LinkedHashMap<>(){
+                new LinkedHashMap(){
                     {
                         put("@controller-editor-cores-browser-uri", String.class);
                         put("@controller-editor-cores-browser-refresh", Boolean.class);
@@ -243,6 +244,9 @@ public class WebBrowser extends Core {
                 WebBrowserStoredData data = (WebBrowserStoredData)getStoredData();
                 return (int)data.frameRateLimit;
             case "@controller-editor-cores-browser-devtools":
+                if(browser==null){
+                    return false;
+                }
                 return browser.isInDeveloperMode(getScreen());
         }
         return null;
@@ -283,9 +287,47 @@ public class WebBrowser extends Core {
                 }
                 break;
             case "@controller-editor-cores-browser-devtools":
+                if(browser==null){
+                    return;
+                }
                 browser.setDeveloperMode(getScreen(),(boolean)value);
                 break;
         }
-
+    }
+    public void onRedstoneInput(int id,int value){
+        synchronized (Browser.getRedstoneInputListenersMap()) {
+            if(Browser.getRedstoneInputListenersMap().get(this.getScreen())==null){
+                return;
+            }
+            for (Browser.RedstoneInputCallback callback : Browser.getRedstoneInputListenersMap().get(this.getScreen())) {
+                if (callback.getID() == id) {
+                    callback.onInput(value);
+                }
+            }
+        }
+    }
+    public void redstoneOutput(int id,int value){
+        List<RedstoneBridge.RedstoneSignalInterface> list = new ArrayList();
+        for(Utils.Pair<String,RedstoneBridge.RedstoneSignalInterface> signalInterface:getRedstoneBridge().getRedstoneSignalInterfaces()){
+            if(!signalInterface.getValue().isInput()){
+                list.add(signalInterface.getValue());
+            }
+        }
+        if(id>=1&&id<=54){
+            list.get(id-1).sendRedstoneSignal(value);
+        }
+    }
+    @Override
+    public void registerRedstoneBridge() {
+        for(int i=1;i<55;i++) {
+            final int index = i;
+            getRedstoneBridge().addRedstoneSignalInterface("Input " + i, new RedstoneBridge.RedstoneSignalInterface(true) {
+                @Override
+                public void onReceiveRedstoneSignal(Core core, int strength) {
+                    ((WebBrowser)core).onRedstoneInput(index,strength);
+                }
+            });
+            getRedstoneBridge().addRedstoneSignalInterface("Output " + i, new RedstoneBridge.RedstoneSignalInterface(false));
+        }
     }
 }

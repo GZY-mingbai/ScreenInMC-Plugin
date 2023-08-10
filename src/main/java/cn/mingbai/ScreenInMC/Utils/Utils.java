@@ -8,7 +8,9 @@ import org.bukkit.util.Vector;
 import sun.misc.Unsafe;
 
 import java.awt.event.MouseEvent;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;

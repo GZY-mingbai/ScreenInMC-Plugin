@@ -1,6 +1,5 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
-import cn.mingbai.ScreenInMC.Browsers.Browser;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.MGUI.*;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
@@ -9,7 +8,6 @@ import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import com.google.gson.internal.LinkedTreeMap;
 import com.shinyhut.vernacular.client.VernacularClient;
 import com.shinyhut.vernacular.client.VernacularConfig;
 import com.shinyhut.vernacular.client.exceptions.VncException;
@@ -20,9 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class VNCClient extends MGUICore {
@@ -317,7 +313,7 @@ public class VNCClient extends MGUICore {
                 "@controller-editor-cores-vnc-details",
                 "blue",
                 Material.DIAMOND_BLOCK,
-                new LinkedHashMap<>(){
+                new LinkedHashMap(){
                     {
                         put("@controller-editor-cores-frame-rate-limit", Integer.class);
                     }

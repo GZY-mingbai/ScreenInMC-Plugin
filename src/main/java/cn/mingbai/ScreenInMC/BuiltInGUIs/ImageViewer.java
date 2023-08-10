@@ -8,7 +8,6 @@ import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -233,13 +232,11 @@ public class ImageViewer extends Core {
                                         Thread.sleep(timeToSleep);
                                     } catch (Exception e) {
                                         setAnimatedRunnableToNull();
-                                        Bukkit.broadcastMessage("Stopped");
                                         return;
                                     }
                                 }
                             }
                             setAnimatedRunnableToNull();
-                            Bukkit.broadcastMessage("Stopped");
                         }
                     };
                     animatedRunnable.runTaskAsynchronously(Main.thisPlugin());
@@ -328,7 +325,7 @@ public class ImageViewer extends Core {
                 "@controller-editor-cores-image-viewer-details",
                 "yellow",
                 Material.PAINTING,
-                new LinkedHashMap<>() {
+                new LinkedHashMap() {
                     {
                         put("@controller-editor-cores-image-viewer-uri", String.class);
                         put("@controller-editor-cores-image-viewer-scale-mode", ScaleModeSettingsList.class);

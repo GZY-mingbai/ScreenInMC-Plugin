@@ -31,9 +31,6 @@ public abstract class PaletteLoader {
 
         private void initParentPaletteLoader(){
             switch (loadFrom){
-                case FROM_GAME_CODE:
-                    this.parentPaletteLoader = new GameCodePaletteLoader();
-                    break;
                 case FROM_CONFIG:
                     this.parentPaletteLoader = new ConfigPaletteLoader();
                     break;

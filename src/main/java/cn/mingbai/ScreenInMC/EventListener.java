@@ -3,15 +3,15 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockRedstoneEvent;
-import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -54,9 +54,14 @@ public class EventListener implements Listener {
     @EventHandler
     public void onBlockRedstone(BlockRedstoneEvent e){
         synchronized (RedstoneBridge.outputBlocks) {
-            for(Location i:RedstoneBridge.outputBlocks){
-                if(e.getBlock().getLocation().equals(i)){
+            for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.outputBlocks){
+                if(e.getBlock().getLocation().equals(i.getBlockLocation())){
                     e.setNewCurrent(e.getOldCurrent());
+                }
+            }
+            for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.inputBlocks){
+                if(e.getBlock().getLocation().equals(i.getBlockLocation())){
+                    i.tryReceiveRedstoneSignal(e.getNewCurrent());
                 }
             }
         }
@@ -87,8 +92,7 @@ public class EventListener implements Listener {
     private boolean handleClick(Player player,Utils.MouseClickType type){
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item != null && item.hasItemMeta()) {
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
+            if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {
                 if(Item.onPlayerClick(player, item, type)) {
                     return true;
                 }
@@ -101,8 +105,7 @@ public class EventListener implements Listener {
                 int x = (int) (result.getMouseX() * 128);
                 int y =  (int) (result.getMouseY() * 128);
                 if (item != null && item.hasItemMeta()) {
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
+                    if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {
                         Item.onPlayerClickScreen(player,item,type,x,y,i);
                         return false;
                     }
@@ -121,9 +124,7 @@ public class EventListener implements Listener {
         }
         ItemStack item = e.getPlayer().getInventory().getItem(e.getPreviousSlot());
         if (item != null && item.hasItemMeta()) {
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
-//                e.getPlayer().getInventory().setHeldItemSlot(e.getPreviousSlot());
+            if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {
                 if (e.getPreviousSlot() - e.getNewSlot() == -1) {
                     onPlayerSwitchMode(e.getPlayer(), item, true, e.getPreviousSlot());
                 } else if (e.getPreviousSlot() - e.getNewSlot() == 1) {

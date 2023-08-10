@@ -6,16 +6,18 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.*;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutSystemMessagePacket;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ConfigPaletteLoader;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils.GameCodePaletteLoader;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -145,7 +147,7 @@ public class Main extends JavaPlugin {
     }
     public static void sendMessage(Player player, LangUtils.JsonText message) {
         LangUtils.JsonText jsonText = new LangUtils.JsonText("[ScreenInMC] ").setColor("gold").addExtra(message);
-        ClientboundSystemChatPacket packet = new ClientboundSystemChatPacket(jsonText.toComponent(),false);
+        Object packet = OutSystemMessagePacket.create(jsonText);
         CraftUtils.sendPacket(player,packet);
     }
 
@@ -169,9 +171,16 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        ImageUtils.initImageUtils(new GameCodePaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();
+        try {
+            CraftUtils.init();
+        } catch (Exception e) {
+            e.printStackTrace();
+            getPluginLogger().warning("ScreenInMC load failed.");
+            return;
+        }
+        ImageUtils.initImageUtils(new ConfigPaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
         try{

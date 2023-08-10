@@ -12,8 +12,8 @@ import java.nio.ByteBuffer;
 
 public class ScreenInMCChromiumBrowser extends CefBrowserOsr {
     private byte[] imageData = new byte[0];
-    public int imageWidth = 0;
-    public int imageHeight = 0;
+    private int imageWidth = 0;
+    private int imageHeight = 0;
     public boolean openedDevTools = false;
     public Object devToolsLock = new Object();
     private ScreenInMCChromiumBrowser devTools=null;
@@ -35,8 +35,13 @@ public class ScreenInMCChromiumBrowser extends CefBrowserOsr {
             else return imageData;
         }
     }
+    public int[] getImageSize(){
+        synchronized (devToolsLock) {
+            if(openedDevTools) return devTools.getImageSize();
+            else return new int[]{imageWidth, imageHeight};
 
-
+        }
+    }
     @Override
     protected ScreenInMCChromiumBrowser createDevToolsBrowser(CefClient client, String url, CefRequestContext context, CefBrowser_N parent, Point inspectAt) {
         return new ScreenInMCChromiumBrowser(client,url,false,context,parent,inspectAt);

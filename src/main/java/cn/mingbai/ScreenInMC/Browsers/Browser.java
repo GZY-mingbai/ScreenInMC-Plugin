@@ -3,9 +3,7 @@ package cn.mingbai.ScreenInMC.Browsers;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public abstract class Browser {
     public static final int NOT_INSTALLED = 0;
@@ -70,5 +68,72 @@ public abstract class Browser {
     public abstract String getNowURL(Screen screen);
     public abstract boolean isInDeveloperMode(Screen screen);
     public abstract void setDeveloperMode(Screen screen,boolean enable);
+    public static abstract class RedstoneInputCallback{
+        private static long finalCallbackID = 0;
+        public long callbackId = 0;
+        private Screen screen;
+        private int id;
+        public RedstoneInputCallback(Screen screen,int id){
+            this.screen = screen;
+            this.id = id;
+            this.callbackId = finalCallbackID;
+            finalCallbackID++;
+        }
 
+        public long getCallbackID() {
+            return callbackId;
+        }
+
+        public Screen getScreen() {
+            return screen;
+        }
+
+        public int getID() {
+            return id;
+        }
+
+        public abstract void onInput(int value);
+    }
+    private static Map<Screen,List<RedstoneInputCallback>> redstoneInputListeners = new HashMap<>();
+    protected static RedstoneInputCallback addRedstoneInputListener(RedstoneInputCallback callback){
+        synchronized (redstoneInputListeners) {
+            if (!redstoneInputListeners.containsKey(callback.screen)) {
+                redstoneInputListeners.put(callback.screen, new ArrayList<>());
+            }
+            List<RedstoneInputCallback> list = redstoneInputListeners.get(callback.screen);
+            list.add(callback);
+            return callback;
+        }
+    }
+    protected static void removeRedstoneInputListener(long callbackID) {
+        synchronized (redstoneInputListeners){
+            for(Screen i:redstoneInputListeners.keySet()){
+                for(RedstoneInputCallback j:redstoneInputListeners.get(i)){
+                    if(j.getCallbackID()==callbackID){
+                        removeRedstoneInputListener(j);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    protected static void removeRedstoneInputListener(RedstoneInputCallback callback){
+        synchronized (redstoneInputListeners) {
+            if (redstoneInputListeners.containsKey(callback.screen)) {
+                List<RedstoneInputCallback> list = redstoneInputListeners.get(callback.screen);
+                list.remove(callback);
+                if (list.size() == 0) {
+                    redstoneInputListeners.remove(callback.screen);
+                }
+            }
+        }
+    }
+
+    public static Map<Screen, List<RedstoneInputCallback>> getRedstoneInputListenersMap() {
+        HashMap map = new HashMap();
+        for(Screen i:redstoneInputListeners.keySet()){
+            map.put(i,redstoneInputListeners.get(i));
+        }
+        return map;
+    }
 }

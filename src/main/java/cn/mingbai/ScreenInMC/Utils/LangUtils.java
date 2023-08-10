@@ -1,11 +1,7 @@
 package cn.mingbai.ScreenInMC.Utils;
 
 import cn.mingbai.ScreenInMC.Main;
-import net.minecraft.network.chat.*;
-import net.minecraft.network.chat.contents.KeybindContents;
-import net.minecraft.network.chat.contents.LiteralContents;
-import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.ResourceLocation;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.JsonTextToNMSComponent;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -14,11 +10,11 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static cn.mingbai.ScreenInMC.Main.getRandom;
 
 public class LangUtils {
-    public static final String EMPTY_JSON_TEXT = "{\"text\":\"\"}";
     //Chars from https://suntrise.github.io/pseudo/
     public static final char[][] QPS_PLOC_CHARS = {
             {'ä', 'ā', 'á', 'ǎ', 'à', 'ă', 'å', 'ǻ', 'ã', 'ǟ', 'ǡ', 'ǻ', 'ȁ', 'ȃ', 'ȧ', 'ᶏ', 'ḁ', 'ẚ', 'ạ', 'ả', 'ấ', 'ầ', 'ẩ', 'ẫ', 'ậ', 'ắ', 'ằ', 'ẳ', 'ẵ', 'ặ', 'ɑ', 'α', 'ά', 'ὰ', 'ἀ', 'ἁ', 'ἂ', 'ἃ', 'ἆ', 'ἇ', 'ᾂ', 'ᾃ', 'ᾰ', 'ᾱ', 'ᾲ', 'ᾳ', 'ᾴ', 'ᾶ', 'ᾷ', 'ⱥ'/*,'𐓘','𐓙','𐓚'*/},
@@ -130,7 +126,7 @@ public class LangUtils {
                 if (p == 0) {
                     chars[i] = useChars[0];
                 } else {
-                    chars[i] = useChars[getRandom().nextInt(0, p)];
+                    chars[i] = useChars[getRandom().nextInt(p+1)];
                 }
             }
         }
@@ -138,11 +134,20 @@ public class LangUtils {
     }
 
     public static class JsonText {
-        public static class JsonTextForGSON{
-            public static class JsonTextForGSONClickEvent{
-                public String action;
-                public String value;
+        public static class ClickEvent{
+            public String action;
+            public String value;
+            public ClickEvent(String action,String value){
+                this.action=action;
+                this.value=value;
             }
+        }
+        public static class HoverEvent{
+            public String action;
+            public Map contents;
+        }
+        public static class JsonTextForGSON{
+
             public String text;
             public String color;
             public boolean bold;
@@ -153,7 +158,8 @@ public class LangUtils {
             public JsonText extra;
             public String translate;
             public String keybind;
-            public JsonTextForGSONClickEvent clickEvent;
+            public ClickEvent clickEvent;
+            public HoverEvent hoverEvent;
         }
         public String text=null;
         public String color=null;
@@ -166,8 +172,8 @@ public class LangUtils {
         public String translate=null;
         public String keybind=null;
         public ClickEvent clickEvent=null;
-        public HoverEvent hoverEvent = null;
-        public ResourceLocation font = null;
+//        public HoverEvent hoverEvent = null;
+//        public ResourceLocation font = null;
 
         public JsonText setTranslate(String translate) {
             this.translate = translate;
@@ -224,15 +230,11 @@ public class LangUtils {
             return this;
         }
 
-        public JsonText setFont(ResourceLocation font) {
-            this.font = font;
-            return this;
-        }
 
-        public JsonText setHoverEvent(HoverEvent hoverEvent) {
-            this.hoverEvent = hoverEvent;
-            return this;
-        }
+//        public JsonText setHoverEvent(HoverEvent hoverEvent) {
+//            this.hoverEvent = hoverEvent;
+//            return this;
+//        }
 
         public JsonText(){}
         public JsonText(String text){
@@ -271,9 +273,7 @@ public class LangUtils {
                 jsonText.keybind = keybind;
             }
             if(clickEvent!=null){
-                jsonText.clickEvent = new JsonTextForGSON.JsonTextForGSONClickEvent();
-                jsonText.clickEvent.action = clickEvent.getAction().getName();
-                jsonText.clickEvent.value = clickEvent.getValue();
+                jsonText.clickEvent = new ClickEvent(clickEvent.action,clickEvent.value);
 
             }
             return jsonText;
@@ -294,8 +294,7 @@ public class LangUtils {
             jsonText.translate=translate;
             jsonText.keybind=keybind;
             jsonText.clickEvent=clickEvent;
-            jsonText.hoverEvent = hoverEvent;
-            jsonText.font = font;
+//            jsonText.hoverEvent = hoverEvent;
             return jsonText;
         }
         public List<JsonText> toListWithoutExtra(){
@@ -321,48 +320,49 @@ public class LangUtils {
         public static String toJSON(JsonText jsonText){
             return jsonText.toJSON();
         }
-        public MutableComponent toComponent(){
-            MutableComponent component;
-            if(keybind!=null){
-                component = MutableComponent.create(new KeybindContents(keybind));
-            }else if(translate!=null){
-                component = MutableComponent.create(new TranslatableContents(translate));
-            }else{
-                component = MutableComponent.create(new LiteralContents(text));
-            }
-            Style style = Style.EMPTY;
-            if(color!=null) {
-                style = style.withColor(TextColor.parseColor(color));
-            }
-            if(bold!=null) {
-                style = style.withBold(bold);
-            }
-            if(italic!=null) {
-                style = style.withItalic(italic);
-            }
-            if(underlined!=null) {
-                style = style.withUnderlined(underlined);
-            }
-            if(strikethrough!=null) {
-                style = style.withStrikethrough(strikethrough);
-            }
-            if(obfuscated!=null) {
-                style = style.withObfuscated(obfuscated);
-            }
-            if(clickEvent!=null){
-                style = style.withClickEvent(clickEvent);
-            }
-            if(hoverEvent!=null){
-                style = style.withHoverEvent(hoverEvent);
-            }
-            if(font!=null){
-                style = style.withFont(font);
-            }
-            component.setStyle(style);
-            if(extra!=null){
-                component.append(extra.toComponent());
-            }
-            return component;
+        public Object toComponent(){
+            return JsonTextToNMSComponent.jsonTextToComponent(this);
+//            MutableComponent component;
+//            if(keybind!=null){
+//                component = MutableComponent.create(new KeybindContents(keybind));
+//            }else if(translate!=null){
+//                component = MutableComponent.create(new TranslatableContents(translate));
+//            }else{
+//                component = MutableComponent.create(new LiteralContents(text));
+//            }
+//            Style style = Style.EMPTY;
+//            if(color!=null) {
+//                style = style.withColor(TextColor.parseColor(color));
+//            }
+//            if(bold!=null) {
+//                style = style.withBold(bold);
+//            }
+//            if(italic!=null) {
+//                style = style.withItalic(italic);
+//            }
+//            if(underlined!=null) {
+//                style = style.withUnderlined(underlined);
+//            }
+//            if(strikethrough!=null) {
+//                style = style.withStrikethrough(strikethrough);
+//            }
+//            if(obfuscated!=null) {
+//                style = style.withObfuscated(obfuscated);
+//            }
+//            if(clickEvent!=null){
+//                style = style.withClickEvent(clickEvent);
+//            }
+//            if(hoverEvent!=null){
+//                style = style.withHoverEvent(hoverEvent);
+//            }
+//            if(font!=null){
+//                style = style.withFont(font);
+//            }
+//            component.setStyle(style);
+//            if(extra!=null){
+//                component.append(extra.toComponent());
+//            }
+//            return component;
         }
         public JsonText addExtra(JsonText extra){
             if(this.extra!=null){

@@ -1,36 +1,30 @@
 package cn.mingbai.ScreenInMC.Controller;
 
-import cn.mingbai.ScreenInMC.BuiltInGUIs.Welcome;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutActionBarPacket;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static cn.mingbai.ScreenInMC.Main.getGson;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getMaxScreenSize;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getScreenFromUUID;
-import static cn.mingbai.ScreenInMC.Utils.CraftUtils.itemBukkitToNMS;
-import static cn.mingbai.ScreenInMC.Utils.CraftUtils.itemNMSToBukkit;
-import static cn.mingbai.ScreenInMC.Utils.LangUtils.EMPTY_JSON_TEXT;
-import static org.bukkit.inventory.ItemFlag.*;
 
 public class Item {
     public static final int CONTROLLER = 1575771175;
@@ -61,10 +55,10 @@ public class Item {
                         ItemStack item = player.getInventory().getItemInMainHand();
                         if (item != null && item.hasItemMeta()) {
                             ItemMeta meta = item.getItemMeta();
-                            if (meta.hasCustomModelData() && meta.getCustomModelData() == CONTROLLER) {
+                            if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {
                                 if (meta.hasLocalizedName()) {
                                     try {
-                                        ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
+                                        ItemData data = getData(item);
                                         JsonText extra = new JsonText("");
                                         switch (data.nowMode) {
                                             case SELECT_MODE:
@@ -185,7 +179,7 @@ public class Item {
                                         JsonText component = new JsonText(LangUtils.getText("controller-item-now-mode") + " " + getModeName(data.nowMode));
                                         component.addExtra(extra);
                                         component.color="gold";
-                                        ClientboundSetActionBarTextPacket packet = new ClientboundSetActionBarTextPacket(component.toComponent());
+                                        Object packet = OutActionBarPacket.create(component);
                                         CraftUtils.sendPacket(player,packet);
 
                                     } catch (Exception e) {
@@ -209,19 +203,16 @@ public class Item {
         if(item==null||!item.hasItemMeta()){
             return null;
         }
-        ItemMeta meta = item.getItemMeta();
-        if(meta.hasCustomModelData()&&meta.getCustomModelData()!=CONTROLLER){
+        if(NMSItemStack.getCustomModelData(item)!=CONTROLLER){
             return null;
         }
         return item;
     }
-    public static ItemData getData(ItemStack item){
-        return getGson().fromJson(item.getItemMeta().getLocalizedName(), ItemData.class);
-    }
     public static void setData(ItemStack item,ItemData data){
-        ItemMeta meta = item.getItemMeta();
-        meta.setLocalizedName(getGson().toJson(data));
-        item.setItemMeta(meta);
+        NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
+    }
+    public static ItemData getData(ItemStack item){
+        return getGson().fromJson(NMSItemStack.readScreenInMCData(item), ItemData.class);
     }
     public static void switchMode(Player player,int to){
         ItemStack item = getItemFromPlayer(player);
@@ -233,33 +224,28 @@ public class Item {
         if(to!=CONNECT_MODE){
             data.conn=null;
         }
-        setData(item,data);
-        setItemLore(item, data.nowMode);
+        NMSItemStack newItem = getNMSItem(to);
+        newItem.setScreenInMCData(getGson().toJson(data));
+        setItemLore(newItem, data.nowMode);
+        player.getInventory().setItemInMainHand(newItem.getBukkitItemStack());
     }
     public static void onDisable() {
         if (runnable != null) {
             runnable.cancel();
         }
     }
-
+    public static NMSItemStack getNMSItem(int mode){
+        NMSItemStack item = new NMSItemStack(new String[]{"wooden_hoe"},1);
+        item.setName(new JsonText(LangUtils.getText("controller-item-name")).setColor("gold"));
+        item.setCustomModelData(CONTROLLER);
+        item.setUnbreakable(true);
+        item.setScreenInMCData(getGson().toJson(new ItemData()));
+        setItemLore(item, mode);
+        return item;
+    }
     public static void giveItem(Player player) {
-        ItemStack item = new ItemStack(Material.WOODEN_HOE);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§6" + LangUtils.getText("controller-item-name"));
-        meta.setCustomModelData(CONTROLLER);
-        meta.setUnbreakable(true);
-        meta.addEnchant(Enchantment.DURABILITY, 1, false);
-        meta.addItemFlags(HIDE_ENCHANTS,
-                HIDE_ATTRIBUTES,
-                HIDE_UNBREAKABLE,
-                HIDE_DESTROYS,
-                HIDE_PLACED_ON,
-                HIDE_POTION_EFFECTS,
-                HIDE_DYE);
-        meta.setLocalizedName(getGson().toJson(new ItemData()));
-        item.setItemMeta(meta);
-        setItemLore(item, FIRST_MODE);
-        player.getInventory().addItem(item);
+
+        player.getInventory().addItem(getNMSItem(FIRST_MODE).getBukkitItemStack());
     }
 
     public static String getModeName(int id) {
@@ -311,28 +297,30 @@ public class Item {
     }
 
 
-    private static JsonText[] replaceLoreKeybind(String text, String from, String to, String textColor, String keyBindColor) {
-        JsonText[] loreArray = new JsonText[3];
+    private static JsonText replaceLoreKeybind(String text, String from, String to, String textColor, String keyBindColor) {
         String[] lore = text.split(from);
         if (lore.length == 0) {
-            return new JsonText[]{getLoreColorfulJsonText(text, textColor)};
+            return getLoreColorfulJsonText(text, textColor);
         }
-        JsonText loreTag = new JsonText();
+        JsonText firstLoreTag = new JsonText();
+        JsonText loreTag = firstLoreTag;
         loreTag.text = lore[0];
         loreTag.color = textColor;
         loreTag.italic = false;
-        loreArray[0] = loreTag;
+
         loreTag = new JsonText();
         loreTag.keybind = to;
         loreTag.color = keyBindColor;
         loreTag.italic = false;
-        loreArray[1] = loreTag;
+        firstLoreTag.addExtra(loreTag);
+
         loreTag = new JsonText();
         loreTag.text = lore[1];
         loreTag.color = textColor;
         loreTag.italic = false;
-        loreArray[2] = loreTag;
-        return loreArray;
+        firstLoreTag.addExtra(loreTag);
+
+        return firstLoreTag;
     }
 
     private static JsonText getLoreColorfulJsonText(String text, String color) {
@@ -343,82 +331,77 @@ public class Item {
         return loreTag;
     }
 
-    private static void setItemLore(ItemStack item, int nowMode) {
-        net.minecraft.world.item.ItemStack stack = itemBukkitToNMS(item);
-        CompoundTag displayTag = (CompoundTag) stack.getOrCreateTag().get("display");
-        ListTag lore = new ListTag();
+    private static void setItemLore(NMSItemStack item, int nowMode) {
+        List<JsonText> lore = new ArrayList<>();
         String[] lore1 = LangUtils.getText("controller-mode-info").split("\n");
-        lore.add(StringTag.valueOf(JsonText.toJSON(
+        lore.add(
                 getLoreColorfulJsonText(lore1[0].replace("%now-mode%", getModeName(nowMode)), "gold")
-        )));
-        lore.add(StringTag.valueOf(JsonText.toJSON(
+        );
+        lore.add(
                 replaceLoreKeybind(lore1[1], "%sneak%", "key.sneak", "gold", "gold")
-        )));
-        lore.add(StringTag.valueOf(EMPTY_JSON_TEXT));
+        );
+        lore.add(new JsonText(""));
         switch (nowMode) {
             case SELECT_MODE:
                 String[] modeLore = LangUtils.getText("controller-select-mode-info").split("\n");
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                lore.add(
                         replaceLoreKeybind(modeLore[0], "%left-click%", "key.attack", "gold", "blue")
-                )));
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                );
+                lore.add(
                         replaceLoreKeybind(modeLore[1], "%right-click%", "key.use", "gold", "red")
-                )));
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                );
+                lore.add(
                         getLoreColorfulJsonText(modeLore[2], "gold")
-                )));
+                );
                 Utils.Pair maxSize = getMaxScreenSize();
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                lore.add(
                         getLoreColorfulJsonText(modeLore[3].replace("%max-size%", maxSize.getKey() + "x" + maxSize.getValue()), "gold")
-                )));
+                );
                 break;
             case PLACE_MODE:
                 modeLore = LangUtils.getText("controller-place-mode-info").split("\n");
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                lore.add(
                         getLoreColorfulJsonText(modeLore[0], "gold")
-                )));
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                );
+                lore.add(
                         replaceLoreKeybind(modeLore[1], "%right-click%", "key.use", "gold", "yellow")
-                )));
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                );
+                lore.add(
                         getLoreColorfulJsonText(modeLore[2], "gold")
-                )));
+                );
                 break;
             case EDIT_MODE:
             case CONNECT_MODE:
                 modeLore = LangUtils.getText(nowMode==EDIT_MODE?"controller-edit-mode-info":"controller-connect-mode-info").split("\n");
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                lore.add(
                         replaceLoreKeybind(modeLore[0], "%right-click%", "key.use", "gold", "yellow")
-                )));
-                lore.add(StringTag.valueOf(JsonText.toJSON(
+                );
+                lore.add(
                         getLoreColorfulJsonText(modeLore[1], "gold")
-                )));
+                );
                 break;
         }
-        displayTag.put("Lore", lore);
-        item.setItemMeta(itemNMSToBukkit(stack).getItemMeta());
+        item.setLore(lore.toArray(new JsonText[0]));
     }
 
     public static void onPlayerSwitchMode(Player player, ItemStack item, boolean next, int slot) {
         try {
-            ItemMeta meta = item.getItemMeta();
-            ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
+            ItemData data = getData(item);
+            int nextMode = FIRST_MODE;
             if (next) {
                 if (data.nowMode == FINAL_MODE) {
-                    data.nowMode = 0;
+                    nextMode = FIRST_MODE;
                 } else {
-                    data.nowMode++;
+                    nextMode= data.nowMode+1;
                 }
             } else {
                 if (data.nowMode == 0) {
-                    data.nowMode = FINAL_MODE;
+                    nextMode =FINAL_MODE;
                 } else {
-                    data.nowMode--;
+                    nextMode = data.nowMode-1;
                 }
             }
-            meta.setLocalizedName(getGson().toJson(data));
-            item.setItemMeta(meta);
-            setItemLore(item, data.nowMode);
+            switchMode(player,nextMode);
         } catch (Exception e) {
             player.getInventory().setItemInMainHand(null);
         }
@@ -426,8 +409,7 @@ public class Item {
 
     public static boolean onPlayerClick(Player player, ItemStack item, Utils.MouseClickType type) {
         try {
-            ItemMeta meta = item.getItemMeta();
-            ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
+            ItemData data = getData(item);
             if (data.nowMode == SELECT_MODE) {
                 if (type.equals(Utils.MouseClickType.LEFT)) {
                     Location eyeLoc = player.getEyeLocation();
@@ -446,8 +428,7 @@ public class Item {
                         Main.sendMessage(player, "§9" + LangUtils.getText("controller-set-point-start").replace("%%",
                                 (int) closest.getX() + "," + (int) closest.getY() + "," + (int) closest.getZ()));
                     }
-                    meta.setLocalizedName(getGson().toJson(data));
-                    item.setItemMeta(meta);
+                    NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
                     return true;
                 }
                 if (type.equals(Utils.MouseClickType.RIGHT)) {
@@ -476,8 +457,7 @@ public class Item {
                                     (int) closest.getX() + "," + (int) closest.getY() + "," + (int) closest.getZ()));
                         }
                     }
-                    meta.setLocalizedName(getGson().toJson(data));
-                    item.setItemMeta(meta);
+                    NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
                     return true;
                 }
             }
@@ -510,8 +490,7 @@ public class Item {
                             .replace("%facing%", "§c" + facing.getTranslatedFacingName() + "§a")
                             .replace("%size%", "§e" + data.w + "x" + data.h + "§a")
                     );
-                    meta.setLocalizedName(getGson().toJson(data));
-                    item.setItemMeta(meta);
+                    NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
                 } else {
                     Main.sendMessage(player, LangUtils.getText("controller-selection-not-found"));
                     return true;
@@ -565,8 +544,7 @@ public class Item {
 
     public static void onPlayerClickScreen(Player player, ItemStack item, Utils.MouseClickType type,int x,int y,Screen screen){
         try {
-            ItemMeta meta = item.getItemMeta();
-            ItemData data = getGson().fromJson(meta.getLocalizedName(), ItemData.class);
+            ItemData data = getData(item);
             if (data.nowMode == EDIT_MODE) {
                 screen.getEditGUI().openGUI(player,x,y,type);
             }
@@ -755,7 +733,7 @@ public class Item {
             eyeVec.add(direction);
             Location point = eyeVec.toLocation(eyeLoc.getWorld());
             Block block = point.getBlock();
-            if (block != null && !block.getType().isAir()) {
+            if (block != null && !block.getType().equals(Material.AIR)) {
                 int x = (int) Math.round(point.getX());
                 int y = (int) Math.round(point.getY());
                 int z = (int) Math.round(point.getZ());
@@ -786,7 +764,7 @@ public class Item {
                 j++;
             }
             Block block = point.getBlock();
-            if (j == 1 && block != null && !block.getType().isAir()) {
+            if (j == 1 && block != null && !block.getType().equals(Material.AIR)) {
                 return new Location(eyeLoc.getWorld(), x, y, z);
             }
         }

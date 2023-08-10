@@ -7,7 +7,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.data.type.RedstoneWire;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -181,7 +180,7 @@ public abstract class Core implements Cloneable {
                 this,
                 this.getClass().getName(),
                 "gold",
-                Material.STRUCTURE_VOID,
+                Material.BARRIER,
                 new HashMap<>()));
     }
     public Object getEditGUISettingValue(String name){

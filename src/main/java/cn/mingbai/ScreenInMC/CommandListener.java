@@ -1,10 +1,8 @@
 package cn.mingbai.ScreenInMC;
 
-import cn.mingbai.ScreenInMC.Browsers.Browser;
 import cn.mingbai.ScreenInMC.Browsers.Chromium;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Controller.Item;
-import cn.mingbai.ScreenInMC.MGUI.MGUICore;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
