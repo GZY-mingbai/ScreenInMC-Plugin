@@ -43,10 +43,6 @@ public class ImageViewer extends Core {
             return storedData;
         }
 
-        @Override
-        public Object getStorableObject() {
-            return this;
-        }
 
 
     }
@@ -104,7 +100,7 @@ public class ImageViewer extends Core {
                 isAnimated = false;
                 savedImage = ImageUtils.byteArrayToImage(imageData);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
     }
@@ -195,68 +191,72 @@ public class ImageViewer extends Core {
     }
 
     public void updateImage(boolean changedSettings) {
-        if (changedSettings) {
-            cancelAndWaitAnimatedRunnable();
-        }
-        final ImageViewerStoredData data = (ImageViewerStoredData) getStoredData();
-        synchronized (loadImageLock) {
-            if (isAnimated) {
-                if (changedSettings || animatedRunnable == null) {
-                    Utils.Pair<Rectangle2D.Float, byte[]>[] preData = new Utils.Pair[animatedFrames.size()];
-                    for (int i = 0; i < animatedFrames.size(); i++) {
-                        BufferedImage image = processImage(animatedFrames.get(i), data.scaleMode, data.scaleAlgorithm);
-                        preData[i] = new Utils.Pair<>(calcRect(image), ImageUtils.imageToMapColors(image));
-                    }
-                    preProcess = preData;
-                    animatedRunnable = new ImmediatelyCancellableBukkitRunnable() {
-                        @Override
-                        public void run() {
-                            getScreen().clearScreen();
-                            int nowFrame = 0;
-                            final int delay = animatedDelay;
-                            long timeStart = System.currentTimeMillis();
-                            while (!this.isCancelled()) {
-                                timeStart = System.currentTimeMillis();
-                                synchronized (loadImageLock) {
-                                    if (nowFrame > animatedFrames.size() - 1) {
-                                        nowFrame = 0;
-                                    }
-                                    Utils.Pair<Rectangle2D.Float, byte[]>[] pre = (Utils.Pair<Rectangle2D.Float, byte[]>[]) (preProcess);
-                                    Utils.Pair<Rectangle2D.Float, byte[]> preData = new Utils.Pair<>(pre[nowFrame].getKey(), pre[nowFrame].getValue());
-                                    nowFrame++;
-                                    if(!this.isCancelled())sendImage(preData.getValue(), (int) preData.getKey().x, (int) preData.getKey().y, (int) preData.getKey().width, (int) preData.getKey().height);
-                                }
-                                long timeToSleep = delay - (System.currentTimeMillis() - timeStart);
-                                if (timeToSleep > 0) {
-                                    try {
-                                        Thread.sleep(timeToSleep);
-                                    } catch (Exception e) {
-                                        setAnimatedRunnableToNull();
-                                        return;
-                                    }
-                                }
-                            }
-                            setAnimatedRunnableToNull();
+        try {
+            if (changedSettings) {
+                cancelAndWaitAnimatedRunnable();
+            }
+            final ImageViewerStoredData data = (ImageViewerStoredData) getStoredData();
+            synchronized (loadImageLock) {
+                if (isAnimated) {
+                    if (changedSettings || animatedRunnable == null) {
+                        Utils.Pair<Rectangle2D.Float, byte[]>[] preData = new Utils.Pair[animatedFrames.size()];
+                        for (int i = 0; i < animatedFrames.size(); i++) {
+                            BufferedImage image = processImage(animatedFrames.get(i), data.scaleMode, data.scaleAlgorithm);
+                            preData[i] = new Utils.Pair<>(calcRect(image), ImageUtils.imageToMapColors(image));
                         }
-                    };
-                    animatedRunnable.runTaskAsynchronously(Main.thisPlugin());
-                }
-            } else {
-                if (changedSettings || preProcess == null) {
-                    Utils.Pair<Rectangle2D.Float, byte[]> preData = new Utils.Pair<Rectangle2D.Float, byte[]>(null, null);
-                    BufferedImage image = processImage(savedImage, data.scaleMode, data.scaleAlgorithm);
-                    preData.setValue(ImageUtils.imageToMapColors(image));
-                    preData.setKey(calcRect(image));
-                    preProcess = preData;
-                }
-                try {
-                    getScreen().clearScreen();
-                    Utils.Pair<Rectangle2D.Float, byte[]> pre = (Utils.Pair<Rectangle2D.Float, byte[]>) preProcess;
-                    sendImage(pre.getValue(), (int) pre.getKey().x, (int) pre.getKey().y, (int) pre.getKey().width, (int) pre.getKey().height);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                        preProcess = preData;
+                        animatedRunnable = new ImmediatelyCancellableBukkitRunnable() {
+                            @Override
+                            public void run() {
+                                getScreen().clearScreen();
+                                int nowFrame = 0;
+                                final int delay = animatedDelay;
+                                long timeStart = System.currentTimeMillis();
+                                while (!this.isCancelled()) {
+                                    timeStart = System.currentTimeMillis();
+                                    synchronized (loadImageLock) {
+                                        if (nowFrame > animatedFrames.size() - 1) {
+                                            nowFrame = 0;
+                                        }
+                                        Utils.Pair<Rectangle2D.Float, byte[]>[] pre = (Utils.Pair<Rectangle2D.Float, byte[]>[]) (preProcess);
+                                        Utils.Pair<Rectangle2D.Float, byte[]> preData = new Utils.Pair<>(pre[nowFrame].getKey(), pre[nowFrame].getValue());
+                                        nowFrame++;
+                                        if(!this.isCancelled())sendImage(preData.getValue(), (int) preData.getKey().x, (int) preData.getKey().y, (int) preData.getKey().width, (int) preData.getKey().height);
+                                    }
+                                    long timeToSleep = delay - (System.currentTimeMillis() - timeStart);
+                                    if (timeToSleep > 0) {
+                                        try {
+                                            Thread.sleep(timeToSleep);
+                                        } catch (Exception e) {
+                                            setAnimatedRunnableToNull();
+                                            return;
+                                        }
+                                    }
+                                }
+                                setAnimatedRunnableToNull();
+                            }
+                        };
+                        animatedRunnable.runTaskAsynchronously(Main.thisPlugin());
+                    }
+                } else {
+                    if (changedSettings || preProcess == null) {
+                        Utils.Pair<Rectangle2D.Float, byte[]> preData = new Utils.Pair<Rectangle2D.Float, byte[]>(null, null);
+                        BufferedImage image = processImage(savedImage, data.scaleMode, data.scaleAlgorithm);
+                        preData.setValue(ImageUtils.imageToMapColors(image));
+                        preData.setKey(calcRect(image));
+                        preProcess = preData;
+                    }
+                    try {
+                        getScreen().clearScreen();
+                        Utils.Pair<Rectangle2D.Float, byte[]> pre = (Utils.Pair<Rectangle2D.Float, byte[]>) preProcess;
+                        sendImage(pre.getValue(), (int) pre.getKey().x, (int) pre.getKey().y, (int) pre.getKey().width, (int) pre.getKey().height);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
 

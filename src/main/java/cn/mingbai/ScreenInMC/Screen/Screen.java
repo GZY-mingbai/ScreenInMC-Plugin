@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.Screen;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
@@ -121,7 +122,7 @@ public class Screen {
         return null;
     }
 
-    public static Utils.Pair<Integer, Integer> getFacingPitchYaw(Facing facing) {
+    public static Utils.Pair<Integer, Integer> getFacingYawPitch(Facing facing) {
         switch (facing) {
             case UP:
                 return new Utils.Pair<>(0, -90);
@@ -185,7 +186,7 @@ public class Screen {
             if (!location.getWorld().equals(player.getWorld())) {
                 return;
             }
-            Utils.Pair<Integer, Integer> pitchYaw = getFacingPitchYaw(facing);
+            Utils.Pair<Integer, Integer> yawPitch = getFacingYawPitch(facing);
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     ScreenPiece piece = screenPieces[x][y];
@@ -194,8 +195,8 @@ public class Screen {
                     Object packet1 = OutAddMapEntityPacket.create(
                             entityID, piece.getUUID(),
                             loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
-                            pitchYaw.getKey(), pitchYaw.getValue(),
-                            facing.ordinal()
+                            yawPitch.getKey(), yawPitch.getValue(),
+                            facing
                     );
                     CraftUtils.sendPacket(player, packet1);
                     Object packet2 = OutSetMapEntityPacket.create(entityID,entityID);
@@ -208,9 +209,24 @@ public class Screen {
             throw new RuntimeException("This Screen has not been placed.");
         }
     }
+    public static class FacingNotSupportedException extends RuntimeException{
+        public Facing facing;
+        public FacingNotSupportedException(Facing facing){
+            this.facing = facing;
+        }
 
+        public Facing getFacing() {
+            return facing;
+        }
+    }
     public void putScreen() {
         if (!placed) {
+            if(CraftUtils.minecraftVersion<=12){
+                if(facing==Facing.UP||facing==Facing.DOWN){
+                    throw new FacingNotSupportedException(facing);
+                }
+            }
+
             screenPieces = new ScreenPiece[width][height];
             switch (facing) {
                 case UP:
@@ -469,6 +485,21 @@ public class Screen {
                     return NORTH;
             }
             return null;
+        }
+        public int getHorizontalIndex()
+        {
+            switch (this) {
+                case EAST:
+                    return 3;
+                case WEST:
+                    return 1;
+                case NORTH:
+                    return 2;
+                case SOUTH:
+                    return 0;
+                default:
+                    return -1;
+            }
         }
 
         public String getTranslatedFacingName() {

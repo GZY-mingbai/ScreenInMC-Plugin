@@ -10,13 +10,14 @@ import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutSystemMessagePacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
+import cn.mingbai.ScreenInMC.Utils.IOUtils;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ConfigPaletteLoader;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONArray;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -38,8 +39,8 @@ public class Main extends JavaPlugin {
     private static boolean isEnabled = false;
     private static Logger logger;
     private static FileConfiguration config;
-    private static Gson gson = new Gson();
-    private static Gson saveGson = new GsonBuilder().setPrettyPrinting().create();
+    private static JSONUtils json = JSONUtils.create();
+    private static JSONUtils saveJson = JSONUtils.create(true);
 
     private static Random random = new Random();
 
@@ -79,8 +80,8 @@ public class Main extends JavaPlugin {
         Main.logger = logger;
     }
 
-    public static Gson getGson() {
-        return gson;
+    public static JSONUtils getJSONUtils() {
+        return json;
     }
 
     public static void saveScreens() {
@@ -93,7 +94,7 @@ public class Main extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-        String json = saveGson.toJson(data);
+        String json = saveJson.toJson(JSONUtils.JSON.create(data));
         try {
             FileOutputStream outputStream = new FileOutputStream(screensFile);
             OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
@@ -113,15 +114,19 @@ public class Main extends JavaPlugin {
         InputStreamReader reader = null;
         try {
             inputStream = new FileInputStream(screensFile);
-            reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Screen.ScreenData[] screenData = gson.fromJson(reader, Screen.ScreenData[].class);
+            String text = new String(IOUtils.readInputStream(inputStream),StandardCharsets.UTF_8);
+            Screen.ScreenData[] screenData = (Screen.ScreenData[]) json.fromJson(text).write(Screen.ScreenData[].class);
             for (Screen.ScreenData i : screenData) {
                 if (i == null) {
                     continue;
                 }
                 try {
                     Screen screen = new Screen(i);
-                    screen.putScreen();
+                    try{
+                        screen.putScreen();
+                    }catch (Screen.FacingNotSupportedException e){
+                        getPluginLogger().warning("The screen ("+screen.getUUID()+") cannot be placed, because placing it in the "+e.getFacing().name()+" direction is not supported in versions below 1.12.2.");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -197,6 +202,7 @@ public class Main extends JavaPlugin {
         Core.addCore(new WebBrowser());
         Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
         Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
+        EventListener.init();
         int device = config.getInt("opencl-device");
         if (device == -3) {
             device = ImageUtils.getBestOpenCLDevice();

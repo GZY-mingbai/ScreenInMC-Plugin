@@ -4,6 +4,7 @@ import cn.mingbai.ScreenInMC.Utils.LangUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public class OutActionBarPacket implements OutPacket{
     static Class ClientboundSetActionBarTextPacketClass;
@@ -14,21 +15,25 @@ public class OutActionBarPacket implements OutPacket{
     static Class IChatBaseComponentClass;
     static Object ChatMessageTypeGameInfo;
     static Method ChatMessageTypeValues;
+    static boolean needUUID = false;
     protected static void init() throws Exception {
         ClientboundSetActionBarTextPacketClass = CraftUtils.getMinecraftClass("ClientboundSetActionBarTextPacket");
-        if(ClientboundSetActionBarTextPacketClass!=null){
-            return;
-        }
-        PacketPlayOutChatClass = CraftUtils.getMinecraftClass("PacketPlayOutChat");
         IChatBaseComponentClass = CraftUtils.getMinecraftClass("IChatBaseComponent");
         if(ClientboundSetActionBarTextPacketClass!=null){
             ClientboundSetActionBarTextPacketConstructor = ClientboundSetActionBarTextPacketClass.getDeclaredConstructor(IChatBaseComponentClass);
+            return;
         }
+        PacketPlayOutChatClass = CraftUtils.getMinecraftClass("PacketPlayOutChat");
         try {
             PacketPlayOutChatConstructor = PacketPlayOutChatClass.getDeclaredConstructor(IChatBaseComponentClass,byte.class);
         }catch (Exception e){
-            ChatMessageTypeClass = CraftUtils.getMinecraftClass("ChatMessageTypeClass");
-            PacketPlayOutChatConstructor = PacketPlayOutChatClass.getDeclaredConstructor(IChatBaseComponentClass,ChatMessageTypeClass);
+            ChatMessageTypeClass = CraftUtils.getMinecraftClass("ChatMessageType");
+            try{
+                PacketPlayOutChatConstructor = PacketPlayOutChatClass.getDeclaredConstructor(IChatBaseComponentClass,ChatMessageTypeClass);
+            }catch (Exception er){
+                needUUID = true;
+                PacketPlayOutChatConstructor = PacketPlayOutChatClass.getDeclaredConstructor(IChatBaseComponentClass,ChatMessageTypeClass,java.util.UUID.class);
+            }
             ChatMessageTypeValues = ChatMessageTypeClass.getDeclaredMethod("values");
             ChatMessageTypeGameInfo = ((Object[])ChatMessageTypeValues.invoke(null) )[2];
         }
@@ -41,7 +46,12 @@ public class OutActionBarPacket implements OutPacket{
             if(ChatMessageTypeClass==null){
                 return PacketPlayOutChatConstructor.newInstance(text.toComponent(),(byte)2);
             }else{
-                return PacketPlayOutChatConstructor.newInstance(text.toComponent(),ChatMessageTypeGameInfo);
+                if(needUUID)
+                {
+                    return PacketPlayOutChatConstructor.newInstance(text.toComponent(),ChatMessageTypeGameInfo,UUID.randomUUID());
+                }else {
+                    return PacketPlayOutChatConstructor.newInstance(text.toComponent(),ChatMessageTypeGameInfo);
+                }
             }
         }catch (Exception e){
             throw new RuntimeException(e);

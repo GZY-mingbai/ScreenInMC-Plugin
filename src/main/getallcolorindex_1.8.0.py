@@ -86,5 +86,5 @@ colors = {
 }
 newcolors = []
 for i in colors:
-    for j in [180,220,255,135]:
+    for j in [180,220,255,220]:
         newcolors.append(colors[i].getcolor(j))

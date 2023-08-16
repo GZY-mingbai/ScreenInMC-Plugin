@@ -13,12 +13,14 @@ import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.function.Function;
 
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.*;
 import static cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText.*;
 
 public class EditGUI {
@@ -112,7 +114,12 @@ public class EditGUI {
         if(openedPlayer==null){
             return;
         }
-        openedPlayer.playSound(openedPlayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS,10,2);
+        try {
+            CraftUtils.playSoundPling(openedPlayer);
+        }catch (Exception e){
+            e.printStackTrace();
+            forceClose();
+        }
     }
     private static final String BookAuthor = "ScreenInMC";
     private NMSBook getBasicBook(){
@@ -457,7 +464,7 @@ public class EditGUI {
     private PacketListener addReOpenPacketListener(int containerID,Player player,Runnable setReOpen){
         return PacketListener.addListener(new PacketListener(player, InWindowClosePacket.class, new PacketListener.PacketHandler() {
             @Override
-            public boolean handle(PacketListener listener, InPacket p) {
+            public boolean handle(PacketListener listener,Player player, InPacket p) {
                 if(p instanceof InWindowClosePacket){
                     InWindowClosePacket packet  = (InWindowClosePacket) p;
                     if(packet.getContainerId()==containerID){
@@ -486,7 +493,7 @@ public class EditGUI {
             reopen=true;
             listener1 =PacketListener.addListener(new PacketListener(player, InWindowClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, InPacket p) {
+                public boolean handle(PacketListener listener, Player player,InPacket p) {
                     if(p instanceof InWindowClickPacket){
                         InWindowClickPacket packet  = (InWindowClickPacket) p;
                         if(packet.getContainerId()==containerID){
@@ -535,10 +542,10 @@ public class EditGUI {
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
-            NMSItemStack itemStack = new NMSItemStack(new String[]{"red_wool"},1);
+            NMSItemStack itemStack = new NMSItemStack(new String[]{"red_wool","wool"},1,COLOR_RED);
             itemStack.setName(new JsonText("false (×)").setColor("red"));
             list.set(0,itemStack);
-            itemStack = new NMSItemStack(new String[]{"lime_wool"},1);
+            itemStack = new NMSItemStack(new String[]{"lime_wool","wool"},1,COLOR_LIME);
             itemStack.setName(new JsonText("true (√)")
                     .setColor("green"));
             list.set(1,NMSItemStack.EMPTY);
@@ -586,7 +593,7 @@ public class EditGUI {
             reopen=true;
             listener1 =PacketListener.addListener(new PacketListener(player, InWindowClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, InPacket p) {
+                public boolean handle(PacketListener listener,Player player, InPacket p) {
                     if(p instanceof InWindowClickPacket){
                         InWindowClickPacket packet  = (InWindowClickPacket) p;
                         if(packet.getContainerId()==containerID){
@@ -607,7 +614,7 @@ public class EditGUI {
             listener2 = addReOpenPacketListener(containerID,player,()->{reopen=true;});
             listener3 = PacketListener.addListener(new PacketListener(player, InAnvilRenamePacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, InPacket p) {
+                public boolean handle(PacketListener listener,Player player, InPacket p) {
                     if(p instanceof InAnvilRenamePacket){
                         InAnvilRenamePacket packet  = (InAnvilRenamePacket) p;
                         nowStringValue = packet.getName();
@@ -624,10 +631,10 @@ public class EditGUI {
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
-            NMSItemStack itemStack = new NMSItemStack(new String[]{"light_gray_stained_glass_pane"},1);
-            itemStack.setName(new JsonText(nowStringValue));
+            NMSItemStack itemStack = new NMSItemStack(new String[]{"light_gray_stained_glass_pane","stained_glass_pane"},1, NMSItemStack.COLOR_SILVER);
+            itemStack.setName(new JsonText(nowStringValue).disableRichStringInOldVersion());
             list.set(0,itemStack);
-            itemStack = new NMSItemStack(new String[]{"lime_stained_glass_pane"},1);
+            itemStack = new NMSItemStack(new String[]{"lime_stained_glass_pane","stained_glass_pane"},1, COLOR_LIME);
             itemStack.setName(new JsonText(LangUtils.getText("complete"))
                     .setColor("green"));
             list.set(1,NMSItemStack.EMPTY);
@@ -882,7 +889,7 @@ public class EditGUI {
             reopen=true;
             listener1 =PacketListener.addListener(new PacketListener(player, InWindowClickPacket.class, new PacketListener.PacketHandler() {
                 @Override
-                public boolean handle(PacketListener listener, InPacket p) {
+                public boolean handle(PacketListener listener, Player player,InPacket p) {
                     if(p instanceof InWindowClickPacket){
                         InWindowClickPacket packet  = (InWindowClickPacket) p;
                         if(packet.getContainerId()==containerID){
@@ -968,7 +975,7 @@ public class EditGUI {
                 list.set(45,getItemSwitchPage(false,nowPage,totalPage));
             }
             if(completeButton){
-                NMSItemStack stack = new NMSItemStack(new String[]{"lime_wool"},1);
+                NMSItemStack stack = new NMSItemStack(new String[]{"lime_wool","wool"},COLOR_LIME);
                 stack.setName(new JsonText(LangUtils.getText("complete"))
                         .setColor("green")
                 );
@@ -1260,89 +1267,206 @@ public class EditGUI {
                     Integer originalValue = null;
                     try {
                         originalValue = (Integer) screen.getCore().getEditGUISettingValue(key);
-                    }catch (Exception e){
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
                         e.printStackTrace();
                     }
                     if(originalValue==null){
                         originalValue=0;
                     }
                     int i = askForInteger(originalValue);
-                    screen.getCore().setEditGUISettingValue(key,i);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key,i);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (item.getValue().equals(Double.class) || item.getValue().equals(Float.class)) {
                     Double originalValue = null;
                     try {
                         originalValue = (Double) screen.getCore().getEditGUISettingValue(key);
-                    }catch (Exception e){
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
                         e.printStackTrace();
                     }
                     if(originalValue==null){
                         originalValue=0d;
                     }
                     double d = askForDouble(originalValue);
-                    screen.getCore().setEditGUISettingValue(key,d);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key, d);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (item.getValue().equals(Boolean.class)) {
                     boolean b = askForBoolean();
-                    screen.getCore().setEditGUISettingValue(key,b);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key, b);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (item.getValue().equals(String.class)) {
                     String originalValue = null;
                     try {
                         originalValue = (String) screen.getCore().getEditGUISettingValue(key);
-                    }catch (Exception e){
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
                         e.printStackTrace();
                     }
                     if(originalValue==null){
                         originalValue="";
                     }
                     String str = askForString(originalValue);
-                    screen.getCore().setEditGUISettingValue(key,str);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key, str);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (item.getValue().equals(String[].class)) {
                     String[] originalValue = null;
                     try {
                         originalValue = (String[]) screen.getCore().getEditGUISettingValue(key);
-                    }catch (Exception e){
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
                         e.printStackTrace();
                     }
                     if(originalValue==null){
                         originalValue=new String[0];
                     }
                     String[] a = askForStringArray(originalValue);
-                    screen.getCore().setEditGUISettingValue(key,a);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key, a);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (item.getValue().equals(Location.class)) {
                     Location originalValue = null;
                     try {
                         originalValue = (Location) screen.getCore().getEditGUISettingValue(key);
-                    }catch (Exception e){
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
                         e.printStackTrace();
                     }
                     if(originalValue==null){
                         originalValue=new Location(Bukkit.getWorld("world"),0,0,0);
                     }
                     Location l = askForLocation(originalValue);
-                    screen.getCore().setEditGUISettingValue(key,l);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key, l);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (item.getValue().equals(Vector.class)) {
                     Vector originalValue = null;
                     try {
                         originalValue = (Vector) screen.getCore().getEditGUISettingValue(key);
-                    }catch (Exception e){
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
                         e.printStackTrace();
                     }
                     if(originalValue==null){
                         originalValue=new Vector(0,0,0);
                     }
                     Vector v = askForVector(originalValue);
-                    screen.getCore().setEditGUISettingValue(key,v);
+                    try {
+                        screen.getCore().setEditGUISettingValue(key,v);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 } else if (EditGUICoreSettingsList.class.isAssignableFrom(item.getValue())) {
                     try {
                         EditGUICoreSettingsList l = (EditGUICoreSettingsList) item.getValue().getDeclaredConstructor().newInstance();
                         int i = askForStringFromList(l.getList());
                         screen.getCore().setEditGUISettingValue(key,i);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (RuntimeException e){
+                        e.printStackTrace();
+                    }
+                    catch (Error e){
+                        e.printStackTrace();
+                    }
+                    catch (Throwable e){
+                        e.printStackTrace();
                     }
                 }
-                reOpenContainer();
-                setBaseItems();
-                updateInventory();
+                try {
+                    reOpenContainer();
+                    setBaseItems();
+                    updateInventory();
+                }catch (Exception e){
+                    e.printStackTrace();
+                    forceClose();
+                }
             }
         };
         runnable.runTaskAsynchronously(Main.thisPlugin());
@@ -1380,8 +1504,15 @@ public class EditGUI {
             data.conn.core = screen.getCore().getCoreName();
             data.conn.id = screen.getUUID().toString();
             data.conn.i = index;
-            Item.setData(itemStack,data);
-            Item.switchMode(openedPlayer,Item.CONNECT_MODE);
+            try {
+                NMSItemStack.writeScreenInMCData(itemStack,Item.getDataJson(data));
+                Item.switchMode(openedPlayer,Item.CONNECT_MODE);
+            } catch (Exception e) {
+                sendClosePacket();
+                onClose();
+                e.printStackTrace();
+                return true;
+            }
             String[] message = LangUtils.getText("controller-connect-start").split("%right-click%");
             Main.sendMessage(openedPlayer,new LangUtils.JsonText(message[0]).setColor("white")
                     .addExtra(new JsonText().setKeybind("key.use").setColor("yellow"))
@@ -1395,7 +1526,7 @@ public class EditGUI {
     private void openContainer(){
         listener1 = PacketListener.addListener(new PacketListener(openedPlayer, InWindowClickPacket.class, new PacketListener.PacketHandler() {
             @Override
-            public boolean handle(PacketListener listener, InPacket p) {
+            public boolean handle(PacketListener listener,Player player, InPacket p) {
                 if (p instanceof InWindowClickPacket) {
                     InWindowClickPacket packet = (InWindowClickPacket) p;
                     if (packet.getContainerId() == containerID) {
@@ -1444,7 +1575,12 @@ public class EditGUI {
                             }
                         }
 
-                        setBaseItems();
+                        try {
+                            setBaseItems();
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            forceClose();
+                        }
                         return true;
                     }
                 }
@@ -1454,7 +1590,7 @@ public class EditGUI {
         }));
         listener2 =  PacketListener.addListener(new PacketListener(openedPlayer, InWindowClosePacket.class, new PacketListener.PacketHandler() {
             @Override
-            public boolean handle(PacketListener listener, InPacket p) {
+            public boolean handle(PacketListener listener, Player player,InPacket p) {
                 if (p instanceof InWindowClosePacket) {
                     InWindowClosePacket packet = (InWindowClosePacket) p;
                     if (packet.getContainerId() == containerID) {
@@ -1501,7 +1637,7 @@ public class EditGUI {
         openedPlayer=null;
     }
     private NMSItemStack getItem0(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"black_glazed_terracotta","black_wool"},1);
+        NMSItemStack stack = new NMSItemStack(new String[]{"black_glazed_terracotta","black_wool","wool"},1, COLOR_BLACK);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-title")).setColor("gold");
         JsonText[] lore = new JsonText[]{
             new JsonText(LangUtils.getText("controller-editor-id"))
@@ -1540,7 +1676,7 @@ public class EditGUI {
         return stack;
     }
     private NMSItemStack getItem1(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"magenta_glazed_terracotta","magenta_wool"},1);
+        NMSItemStack stack = new NMSItemStack(new String[]{"magenta_glazed_terracotta","magenta_wool","wool"},1, COLOR_MAGENTA);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-replace-core-title")).setColor("light_purple");
         JsonText[] lore = new JsonText[]{
             new JsonText(LangUtils.getText("controller-editor-replace-core-info"))
@@ -1552,7 +1688,7 @@ public class EditGUI {
         return stack;
     }
     private NMSItemStack getItem2(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"red_glazed_terracotta","red_wool"},1);
+        NMSItemStack stack = new NMSItemStack(new String[]{"red_glazed_terracotta","red_wool","wool"},1,COLOR_RED);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-title")).setColor("red");
         JsonText[] lore = new JsonText[]{
             new JsonText(LangUtils.getText("controller-editor-redstone-connect-info"))
@@ -1564,7 +1700,7 @@ public class EditGUI {
         return stack;
     }
     private NMSItemStack getItem2NotSupported(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"red_stained_glass"},1);
+        NMSItemStack stack = new NMSItemStack(new String[]{"red_stained_glass","stained_glass"},1,COLOR_RED);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-not-supported")).setColor("red");
         stack.setName(jsonText);
         return stack;
@@ -1603,14 +1739,17 @@ public class EditGUI {
     private int totalPage = 0;
     private NMSItemStack getItem9To17(int i){
         String type = "white_stained_glass_pane";
+        short oldId = COLOR_WHITE;
         if(i==nowMode){
             if(nowMode==0){
                 type = "yellow_stained_glass_pane";
+                oldId = COLOR_YELLOW;
             }else{
                 type = "lime_stained_glass_pane";
+                oldId = COLOR_LIME;
             }
         }
-        NMSItemStack stack = new NMSItemStack(new String[]{type},1);
+        NMSItemStack stack = new NMSItemStack(new String[]{type,"stained_glass_pane"},1,oldId);
         JsonText jsonText = new JsonText("");
         stack.setName(jsonText);
         return stack;
@@ -1666,7 +1805,18 @@ public class EditGUI {
                 .setItalic(false)
                 .setColor("yellow"));
         try{
-            Object nowValue = screen.getCore().getEditGUISettingValue(settings.getKey());
+            Object nowValue=null;
+            try {
+                nowValue = screen.getCore().getEditGUISettingValue(settings.getKey());
+            }catch (RuntimeException e){
+                e.printStackTrace();
+            }
+            catch (Error e){
+                e.printStackTrace();
+            }
+            catch (Throwable e){
+                e.printStackTrace();
+            }
             List<String> texts = new ArrayList<>();
             if(nowValue!=null){
                 if (settings.getValue().equals(Integer.class)) {
@@ -1730,7 +1880,7 @@ public class EditGUI {
         return settings;
     }
     private NMSItemStack getRedstoneConnectItem(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> info){
-        NMSItemStack stack = new NMSItemStack(new String[]{"redstone_wire"},1);
+        NMSItemStack stack = new NMSItemStack(new String[]{"redstone","redstone_wire"},1);
         String text = info.getKey();
         if(text.startsWith("@")){
             text=LangUtils.getText(text.substring(1));
@@ -1863,8 +2013,12 @@ public class EditGUI {
             this.clickX=clickX;
             this.clickY=clickY;
             this.clickType=clickType;
-            openContainer();
-            setBaseItems();
+            try {
+                openContainer();
+                setBaseItems();
+            }catch (Exception e){
+                forceClose();
+            }
         }
     }
 }

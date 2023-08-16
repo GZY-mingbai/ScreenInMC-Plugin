@@ -17,6 +17,7 @@ public class OutOpenWindowPacket implements OutPacket{
     static Object Generic9x6=null;
     static Object Anvil=null;
     static Object Hopper=null;
+    static Constructor PacketPlayOutOpenWindowConstructorWithNumber;
 
     protected static void init() throws Exception {
         PacketPlayOutOpenWindowClass = CraftUtils.getMinecraftClass("PacketPlayOutOpenWindow");
@@ -27,24 +28,26 @@ public class OutOpenWindowPacket implements OutPacket{
         }
         try {
             PacketPlayOutOpenWindowConstructor = PacketPlayOutOpenWindowClass.getDeclaredConstructor(int.class,String.class,IChatBaseComponentClass);
+            PacketPlayOutOpenWindowConstructorWithNumber = PacketPlayOutOpenWindowClass.getDeclaredConstructor(int.class,String.class,IChatBaseComponentClass,int.class);
             method=0;
+            return;
         }catch (Exception e){
             PacketPlayOutOpenWindowConstructor = PacketPlayOutOpenWindowClass.getDeclaredConstructor(int.class,ContainersClass,IChatBaseComponentClass);
             method=1;
         }
         for(Field i:ContainersClass.getDeclaredFields()){
-            if(i.getGenericType().getTypeName().equals("ContainerChest")){
-                if(Generic9x1==null) Generic9x1=i.get(null);
-                if(Generic9x2==null) Generic9x2=i.get(null);
-                if(Generic9x3==null) Generic9x3=i.get(null);
-                if(Generic9x4==null) Generic9x4=i.get(null);
-                if(Generic9x5==null) Generic9x5=i.get(null);
-                if(Generic9x6==null) Generic9x6=i.get(null);
+            if(i.getGenericType().getTypeName().contains("ContainerChest")){
+                if(Generic9x1==null) {Generic9x1=i.get(null);continue;}
+                if(Generic9x2==null) {Generic9x2=i.get(null);continue;}
+                if(Generic9x3==null) {Generic9x3=i.get(null);continue;}
+                if(Generic9x4==null) {Generic9x4=i.get(null);continue;}
+                if(Generic9x5==null) {Generic9x5=i.get(null);continue;}
+                if(Generic9x6==null) {Generic9x6=i.get(null);continue;}
             }
-            if(i.getGenericType().getTypeName().equals("ContainerAnvil")) {
+            if(i.getGenericType().getTypeName().contains("ContainerAnvil")) {
                 Anvil = i.get(null);
             }
-            if(i.getGenericType().getTypeName().equals("ContainerHopper")) {
+            if(i.getGenericType().getTypeName().contains("ContainerHopper")) {
                 Hopper = i.get(null);
             }
         }
@@ -52,7 +55,24 @@ public class OutOpenWindowPacket implements OutPacket{
     public static Object create(int id, String type, Object title){
         try {
             if(method==0){
-                return PacketPlayOutOpenWindowConstructor.newInstance(id,"minecraft:"+type,title);
+                switch (type){
+                    case "generic_9x1":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:container",title,9);
+                    case "generic_9x2":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:container",title,18);
+                    case "generic_9x3":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:container",title,27);
+                    case "generic_9x4":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:container",title,36);
+                    case "generic_9x5":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:container",title,45);
+                    case "generic_9x6":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:container",title,54);
+                    case "hopper":
+                        return PacketPlayOutOpenWindowConstructorWithNumber.newInstance(id,"minecraft:hopper",title,5);
+                    default:
+                        return PacketPlayOutOpenWindowConstructor.newInstance(id,"minecraft:"+type,title);
+                }
             }
             if(method==1){
                 switch (type){

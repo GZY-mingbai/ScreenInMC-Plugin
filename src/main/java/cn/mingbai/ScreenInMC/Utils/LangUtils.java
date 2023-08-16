@@ -2,6 +2,9 @@ package cn.mingbai.ScreenInMC.Utils;
 
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.JsonTextToNMSComponent;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONArray;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONObject;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -146,21 +149,7 @@ public class LangUtils {
             public String action;
             public Map contents;
         }
-        public static class JsonTextForGSON{
 
-            public String text;
-            public String color;
-            public boolean bold;
-            public boolean italic;
-            public boolean underlined;
-            public boolean strikethrough;
-            public boolean obfuscated;
-            public JsonText extra;
-            public String translate;
-            public String keybind;
-            public ClickEvent clickEvent;
-            public HoverEvent hoverEvent;
-        }
         public String text=null;
         public String color=null;
         public Boolean bold=null;
@@ -240,46 +229,53 @@ public class LangUtils {
         public JsonText(String text){
             this.text = text;
         }
-        private JsonTextForGSON getJsonTextForGSON(){
-            JsonTextForGSON jsonText = new JsonTextForGSON();
+        public JsonText disableRichStringInOldVersion(){
+            this.disableRichStringInOldVersion = true;
+            return this;
+        }
+        private boolean disableRichStringInOldVersion = false;
+        private JSONObject getJSONObject(){
+            JSONObject jsonText = new JSONObject();
             if (text != null) {
-                jsonText.text = text;
+                jsonText.setValue("text",text);
             }
             if (color != null) {
-                jsonText.color = color;
+                jsonText.setValue("color",color);
             }
             if (bold != null) {
-                jsonText.bold = bold;
+                jsonText.setValue("bold",bold);
             }
             if (italic != null) {
-                jsonText.italic = italic;
+                jsonText.setValue("italic",italic);
             }
             if (underlined != null) {
-                jsonText.underlined = underlined;
+                jsonText.setValue("underlined",underlined);
             }
             if (strikethrough != null) {
-                jsonText.strikethrough = strikethrough;
+                jsonText.setValue("strikethrough",strikethrough);
             }
             if (obfuscated != null) {
-                jsonText.obfuscated = obfuscated;
+                jsonText.setValue("obfuscated",obfuscated);
             }
             if (extra != null) {
-                jsonText.extra = extra;
+                jsonText.setValue("extra",extra.getJSONObject());
             }
             if (translate != null) {
-                jsonText.translate = translate;
+                jsonText.setValue("translate",translate);
             }
             if (keybind != null) {
-                jsonText.keybind = keybind;
+                jsonText.setValue("keybind",keybind);
             }
             if(clickEvent!=null){
-                jsonText.clickEvent = new ClickEvent(clickEvent.action,clickEvent.value);
-
+                JSONObject object = new JSONObject();
+                object.setValue("action",clickEvent.action);
+                object.setValue("value",clickEvent.value);
+                jsonText.setValue("clickEvent",object);
             }
             return jsonText;
         }
         public String toJSON(){
-            return Main.getGson().toJson(getJsonTextForGSON());
+            return Main.getJSONUtils().toJson(getJSONObject());
         }
         public JsonText copy(){
             JsonText jsonText = new JsonText();
@@ -311,58 +307,17 @@ public class LangUtils {
             return toJSON(toListWithoutExtra().toArray(new JsonText[0]));
         }
         public static String toJSON(JsonText[] jsonTexts){
-            JsonTextForGSON[] array = new JsonTextForGSON[jsonTexts.length];
+            JSONArray array = new JSONArray();
             for(int i=0;i<jsonTexts.length;i++){
-                array[i] = jsonTexts[i].getJsonTextForGSON();
+                array.add(jsonTexts[i].getJSONObject());
             }
-            return Main.getGson().toJson(array);
+            return Main.getJSONUtils().toJson(array);
         }
         public static String toJSON(JsonText jsonText){
             return jsonText.toJSON();
         }
         public Object toComponent(){
             return JsonTextToNMSComponent.jsonTextToComponent(this);
-//            MutableComponent component;
-//            if(keybind!=null){
-//                component = MutableComponent.create(new KeybindContents(keybind));
-//            }else if(translate!=null){
-//                component = MutableComponent.create(new TranslatableContents(translate));
-//            }else{
-//                component = MutableComponent.create(new LiteralContents(text));
-//            }
-//            Style style = Style.EMPTY;
-//            if(color!=null) {
-//                style = style.withColor(TextColor.parseColor(color));
-//            }
-//            if(bold!=null) {
-//                style = style.withBold(bold);
-//            }
-//            if(italic!=null) {
-//                style = style.withItalic(italic);
-//            }
-//            if(underlined!=null) {
-//                style = style.withUnderlined(underlined);
-//            }
-//            if(strikethrough!=null) {
-//                style = style.withStrikethrough(strikethrough);
-//            }
-//            if(obfuscated!=null) {
-//                style = style.withObfuscated(obfuscated);
-//            }
-//            if(clickEvent!=null){
-//                style = style.withClickEvent(clickEvent);
-//            }
-//            if(hoverEvent!=null){
-//                style = style.withHoverEvent(hoverEvent);
-//            }
-//            if(font!=null){
-//                style = style.withFont(font);
-//            }
-//            component.setStyle(style);
-//            if(extra!=null){
-//                component.append(extra.toComponent());
-//            }
-//            return component;
         }
         public JsonText addExtra(JsonText extra){
             if(this.extra!=null){
@@ -371,6 +326,93 @@ public class LangUtils {
                 this.extra = extra;
             }
             return this;
+        }
+        public String toRichString(){
+            String str = "";
+            if(!disableRichStringInOldVersion) {
+                str += "§r";
+                if (color != null) {
+                    switch (color) {
+                        case "black":
+                            str += "§0";
+                            break;
+                        case "dark_blue":
+                            str += "§1";
+                            break;
+                        case "dark_green":
+                            str += "§2";
+                            break;
+                        case "dark_aqua":
+                            str += "§3";
+                            break;
+                        case "dark_red":
+                            str += "§4";
+                            break;
+                        case "dark_purple":
+                            str += "§5";
+                            break;
+                        case "gold":
+                            str += "§6";
+                            break;
+                        case "gray":
+                            str += "§7";
+                            break;
+                        case "dark_gray":
+                            str += "§8";
+                            break;
+                        case "blue":
+                            str += "§9";
+                            break;
+                        case "green":
+                            str += "§a";
+                            break;
+                        case "aqua":
+                            str += "§b";
+                            break;
+                        case "red":
+                            str += "§c";
+                            break;
+                        case "light_purple":
+                            str += "§d";
+                            break;
+                        case "yellow":
+                            str += "§e";
+                            break;
+                        case "white":
+                            str += "§f";
+                            break;
+                    }
+                }
+                if (bold != null && bold == true) {
+                    str += "§l";
+                }
+                if (italic != null && italic == true) {
+                    str += "§o";
+                }
+                if (underlined != null && underlined == true) {
+                    str += "§n";
+                }
+                if (strikethrough != null && strikethrough == true) {
+                    str += "§m";
+                }
+                if (obfuscated != null && obfuscated == true) {
+                    str += "§k";
+                }
+            }
+            if(text!=null){
+                str+=text;
+            }else
+            if(keybind!=null){
+                str+=JsonTextToNMSComponent.getKeybind(keybind);
+            }else
+            if(translate!=null) {
+                str+=translate;
+            }
+            if(extra!=null){
+                str+=extra.toRichString();
+            }
+            return str;
+
         }
     }
 }

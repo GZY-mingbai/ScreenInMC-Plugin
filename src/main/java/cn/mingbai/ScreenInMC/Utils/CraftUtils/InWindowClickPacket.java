@@ -1,7 +1,10 @@
 package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
+import cn.mingbai.ScreenInMC.Utils.Utils;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 public class InWindowClickPacket implements InPacket {
     static Class PacketPlayInWindowClickClass;
@@ -18,11 +21,12 @@ public class InWindowClickPacket implements InPacket {
         if(CraftUtils.minecraftVersion<9){
             isActionNumber = true;
             for(Field i:PacketPlayInWindowClickClass.getDeclaredFields()){
+                if(Modifier.isStatic(i.getModifiers())) continue;
                 if(i.getType().equals(int.class)){
-                    if(ContainerId==null) ContainerId = i;
-                    if(SlotId==null) SlotId = i;
-                    if(ButtonId==null) ButtonId = i;
-                    if(ActionId==null) ActionId = i;
+                    if(ContainerId==null) {ContainerId = i;continue;}
+                    if(SlotId==null) {SlotId = i;continue;}
+                    if(ButtonId==null) {ButtonId = i;continue;}
+                    if(ActionId==null) {ActionId = i;continue;}
                     if(ActionId!=null) break;
                 }
             }
@@ -32,10 +36,11 @@ public class InWindowClickPacket implements InPacket {
             InventoryClickTypeOrdinal = Enum.class.getDeclaredMethod("ordinal");
             if(CraftUtils.minecraftVersion<17){
                 for(Field i:PacketPlayInWindowClickClass.getDeclaredFields()){
+                    if(Modifier.isStatic(i.getModifiers())) continue;
                     if(i.getType().equals(int.class)){
-                        if(ContainerId==null) ContainerId = i;
-                        if(SlotId==null) SlotId = i;
-                        if(ButtonId==null) ButtonId = i;
+                        if(ContainerId==null) {ContainerId = i;continue;}
+                        if(SlotId==null) {SlotId = i;continue;}
+                        if(ButtonId==null) {ButtonId = i;continue;}
                     }
                     if(i.getType().equals(InventoryClickTypeClass)){
                         ActionId = i;
@@ -45,27 +50,18 @@ public class InWindowClickPacket implements InPacket {
             }else {
                 boolean skippedStateId = false;
                 for (Field i : PacketPlayInWindowClickClass.getDeclaredFields()) {
+                    if(Modifier.isStatic(i.getModifiers())) continue;
                     if (i.getType().equals(int.class)) {
-                        if (ContainerId == null) ContainerId = i;
-                        if (CraftUtils.minecraftVersion < 18) {
-                            if (SlotId == null) SlotId = i;
-                            if (ButtonId == null) {
-                                if (skippedStateId) {
-                                    ButtonId = i;
-                                } else {
-                                    skippedStateId = true;
-                                }
+                        if (ContainerId == null) {ContainerId = i;continue;}
+                        if (SlotId == null) {
+                            if (skippedStateId) {
+                                SlotId = i;
+                            } else {
+                                skippedStateId = true;
+                                continue;
                             }
-                        } else {
-                            if (SlotId == null) {
-                                if (skippedStateId) {
-                                    SlotId = i;
-                                } else {
-                                    skippedStateId = true;
-                                }
-                            }
-                            if (ButtonId == null) ButtonId = i;
                         }
+                        if (ButtonId == null) {ButtonId = i;continue;}
                     }
                     if (i.getType().equals(InventoryClickTypeClass)) {
                         ActionId = i;
@@ -74,6 +70,11 @@ public class InWindowClickPacket implements InPacket {
                 }
             }
         }
+        ContainerId.setAccessible(true);
+        SlotId.setAccessible(true);
+        ActionId.setAccessible(true);
+        ButtonId.setAccessible(true);
+
 
     }
     @Override
@@ -88,14 +89,14 @@ public class InWindowClickPacket implements InPacket {
     }
     public int getContainerId(){
         try {
-            return (int) ContainerId.get(packet);
+            return Utils.getInt(ContainerId.get(packet));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
     public int getSlotNum(){
         try {
-            return (int) SlotId.get(packet);
+            return Utils.getInt(SlotId.get(packet));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -103,9 +104,9 @@ public class InWindowClickPacket implements InPacket {
     public ClickType getClickType(){
         try {
             if(isActionNumber){
-                return ClickType.values()[(int)ActionId.get(packet)];
+                return ClickType.values()[Utils.getInt(ActionId.get(packet))];
             }else{
-                return ClickType.values()[(int) InventoryClickTypeOrdinal.invoke(ActionId.get(packet))];
+                return ClickType.values()[Utils.getInt(InventoryClickTypeOrdinal.invoke(ActionId.get(packet)))];
             }
         }catch (Exception e) {
             throw new RuntimeException(e);

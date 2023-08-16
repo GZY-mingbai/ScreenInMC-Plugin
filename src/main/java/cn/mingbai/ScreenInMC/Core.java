@@ -2,8 +2,8 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,7 +17,6 @@ import java.util.List;
 public abstract class Core implements Cloneable {
     public interface StoredData{
         StoredData clone();
-        Object getStorableObject();
     }
     private static final List<Core> allCores = Collections.synchronizedList(new ArrayList<>());
     private String coreName;
@@ -71,23 +70,7 @@ public abstract class Core implements Cloneable {
                 try {
                     Core core = (Core) i.clone();
                     if(core.storedData!=null) {
-                        LinkedTreeMap map = ((LinkedTreeMap) data.data);
-                        for (Object key : map.keySet()) {
-                            try {
-                                if (key instanceof String && map.get(key)!=null) {
-                                    Field field = core.storedData.getClass().getDeclaredField((String) key);
-                                    Object o = map.get(key);
-                                    if(field.getType().equals(int.class)||field.getType().equals(Integer.class)){
-                                        o = ((Double)o).intValue();
-                                    }else if(field.getType().equals(float.class)||field.getType().equals(Float.class)){
-                                        o = ((Double)o).floatValue();
-                                    }
-                                    core.storedData.getClass().getDeclaredField((String) key).set(core.storedData, o);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        core.storedData = (StoredData) ((JSONUtils.JSONObject)data.data).write(core.storedData.getClass());
                     }
                     for(CoreData.RedstoneBridgeData r: data.redstone){
                         for(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> f : core.redstoneBridge.getRedstoneSignalInterfaces()){
@@ -205,11 +188,11 @@ public abstract class Core implements Cloneable {
 
     public static class CoreData {
         public static class RedstoneBridgeData{
-            String blockWorld;
-            int blockX;
-            int blockY;
-            int blockZ;
-            String id;
+            public String blockWorld;
+            public int blockX;
+            public int blockY;
+            public int blockZ;
+            public String id;
         }
         public String coreClassName;
         public Object data;

@@ -7,6 +7,7 @@ import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutActionBarPacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -14,7 +15,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -22,9 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static cn.mingbai.ScreenInMC.Main.getGson;
+import static cn.mingbai.ScreenInMC.Main.getJSONUtils;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getMaxScreenSize;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getScreenFromUUID;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.getItemInHand;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.setItemInHand;
+import static cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.*;
 
 public class Item {
     public static final int CONTROLLER = 1575771175;
@@ -52,13 +55,15 @@ public class Item {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (player.isOp()) {
-                        ItemStack item = player.getInventory().getItemInMainHand();
-                        if (item != null && item.hasItemMeta()) {
-                            ItemMeta meta = item.getItemMeta();
+                        ItemStack item = getItemInHand(player.getInventory());
+                        if (item != null && (item.getType().name().equalsIgnoreCase("wooden_hoe") || item.getType().name().equalsIgnoreCase("wood_hoe"))) {
                             if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {
-                                if (meta.hasLocalizedName()) {
                                     try {
                                         ItemData data = getData(item);
+                                        if(data==null){
+                                            setItemInHand(player.getInventory(),null);
+                                            return;
+                                        }
                                         JsonText extra = new JsonText("");
                                         switch (data.nowMode) {
                                             case SELECT_MODE:
@@ -78,7 +83,7 @@ public class Item {
                                                         jsonText = new JsonText(" " + data.w + "x" + data.h);
                                                         jsonText.color="yellow";
                                                         extra.addExtra(jsonText);
-                                                        world.spawnParticle(Particle.REDSTONE, (double) data.p2x, (double) data.p2y, (double) data.p2z, 0, 0, 0, 0, 0, new Particle.DustOptions(RED, 1));
+                                                        CraftUtils.spawnRedstoneParticle(world, (double) data.p2x, (double) data.p2y, (double) data.p2z,  RED, 1);
                                                         Utils.Pair<Utils.Pair<Screen.Facing, Location>, Utils.Pair<Screen.Facing, Location>> locations = getScreenLocations(world, data.p1x, data.p1y, data.p1z, data.p2x, data.p2y, data.p2z);
                                                         if (data.w != null && data.h != null) {
                                                             Utils.ScreenClickResult result1 = Utils.getScreenClickAt(player.getEyeLocation(), locations.getKey().getValue(), locations.getKey().getKey(), data.w, data.h, 64);
@@ -97,7 +102,7 @@ public class Item {
                                                             extra.addExtra(jsonText);
                                                         }
                                                     }
-                                                    world.spawnParticle(Particle.REDSTONE, (double) data.p1x, (double) data.p1y, (double) data.p1z, 0, 0, 0, 0, 0, new Particle.DustOptions(BLUE, 1));
+                                                    CraftUtils.spawnRedstoneParticle(world, (double) data.p1x, (double) data.p1y, (double) data.p1z,  BLUE, 1);
                                                 } else {
                                                     closest = getClosestBlock(eyeLoc);
                                                 }
@@ -107,9 +112,9 @@ public class Item {
                                                     direction.multiply(5);
                                                     eyeVec.add(direction);
                                                     Location point = eyeVec.toLocation(eyeLoc.getWorld());
-                                                    eyeLoc.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, point, 0, 0, 0, 0, 0);
+                                                    CraftUtils.spawnFireworkParticle(eyeLoc.getWorld(),point.getX(),point.getY(),point.getZ());
                                                 } else {
-                                                    eyeLoc.getWorld().spawnParticle(Particle.REDSTONE, closest, 0, 0, 0, 0, 0, new Particle.DustOptions(GREEN, 1));
+                                                    CraftUtils.spawnRedstoneParticle(eyeLoc.getWorld(), closest.getX(),closest.getY(),closest.getZ(), GREEN, 1);
                                                 }
                                                 break;
                                             case PLACE_MODE:
@@ -126,8 +131,8 @@ public class Item {
                                                     jsonText.color="yellow";
                                                     extra.addExtra(jsonText);
                                                     World world = Bukkit.getWorld(data.world);
-                                                    world.spawnParticle(Particle.REDSTONE, (double) data.p1x, (double) data.p1y, (double) data.p1z, 0, 0, 0, 0, 0, new Particle.DustOptions(BLUE, 1));
-                                                    world.spawnParticle(Particle.REDSTONE, (double) data.p2x, (double) data.p2y, (double) data.p2z, 0, 0, 0, 0, 0, new Particle.DustOptions(RED, 1));
+                                                    CraftUtils.spawnRedstoneParticle(world, (double) data.p1x, (double) data.p1y, (double) data.p1z,   BLUE, 1);
+                                                    CraftUtils.spawnRedstoneParticle(world, (double) data.p2x, (double) data.p2y, (double) data.p2z,RED, 1);
                                                     spawnRectParticle(world, data.p1x, data.p1y, data.p1z, data.p2x, data.p2y, data.p2z, YELLOW);
                                                 }
                                                 break;
@@ -184,11 +189,8 @@ public class Item {
 
                                     } catch (Exception e) {
                                         e.printStackTrace();
-                                        player.getInventory().setItemInMainHand(null);
+                                        setItemInHand(player.getInventory(),null);
                                     }
-                                } else {
-                                    player.getInventory().setItemInMainHand(null);
-                                }
                             }
                         }
                     }
@@ -199,8 +201,8 @@ public class Item {
         runnable.runTaskTimer(Main.thisPlugin(), 0L, 1L);
     }
     public static ItemStack getItemFromPlayer(Player player){
-        ItemStack item =player.getInventory().getItemInMainHand();
-        if(item==null||!item.hasItemMeta()){
+        ItemStack item =getItemInHand(player.getInventory());
+        if(item==null){
             return null;
         }
         if(NMSItemStack.getCustomModelData(item)!=CONTROLLER){
@@ -208,13 +210,19 @@ public class Item {
         }
         return item;
     }
-    public static void setData(ItemStack item,ItemData data){
-        NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
+    public static String getDataJson(ItemData data) {
+        return getJSONUtils().toJson(JSON.create(data));
     }
     public static ItemData getData(ItemStack item){
-        return getGson().fromJson(NMSItemStack.readScreenInMCData(item), ItemData.class);
+        try {
+            JSON json = getJSONUtils().fromJson(NMSItemStack.readScreenInMCData(item));
+            return (ItemData) json.write(ItemData.class);
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
     }
-    public static void switchMode(Player player,int to){
+    public static void switchMode(Player player,int to) throws Exception {
         ItemStack item = getItemFromPlayer(player);
         if(item==null){
             return;
@@ -225,9 +233,9 @@ public class Item {
             data.conn=null;
         }
         NMSItemStack newItem = getNMSItem(to);
-        newItem.setScreenInMCData(getGson().toJson(data));
+        newItem.setScreenInMCData(getDataJson(data));
         setItemLore(newItem, data.nowMode);
-        player.getInventory().setItemInMainHand(newItem.getBukkitItemStack());
+        setItemInHand(player.getInventory(),newItem.getCraftItemStack());
     }
     public static void onDisable() {
         if (runnable != null) {
@@ -235,17 +243,20 @@ public class Item {
         }
     }
     public static NMSItemStack getNMSItem(int mode){
-        NMSItemStack item = new NMSItemStack(new String[]{"wooden_hoe"},1);
+        NMSItemStack item = new NMSItemStack(new String[]{"wooden_hoe","wood_hoe"},1);
         item.setName(new JsonText(LangUtils.getText("controller-item-name")).setColor("gold"));
         item.setCustomModelData(CONTROLLER);
         item.setUnbreakable(true);
-        item.setScreenInMCData(getGson().toJson(new ItemData()));
+        try {
+            item.setScreenInMCData(getDataJson(new ItemData()));
+        } catch (Exception e) {
+            return NMSItemStack.EMPTY;
+        }
         setItemLore(item, mode);
         return item;
     }
     public static void giveItem(Player player) {
-
-        player.getInventory().addItem(getNMSItem(FIRST_MODE).getBukkitItemStack());
+        player.getInventory().addItem(getNMSItem(FIRST_MODE).getCraftItemStack());
     }
 
     public static String getModeName(int id) {
@@ -270,7 +281,7 @@ public class Item {
         v3.divide(new Vector(d1, d1, d1));
         v3.multiply(0.1);
         for (double i = 0; i < d1; i += 0.1) {
-            world.spawnParticle(Particle.REDSTONE, v1.getX(), v1.getY(), v1.getZ(), 0, 0, 0, 0, 0, new Particle.DustOptions(color, 1));
+            CraftUtils.spawnRedstoneParticle(world, v1.getX(), v1.getY(), v1.getZ(),  color, 1);
             v1.add(v3);
         }
     }
@@ -403,7 +414,7 @@ public class Item {
             }
             switchMode(player,nextMode);
         } catch (Exception e) {
-            player.getInventory().setItemInMainHand(null);
+            setItemInHand(player.getInventory(),null);
         }
     }
 
@@ -428,7 +439,7 @@ public class Item {
                         Main.sendMessage(player, "§9" + LangUtils.getText("controller-set-point-start").replace("%%",
                                 (int) closest.getX() + "," + (int) closest.getY() + "," + (int) closest.getZ()));
                     }
-                    NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
+                    NMSItemStack.writeScreenInMCData(item, getDataJson(data));
                     return true;
                 }
                 if (type.equals(Utils.MouseClickType.RIGHT)) {
@@ -457,7 +468,7 @@ public class Item {
                                     (int) closest.getX() + "," + (int) closest.getY() + "," + (int) closest.getZ()));
                         }
                     }
-                    NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
+                    NMSItemStack.writeScreenInMCData(item, getDataJson(data));
                     return true;
                 }
             }
@@ -484,13 +495,21 @@ public class Item {
                     Main.sendMessage(player, LangUtils.getText("controller-place-start"));
                     Screen screen = new Screen(location, facing, data.w, data.h);
                     screen.setCore(Core.createCore("Welcome"));
-                    screen.putScreen();
+                    try {
+                        screen.putScreen();
+                    }catch (Screen.FacingNotSupportedException e){
+                        Main.sendMessage(player, "§c" + LangUtils.getText("controller-place-failed-facing-not-supported")
+                                .replace("%%", e.getFacing().getTranslatedFacingName())
+                        );
+                        NMSItemStack.writeScreenInMCData(item, getDataJson(data));
+                        return true;
+                    }
                     Main.sendMessage(player, "§a" + LangUtils.getText("controller-place-success")
                             .replace("%location%", "§9" + world.getName() + "(" + (int) location.getX() + "," + (int) location.getY() + "," + (int) location.getZ() + ")§a")
                             .replace("%facing%", "§c" + facing.getTranslatedFacingName() + "§a")
                             .replace("%size%", "§e" + data.w + "x" + data.h + "§a")
                     );
-                    NMSItemStack.writeScreenInMCData(item,getGson().toJson(data));
+                    NMSItemStack.writeScreenInMCData(item, getDataJson(data));
                 } else {
                     Main.sendMessage(player, LangUtils.getText("controller-selection-not-found"));
                     return true;
@@ -537,7 +556,7 @@ public class Item {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            player.getInventory().setItemInMainHand(null);
+            setItemInHand(player.getInventory(),null);
         }
         return false;
     }
@@ -550,7 +569,7 @@ public class Item {
             }
         }catch (Exception e){
             e.printStackTrace();
-            player.getInventory().setItemInMainHand(null);
+            setItemInHand(player.getInventory(),null);
         }
     }
     private static void clearPoints(ItemData data) {

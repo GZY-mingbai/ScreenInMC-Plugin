@@ -35,6 +35,27 @@ public class Utils {
                 (byte) (value >>> 8),
                 (byte) value};
     }
+    public static int getInt(Object object){
+        if(object.getClass().equals(int.class)){
+            return (int)object;
+        }else{
+            return ((Number)object).intValue();
+        }
+    }
+    public static double getDouble(Object object){
+        if(object.getClass().equals(double.class)){
+            return (double)object;
+        }else{
+            return ((Number)object).doubleValue();
+        }
+    }
+    public static float getFloat(Object object){
+        if(object.getClass().equals(float.class)){
+            return (float)object;
+        }else{
+            return ((Number)object).floatValue();
+        }
+    }
 
     public static Pair<String, String> getSystem() {
         String systemName = System.getProperty("os.name").replace(" ", "").toLowerCase();
@@ -134,35 +155,51 @@ public class Utils {
             }
         }
     }
-
+    private static Class getBuiltinClassLoaderClass(Class cls){
+        if(cls.getSimpleName().equals("BuiltinClassLoader")){
+            return cls;
+        }else{
+            if(cls.getSuperclass().equals(Object.class)) return null;
+            return getBuiltinClassLoaderClass(cls.getSuperclass());
+        }
+    }
     public static void loadJar(URL url) {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        if (loader instanceof URLClassLoader) {
+        Class loaderClass;
+        if (URLClassLoader.class.isAssignableFrom(loader.getClass())) {
+            loaderClass = URLClassLoader.class;
+        }else{
             try {
-                Method method = URLClassLoader.class.getDeclaredMethod("addURL");
-                method.setAccessible(true);
-                method.invoke(url);
-            } catch (Throwable e) {
-                try {
-                    Unsafe unsafe = Utils.getUnsafe();
-                    Field field = URLClassLoader.class.getDeclaredField("ucp");
-                    long offset = unsafe.objectFieldOffset(field);
-                    Object ucp = unsafe.getObject(loader, offset);
-                    field = ucp.getClass().getDeclaredField("unopenedUrls");
-                    offset = unsafe.objectFieldOffset(field);
-                    Collection<URL> unopenedURLs = (Collection<URL>) unsafe.getObject(ucp, offset);
-                    field = ucp.getClass().getDeclaredField("path");
-                    offset = unsafe.objectFieldOffset(field);
-                    Collection<URL> pathURLs = (Collection<URL>) unsafe.getObject(ucp, offset);
-                    unopenedURLs.add(url);
-                    pathURLs.add(url);
-                } catch (Exception er) {
-                    er.printStackTrace();
-                    throw new RuntimeException("Try to add argument: --illegal-access=permit");
+                loaderClass = getBuiltinClassLoaderClass(loader.getClass());
+                if(loaderClass==null){
+                    throw new RuntimeException("Can't found BuiltinClassLoader.");
                 }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        } else {
-            throw new RuntimeException("ClassLoader is not URLClassLoader");
+        }
+        try {
+            Method method = loaderClass.getDeclaredMethod("addURL",URL.class);
+            method.setAccessible(true);
+            method.invoke(loader,url);
+        } catch (Throwable e) {
+            try {
+                Unsafe unsafe = Utils.getUnsafe();
+                Field field = loaderClass.getDeclaredField("ucp");
+                long offset = unsafe.objectFieldOffset(field);
+                Object ucp = unsafe.getObject(loader, offset);
+                field = ucp.getClass().getDeclaredField("unopenedUrls");
+                offset = unsafe.objectFieldOffset(field);
+                Collection<URL> unopenedURLs = (Collection<URL>) unsafe.getObject(ucp, offset);
+                field = ucp.getClass().getDeclaredField("path");
+                offset = unsafe.objectFieldOffset(field);
+                Collection<URL> pathURLs = (Collection<URL>) unsafe.getObject(ucp, offset);
+                unopenedURLs.add(url);
+                pathURLs.add(url);
+            } catch (Exception er) {
+                er.printStackTrace();
+                throw new RuntimeException("Try to add argument: --illegal-access=permit");
+            }
         }
         loadedURLs.add(url);
     }

@@ -26,20 +26,20 @@ public class OutOpenBookPacket implements OutPacket{
             PacketPlayOutOpenBookClass = CraftUtils.getMinecraftClass("PacketPlayOutOpenBook");
             EnumHandClass = CraftUtils.getMinecraftClass("EnumHand");
             PacketPlayOutOpenBookConstructor = PacketPlayOutOpenBookClass.getDeclaredConstructor(EnumHandClass);
-            method = 3;
+            method = 2;
         }catch (Exception e){
             PacketPlayOutCustomPayloadClass = CraftUtils.getMinecraftClass("PacketPlayOutCustomPayload");
-            if(CraftUtils.minecraftVersion<13){
-                if(CraftUtils.minecraftVersion<8){
-                    PacketPlayOutCustomPayloadConstructor = PacketPlayOutCustomPayloadClass.getDeclaredConstructor(String.class, OutSetMapEntityPacket.PacketDataSerializerClass);
-                    method = 0;
-                }else{
+            if(CraftUtils.minecraftVersion<=13){
+                try {
                     MinecraftKeyClass = CraftUtils.getMinecraftClass("MinecraftKey");
                     PacketPlayOutCustomPayloadConstructor = PacketPlayOutCustomPayloadClass.getDeclaredConstructor(MinecraftKeyClass, OutSetMapEntityPacket.PacketDataSerializerClass);
                     method = 1;
+                }catch (Exception er){
+                    PacketPlayOutCustomPayloadConstructor = PacketPlayOutCustomPayloadClass.getDeclaredConstructor(String.class, OutSetMapEntityPacket.PacketDataSerializerClass);
+                    method = 0;
                 }
             }else{
-                method = 2;
+                throw new RuntimeException(e);
             }
         }
         if(method==1){

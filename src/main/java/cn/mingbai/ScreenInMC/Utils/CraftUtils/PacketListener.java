@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
+import cn.mingbai.ScreenInMC.Utils.Utils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.bukkit.entity.Player;
@@ -15,7 +16,7 @@ public class PacketListener {
     }
 
     public interface PacketHandler{
-        boolean handle(PacketListener listener,InPacket packet);
+        boolean handle(PacketListener listener,Player player,InPacket packet);
     }
     private final static String ScreenInMCPacketHandlerName = "screen_in_mc_packet_handler";
     private static List<PacketListener> listeners = new ArrayList<>();
@@ -50,10 +51,11 @@ public class PacketListener {
         }
     }
     public static void addGlobalListener(Player player){
+        removeGlobalListener(player);
         CraftUtils.getChannel(player).pipeline().addBefore("packet_handler", ScreenInMCPacketHandlerName, new ChannelInboundHandlerAdapter() {
             @Override
             public void channelRead(ChannelHandlerContext ctx, Object packet) throws Exception {
-                List<PacketListener> listenersToHandle = new ArrayList<>();
+                List<Utils.Pair<Player,PacketListener>> listenersToHandle = new ArrayList<>();
                 InPacket inPacket = InPacket.create(packet);
                 if(inPacket==null) {
                     super.channelRead(ctx, packet);
@@ -61,16 +63,16 @@ public class PacketListener {
                 }
                 synchronized (listeners) {
                     for (PacketListener i : listeners) {
-                        if (i.getPlayer().equals(player)) {
+                        if (i.getPlayer()==null||i.getPlayer().equals(player)) {
                             if (i.getType().equals(inPacket.getClass())) {
-                                listenersToHandle.add(i);
+                                listenersToHandle.add(new Utils.Pair<>(player,i));
                             }
                         }
                     }
                 }
                 boolean result = false;
-                for(PacketListener i:listenersToHandle){
-                    if(i.getHandler().handle(i,inPacket)&&!result){
+                for(Utils.Pair<Player,PacketListener> i:listenersToHandle){
+                    if(i.getValue().getHandler().handle(i.getValue(),i.getKey(),inPacket)&&!result){
                         result = true;
                     }
                 }
@@ -81,7 +83,7 @@ public class PacketListener {
             }
         });
     }
-    public PacketListener(Player player,Class type,PacketHandler handler){
+    public PacketListener(Player player,Class<? extends InPacket> type,PacketHandler handler){
         this.player=player;
         this.type=type;
         this.handler=handler;

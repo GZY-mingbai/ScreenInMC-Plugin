@@ -1,16 +1,23 @@
 package cn.mingbai.ScreenInMC;
 
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.data.BlockData;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.type.RedstoneWire;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.checkRedstoneWire;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.setRedstoneWirePower;
 
 public class RedstoneBridge implements Cloneable {
     private Core core;
@@ -60,7 +67,7 @@ public class RedstoneBridge implements Cloneable {
                 disconnect();
             }
             synchronized (this) {
-                RedstoneWire wire = checkRedstone(block);
+                Object wire = checkRedstoneWire(block);
                 if (wire != null) {
                     this.block = block;
                     isConnected = true;
@@ -100,7 +107,7 @@ public class RedstoneBridge implements Cloneable {
         public void tryReceiveRedstoneSignal(int value){
             boolean disconnect = false;
             synchronized (this) {
-                RedstoneWire wire = checkRedstone(block);
+                Object wire = checkRedstoneWire(block);
                 if(wire==null){
                     disconnect=true;
                 }else {
@@ -135,7 +142,7 @@ public class RedstoneBridge implements Cloneable {
                 isConnected = false;
             }
         }
-        private BukkitRunnable resetRunnable = null;
+        private ImmediatelyCancellableBukkitRunnable resetRunnable = null;
         public void sendRedstoneSignal(int strength) {
             synchronized (this) {
                 if (!isConnected) {
@@ -143,16 +150,15 @@ public class RedstoneBridge implements Cloneable {
                 }
                 if (!isInput) {
                     if (block.getBlock().getType().equals(Material.REDSTONE_WIRE)) {
-                        RedstoneWire wire = checkRedstone(block);
+                        Object wire = checkRedstoneWire(block);
                         if (wire != null) {
                             final RedstoneSignalInterface signalInterface = this;
                             BukkitRunnable runnable = new BukkitRunnable() {
                                 @Override
                                 public void run() {
-                                    RedstoneWire wire = checkRedstone(signalInterface.block);
+                                    Object wire = checkRedstoneWire(signalInterface.block);
                                     if (wire != null) {
-                                        wire.setPower(strength);
-                                        signalInterface.block.getBlock().setBlockData(wire);
+                                        setRedstoneWirePower(signalInterface.block.getBlock(),wire,strength);
                                     }
                                     if (wire == null) {
                                         disconnect();
@@ -162,13 +168,13 @@ public class RedstoneBridge implements Cloneable {
                             if(resetRunnable!=null&&!resetRunnable.isCancelled()){
                                 resetRunnable.cancel();
                             }
-                            resetRunnable = new BukkitRunnable() {
+                            resetRunnable = new ImmediatelyCancellableBukkitRunnable() {
                                 @Override
                                 public void run() {
                                     if(this.isCancelled()){
                                         return;
                                     }
-                                    RedstoneWire wire = checkRedstone(signalInterface.block);
+                                    Object wire = checkRedstoneWire(signalInterface.block);
                                     if (wire != null) {
                                         signalInterface.block.getBlock().getState().update();
                                     }
@@ -226,20 +232,6 @@ public class RedstoneBridge implements Cloneable {
         if(interfaces.containsKey(id)) {
             interfaces.remove(id);
         }
-    }
-    private static RedstoneWire checkRedstone(Location location){
-        if(location==null){
-            return null;
-        }
-        if(location.getBlock()==null){
-            return null;
-        }
-        BlockData data = location.getBlock().getBlockData();
-        if(data instanceof RedstoneWire) {
-            RedstoneWire wire = (RedstoneWire) data;
-            return wire;
-        }
-        return null;
     }
 
     @Override

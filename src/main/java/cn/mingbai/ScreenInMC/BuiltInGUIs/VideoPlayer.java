@@ -38,18 +38,15 @@ public class VideoPlayer extends Core {
         data.loop = loop;
     }
     public static class VideoPlayerStoredData implements StoredData{
-        String path=null;
-        boolean loop=false;
+        public String path=null;
+        public boolean loop=false;
 
         @Override
         public StoredData clone() {
             return null;
         }
 
-        @Override
-        public Object getStorableObject() {
-            return null;
-        }
+
     }
 
 

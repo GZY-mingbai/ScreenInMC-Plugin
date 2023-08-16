@@ -3,8 +3,8 @@ package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 public interface OutPacket {
     static void initAll() throws Exception{
         OutMapPacket.init();
-        OutAddMapEntityPacket.init();
         OutSetMapEntityPacket.init();
+        OutAddMapEntityPacket.init();
         OutActionBarPacket.init();
         OutSetSlotPacket.init();
         OutWindowDataPacket.init();
@@ -12,5 +12,7 @@ public interface OutPacket {
         OutOpenBookPacket.init();
         OutWindowItemsPacket.init();
         OutSystemMessagePacket.init();
+        OutRemoveMapEntityPacket.init();
+        OutCloseWindowPacket.init();
     }
 }

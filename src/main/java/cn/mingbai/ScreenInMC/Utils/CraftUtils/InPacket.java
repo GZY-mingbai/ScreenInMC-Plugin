@@ -6,16 +6,23 @@ public interface InPacket {
         InWindowClosePacket.init();
         InWindowClickPacket.init();
         InAnvilRenamePacket.init();
+        InClickEntityPacket.init();
     }
     boolean load(Object obj);
     static InPacket create(Object obj){
         InPacket inPacket;
         inPacket = new InWindowClosePacket();
         if(obj.getClass().equals(inPacket.getNMSClass())) if(inPacket.load(obj)) return inPacket;
+
         inPacket = new InWindowClickPacket();
         if(obj.getClass().equals(inPacket.getNMSClass())) if(inPacket.load(obj)) return inPacket;
+
         inPacket = new InAnvilRenamePacket();
         if(obj.getClass().equals(inPacket.getNMSClass())) if(inPacket.load(obj)) return inPacket;
+
+        inPacket = new InClickEntityPacket();
+        if(obj.getClass().equals(inPacket.getNMSClass())) if(inPacket.load(obj)) return inPacket;
+
         return null;
     }
 }

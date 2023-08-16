@@ -46,6 +46,7 @@ public class JsonTextToNMSComponent {
     public static void init() throws Exception {
         ChatModifierClass = CraftUtils.getMinecraftClass("ChatModifier");
         ChatModifierClassConstructor = CraftUtils.getConstructor(ChatModifierClass);
+        ChatModifierClassConstructor.setAccessible(true);
         EnumChatFormatClass = CraftUtils.getMinecraftClass("EnumChatFormat");
         ChatClickableClass = CraftUtils.getMinecraftClass("ChatClickable");
         ChatClickableClassConstructor = CraftUtils.getConstructor(ChatClickableClass);
@@ -74,12 +75,12 @@ public class JsonTextToNMSComponent {
 
             if (CraftUtils.minecraftVersion >= 16) {
                 ChatComponentKeybindClass = CraftUtils.getMinecraftClass("ChatComponentKeybind");
-                ChatComponentKeybindClassConstructor = CraftUtils.getConstructor(ChatComponentTextClass);
+                ChatComponentKeybindClassConstructor = CraftUtils.getConstructor(ChatComponentKeybindClass);
                 ChatHexColorClass = CraftUtils.getMinecraftClass("ChatHexColor");
             } else {
                 if (CraftUtils.minecraftVersion >= 12) {
                     ChatComponentKeybindClass = CraftUtils.getMinecraftClass("ChatComponentKeybind");
-                    ChatComponentKeybindClassConstructor = CraftUtils.getConstructor(ChatComponentTextClass);
+                    ChatComponentKeybindClassConstructor = CraftUtils.getConstructor(ChatComponentKeybindClass);
                 }
                 ChatModifierSetBold = getMethod(ChatModifierClass,"setBold");
                 ChatModifierSetItalic = getMethod(ChatModifierClass,"setItalic");
@@ -91,13 +92,16 @@ public class JsonTextToNMSComponent {
                 ChatModifierSetChatHoverable = getMethod(ChatModifierClass,"setChatHoverable");
             }
         }
-
-        for(Method i:ChatHexColorClass.getDeclaredMethods()){
-            if(i.getParameterCount()==1&&i.getParameters()[0].getType().getSimpleName().equals("EnumChatFormat")){
-                ChatHexColorFromEnumChatFormat = i;
+        if(ChatHexColorClass!=null) {
+            for (Method i : ChatHexColorClass.getDeclaredMethods()) {
+                if (i.getParameterCount() == 1 && i.getParameters()[0].getType().getSimpleName().equals("EnumChatFormat")) {
+                    ChatHexColorFromEnumChatFormat = i;
+                    ChatHexColorFromEnumChatFormat.setAccessible(true);
+                }
             }
+            if (ChatHexColorFromEnumChatFormat == null)
+                throw new RuntimeException("public static ChatHexColor ...(EnumChatFormat ...) not found.");
         }
-        if(ChatHexColorFromEnumChatFormat ==null) throw new RuntimeException("public static ChatHexColor ...(EnumChatFormat ...) not found.");
         for(Method i:IChatMutableComponentClass==null?
                 ChatBaseComponentClass.getDeclaredMethods():
                 IChatMutableComponentClass.getDeclaredMethods()){
@@ -114,7 +118,7 @@ public class JsonTextToNMSComponent {
         if(ChatBaseComponentAddSibling==null) throw new RuntimeException("public IChatBaseComponent ...(IChatBaseComponent ...) not found.");
         if(ChatBaseComponentSetChatModifier==null) throw new RuntimeException("public IChatBaseComponent ...(ChatModifier ...) not found.");
     }
-    private static String getKeybind(String keybind){
+    public static String getKeybind(String keybind){
         switch (keybind){
             case "key.sneak":
                 return "Shift(Default)";
@@ -126,6 +130,7 @@ public class JsonTextToNMSComponent {
         return "Unknown";
     }
     private static Object getColor(String color) throws Exception{
+        if(color==null) return null;
         Object o = Enum.valueOf(EnumChatFormatClass, color.toUpperCase());
         if (ChatHexColorClass != null) {
             o = ChatHexColorFromEnumChatFormat.invoke(null, o);
@@ -176,23 +181,38 @@ public class JsonTextToNMSComponent {
                 }
             }
             if(CraftUtils.minecraftVersion>=19) {
-                obj=IChatMutableComponentFromComponentContents.invoke(obj);
+                obj=IChatMutableComponentFromComponentContents.invoke(null,obj);
             }
             Object chatModifier = null;
             if(CraftUtils.minecraftVersion>=16){
-                chatModifier = ChatModifierClassConstructor.newInstance(
-                        getColor(text.color),
-                        text.bold,
-                        text.italic,
-                        text.underlined,
-                        text.strikethrough,
-                        text.obfuscated,
-                        text.clickEvent,
-                        getClickEvent(text.clickEvent),
-                        null,
-                        null,
-                        null
-                );
+                if(ChatModifierClassConstructor.getParameterCount()==10) {
+                    chatModifier = ChatModifierClassConstructor.newInstance(
+                            getColor(text.color),
+                            text.bold,
+                            text.italic,
+                            text.underlined,
+                            text.strikethrough,
+                            text.obfuscated,
+                            getClickEvent(text.clickEvent),
+                            null,
+                            null,
+                            null
+                    );
+                }else{
+                    chatModifier = ChatModifierClassConstructor.newInstance(
+                            getColor(text.color),
+                            text.bold,
+                            text.italic,
+                            text.underlined,
+                            text.strikethrough,
+                            text.obfuscated,
+                            getClickEvent(text.clickEvent),
+                            null,
+                            null,
+                            null,
+                            null
+                    );
+                }
 
             }else {
                 chatModifier = ChatModifierClassConstructor.newInstance();
@@ -210,9 +230,6 @@ public class JsonTextToNMSComponent {
                 }
                 if (text.obfuscated != null) {
                     ChatModifierSetRandom.invoke(chatModifier, text.obfuscated);
-                }
-                if (text.color != null) {
-                    ChatModifierSetColor.invoke(chatModifier);
                 }
                 if (text.bold != null) {
                     ChatModifierSetBold.invoke(chatModifier, text.bold);

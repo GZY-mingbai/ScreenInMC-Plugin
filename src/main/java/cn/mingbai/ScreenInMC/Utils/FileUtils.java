@@ -195,7 +195,7 @@ public class FileUtils {
         }
     }
 
-    public class GithubReleasesObject {
+    public static class GithubReleasesObject {
         public String tag_name;
     }
 }

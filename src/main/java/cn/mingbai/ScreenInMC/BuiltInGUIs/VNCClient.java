@@ -299,10 +299,6 @@ public class VNCClient extends MGUICore {
             return data;
         }
 
-        @Override
-        public Object getStorableObject() {
-            return this;
-        }
     }
 
     @Override

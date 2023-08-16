@@ -2,22 +2,38 @@ package cn.mingbai.ScreenInMC.Browsers;
 
 import org.cef.CefApp;
 import org.cef.CefSettings;
+import org.cef.SystemBootstrap;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 
 import static org.cef.CefAppHelper.clearSelf;
 import static org.cef.CefAppHelper.setState;
 
 public class ChromiumLibrariesLoader {
-    public static void load(String pluginFilesPath, String systemName, String prefix) {
+    private static String libPath = "";
+    private static String chromiumPath = "";
+    public static void load(String pluginFilesPath, String systemName, String prefix, boolean addLib) {
+        libPath = new File(pluginFilesPath + "Chromium/bin/lib/" + systemName + "/").getAbsolutePath().replace("\\","/");
+        if(libPath.endsWith("/")){
+            libPath = libPath.substring(0,libPath.length()-1);
+        }
+        chromiumPath = new File(pluginFilesPath + "Chromium/").getAbsolutePath().replace("\\","/");
+        if(chromiumPath.endsWith("/")){
+            chromiumPath = chromiumPath.substring(0,chromiumPath.length()-1);
+        }
         org.cef.SystemBootstrap.setLoader(new org.cef.SystemBootstrap.Loader() {
             @Override
             public synchronized void loadLibrary(String libname) {
                 try {
-                        File path = new File(pluginFilesPath + "Chromium/bin/lib/" + systemName + "/" + libname + prefix);
-                        System.load(path.getAbsolutePath());
-//                        System.out.println("!!!Loaded Library: " + path.getAbsolutePath())
+                    File path = new File(pluginFilesPath + "Chromium/bin/lib/" + systemName + "/"+ (addLib?"lib":"") + libname + prefix);
+                    System.load(path.getAbsolutePath());
+                    System.out.println("!!!Loaded Library: " + path.getAbsolutePath());
                 } catch (Throwable e) {
+                    e.printStackTrace();
                     try {
                     System.loadLibrary(libname);
                     } catch (Throwable er) {
@@ -26,6 +42,46 @@ public class ChromiumLibrariesLoader {
                 }
             }
         });
+    }
+    public static void setPermissions(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    setPermissions(file);
+                }else{
+                    try {
+                        file.setExecutable(true,false);
+                        file.setReadable(true,false);
+                        file.setWritable(true,false);
+                    }catch (Exception e){
+                    }
+                }
+            }
+        }
+    }
+    public static void loadLinuxLibraries(){
+        try {
+            String javaHome = System.getProperty("java.home").replace("\\","/");
+            if(javaHome.endsWith("/")){
+                javaHome = javaHome.substring(0,javaHome.length()-1);
+            }
+            File src = new File(javaHome+"/lib/libjawt.so");
+            File dest = new File(libPath+"/libjawt.so");
+            System.out.println("Linking "+src.getAbsolutePath()+" to "+dest.getAbsolutePath()+" .");
+            Files.createSymbolicLink(
+                    dest.toPath(),
+                    src.toPath()
+                );
+        }catch (Throwable e){
+        }
+        setPermissions(new File(chromiumPath));
+        try {
+            SystemBootstrap.loadLibrary("jcef");
+        }catch (Error e){
+        }
+        catch (Throwable e){
+        }
     }
     public static void resetState(){
         setState(CefApp.CefAppState.NONE);

@@ -5,6 +5,7 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -21,6 +22,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static cn.mingbai.ScreenInMC.Main.getPluginLogger;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class CommandListener implements TabExecutor {
@@ -54,7 +56,12 @@ public class CommandListener implements TabExecutor {
                         Integer.parseInt(args[7])
                 );
                 screen.setCore(core);
-                screen.putScreen();
+                try {
+                    screen.putScreen();
+                }catch (Screen.FacingNotSupportedException exception){
+                    getPluginLogger().warning("The screen ("+screen.getUUID()+") cannot be placed, because placing it in the "+exception.getFacing().name()+" direction is not supported in versions below 1.12.2.");
+                    sender.sendMessage("Failed");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -229,6 +236,11 @@ public class CommandListener implements TabExecutor {
             if (args.length == 6) {
                 if (args[0].equalsIgnoreCase("putScreen")) {
                     for (Screen.Facing i : Screen.Facing.values()) {
+                        if(CraftUtils.minecraftVersion<=12){
+                            if(i== Screen.Facing.UP||i== Screen.Facing.DOWN){
+                                continue;
+                            }
+                        }
                         sub2.add(i.toString());
                     }
                 }

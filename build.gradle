@@ -35,6 +35,7 @@ dependencies {
     implementation 'com.shinyhut:vernacular:1.14'
     implementation 'org.apache.commons:commons-compress:1.22'
     implementation 'me.friwi:jcef-api:jcef-87476e9+cef-110.0.25+g75b1c96+chromium-110.0.5481.78'
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 }
 
 
@@ -100,6 +101,7 @@ jar {
                 include '**/CharsetAccessor.class'
                 include '**/TarUtils.class'
                 include '**/TarUtils$1.class'
+                include '**/TarArchiveStructSparse.class'
             }
             zip.forEach {
                 System.out.println(it.path)

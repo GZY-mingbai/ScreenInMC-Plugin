@@ -1,9 +1,11 @@
 package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
-import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
+import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.material.MaterialData;
 
 import java.lang.reflect.*;
 import java.util.List;
@@ -20,7 +22,7 @@ public class NMSItemStack {
     static Constructor ItemStackClassConstructor;
     static Class NBTTagCompoundClass;
     static Field ItemStackNBTTagCompound;
-    static Constructor NBTTagCompoundClassConstructor;
+    static Constructor NBTTagCompoundConstructor;
     static Method NBTTagCompoundPut;
     static Method NBTTagCompoundGet;
     static Class NBTTagStringClass;
@@ -33,6 +35,11 @@ public class NMSItemStack {
     static Class NBTTagByteClass;
     static Constructor NBTTagByteClassConstructor;
     static Field NBTTagStringString;
+    static Field NBTTagIntInt;
+    static Method GetItemInHand;
+    static Method SetItemInHand;
+
+
 
 
     static void init() throws Exception{
@@ -55,12 +62,12 @@ public class NMSItemStack {
             throw new RuntimeException("private NBTTagCompound ... not found");
         }
         ItemStackNBTTagCompound.setAccessible(true);
-        NBTTagCompoundClassConstructor = getConstructor(NBTTagCompoundClass);
-        for(Method i:ItemStackClass.getDeclaredMethods()){
+        NBTTagCompoundConstructor = getConstructor(NBTTagCompoundClass);
+        for(Method i:NBTTagCompoundClass.getDeclaredMethods()){
             if(i.getParameterCount()==2&&i.getParameters()[0].getType().equals(String.class)&&i.getParameters()[1].getType().getSimpleName().equals("NBTBase")){
                 NBTTagCompoundPut=i;
             }
-            if(i.getParameterCount()==1&&i.getParameters()[0].getType().equals(String.class)&&i.getReturnType().getSimpleName().equals("NBTTagCompound")){
+            if(i.getParameterCount()==1&&i.getParameters()[0].getType().equals(String.class)&&i.getReturnType().getSimpleName().equals("NBTBase")){
                 NBTTagCompoundGet=i;
             }
         }
@@ -82,6 +89,7 @@ public class NMSItemStack {
         for(Field i:NBTTagListClass.getDeclaredFields()){
             if(i.getType().equals(List.class)){
                 NBTTagListNBTBaseList = i;
+                NBTTagListNBTBaseList.setAccessible(true);
             }
         }
         for(Field i:NBTTagStringClass.getDeclaredFields()){
@@ -90,12 +98,30 @@ public class NMSItemStack {
                 i.setAccessible(true);
             }
         }
+        for(Field i:NBTTagIntClass.getDeclaredFields()){
+            if(!Modifier.isStatic(i.getModifiers())&&i.getType().equals(int.class)){
+                NBTTagIntInt=i;
+                i.setAccessible(true);
+            }
+        }
         if(NBTTagListNBTBaseList==null){
             throw new RuntimeException("private List<NBTBase> ... = Lists.newArrayList(); not found");
+        }
+        Class PlayerInventoryClass = Class.forName("org.bukkit.inventory.PlayerInventory");
+        try {
+            GetItemInHand = PlayerInventoryClass.getDeclaredMethod("getItemInMainHand");
+        }catch (Exception e){
+            GetItemInHand = PlayerInventoryClass.getDeclaredMethod("getItemInHand");
+        }
+        try {
+            SetItemInHand = PlayerInventoryClass.getDeclaredMethod("setItemInMainHand",ItemStack.class);
+        }catch (Exception e){
+            SetItemInHand = PlayerInventoryClass.getDeclaredMethod("setItemInHand",ItemStack.class);
         }
     }
     private String[] itemIds;
     private int count;
+    private short oldId;
     private boolean unbreakable = false;
 
     public void setUnbreakable(boolean unbreakable) {
@@ -113,13 +139,13 @@ public class NMSItemStack {
     }
     public static int getCustomModelData(ItemStack itemStack){
         try {
-            Object item = CraftItemStackAsNMSCopy.invoke(itemStack);
+            Object item = bukkitToNmsItemStack(itemStack);
             Object nbt = ItemStackNBTTagCompound.get(item);
             if(nbt==null)return -1;
             Object obj = NBTTagCompoundGet.invoke(nbt,"CustomModelData");
             if(obj==null)return -1;
             try {
-                return (int) NBTTagStringString.get(obj);
+                return Utils.getInt(NBTTagIntInt.get(obj));
             }catch (Exception e){
                 return -1;
             }
@@ -128,16 +154,44 @@ public class NMSItemStack {
         }
     }
 
-    private LangUtils.JsonText[] lore = new LangUtils.JsonText[0];
+    private LangUtils.JsonText[] lore = null;
     private LangUtils.JsonText name = null;
     public static NMSItemStack EMPTY = new NMSItemStack(new String[0],1);
+
+    public void setOldId(short oldId) {
+        this.oldId = oldId;
+    }
 
     // When generating items,
     // each item ID will be tried one by one from the itemIds list.
     // If the item with that ID does not exist in the current version of Minecraft, the next ID will be tried.
-    public NMSItemStack(String[] itemIds,int count){
+    public NMSItemStack(String[] itemIds,int count) {
+        this(itemIds,count,(short) 0);
+    }
+
+    public final static short COLOR_WHITE = 0;
+    public final static short COLOR_ORANGE = 1;
+    public final static short COLOR_MAGENTA = 2;
+    public final static short COLOR_LIGHT_BLUE = 3;
+    public final static short COLOR_YELLOW = 4;
+    public final static short COLOR_LIME = 5;
+    public final static short COLOR_PINK = 6;
+    public final static short COLOR_GRAY = 7;
+    public final static short COLOR_SILVER = 8;
+    public final static short COLOR_CYAN = 9;
+    public final static short COLOR_PURPLE = 10;
+    public final static short COLOR_BLUE = 11;
+    public final static short COLOR_BROWN = 12;
+    public final static short COLOR_GREEN = 13;
+    public final static short COLOR_RED = 14;
+    public final static short COLOR_BLACK = 15;
+
+
+
+    public NMSItemStack(String[] itemIds,int count,short oldId){
         this.itemIds = itemIds;
         this.count=count;
+        this.oldId=oldId;
     }
     public void setLore(LangUtils.JsonText[] lore){
         this.lore=lore;
@@ -145,6 +199,7 @@ public class NMSItemStack {
     public void setName(LangUtils.JsonText name){
         this.name=name;
     }
+
     public boolean isEmpty(){
         if(this.itemIds.length==0||this.itemIds[0].equals("air")){
             return true;
@@ -153,17 +208,19 @@ public class NMSItemStack {
     }
 
     protected void setNbt(Object nbt) throws Exception {
-        //Caused by: java.lang.IllegalArgumentException: object is not an instance of declaring class
-        //报错
-        Object displayNbt = NBTTagCompoundClassConstructor.newInstance();
-        NBTTagCompoundPut.invoke(nbt,"display",displayNbt);
-        Object nameNbt = NBTTagStringClassConstructor.newInstance(name.toJSON());
-        NBTTagCompoundPut.invoke(displayNbt,"Name",nameNbt);
-        Object loreNbt = NBTTagListClassConstructor.newInstance();
-        List list = (List) NBTTagListNBTBaseList.get(loreNbt);
-        for(LangUtils.JsonText i:lore){
-            Object singleLoreNbt = NBTTagStringClassConstructor.newInstance(i.toJSONWithoutExtra());
-            list.add(singleLoreNbt);
+        Object displayNbt = NBTTagCompoundConstructor.newInstance();
+        if(name!=null) {
+            Object nameNbt = NBTTagStringClassConstructor.newInstance(CraftUtils.minecraftVersion<=12?name.toRichString():name.toJSON());
+            NBTTagCompoundPut.invoke(displayNbt, "Name", nameNbt);
+        }
+        if(lore!=null) {
+            Object loreNbt = NBTTagListClassConstructor.newInstance();
+            List list = (List) NBTTagListNBTBaseList.get(loreNbt);
+            for (LangUtils.JsonText i : lore) {
+                Object singleLoreNbt = NBTTagStringClassConstructor.newInstance(CraftUtils.minecraftVersion<=13?i.toRichString():i.toJSONWithoutExtra());
+                list.add(singleLoreNbt);
+            }
+            NBTTagCompoundPut.invoke(displayNbt,"Lore",loreNbt);
         }
         if(unbreakable){
             NBTTagCompoundPut.invoke(nbt,"Unbreakable",NBTTagByteClassConstructor.newInstance((byte)1));
@@ -174,9 +231,10 @@ public class NMSItemStack {
         if(screenInMCData!=null){
             NBTTagCompoundPut.invoke(nbt,"ScreenInMCData",NBTTagStringClassConstructor.newInstance(screenInMCData));
         }
-        NBTTagCompoundPut.invoke(displayNbt,"Lore",loreNbt);
+        NBTTagCompoundPut.invoke(nbt,"display",displayNbt);
     }
     public Object getItemStack(){
+        if(itemIds.length==0) return bukkitToNmsItemStack(new ItemStack(Material.AIR,0));
         Material itemType=null;
         try {
             for(String id:itemIds) {
@@ -191,8 +249,12 @@ public class NMSItemStack {
             if(itemType==null){
                 throw new RuntimeException("Item: "+String.join(", ",itemIds)+" not found.");
             }
-            Object stack = bukkitToNmsItemStack(new ItemStack(itemType,count));
-            Object nbt = NBTTagCompoundClassConstructor.newInstance();
+            ItemStack bukkitItem = new ItemStack(itemType,count);
+            if(minecraftVersion<=12){
+                bukkitItem.setDurability((short) oldId);
+            }
+            Object stack = bukkitToNmsItemStack(bukkitItem);
+            Object nbt = NBTTagCompoundConstructor.newInstance();
             setNbt(nbt);
             ItemStackNBTTagCompound.set(stack,nbt);
             return stack;
@@ -202,7 +264,7 @@ public class NMSItemStack {
     }
     public static String readScreenInMCData(ItemStack itemStack){
         try {
-            Object item = CraftItemStackAsNMSCopy.invoke(itemStack);
+            Object item = bukkitToNmsItemStack(itemStack);
             Object nbt = ItemStackNBTTagCompound.get(item);
             if(nbt==null)return "";
             Object obj = NBTTagCompoundGet.invoke(nbt,"ScreenInMCData");
@@ -218,15 +280,15 @@ public class NMSItemStack {
     }
     public static void writeScreenInMCData(ItemStack itemStack,String data){
         try {
-            Object item = CraftItemStackAsNMSCopy.invoke(itemStack);
+            Object item = bukkitToNmsItemStack(itemStack);
             Object nbt = ItemStackNBTTagCompound.get(item);
             if(nbt==null) {
-                nbt = NBTTagCompoundClassConstructor.newInstance();
+                nbt = NBTTagCompoundConstructor.newInstance();
                 ItemStackNBTTagCompound.set(item,nbt);
             }
             Object string = NBTTagStringClassConstructor.newInstance(data);
             NBTTagCompoundPut.invoke(nbt,"ScreenInMCData",string);
-            ItemStack result = (ItemStack) CraftItemStackAsBukkitCopy.invoke(item);
+            ItemStack result = (ItemStack) CraftItemStackAsBukkitCopy.invoke(null,item);
             itemStack.setItemMeta(result.getItemMeta());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -234,6 +296,13 @@ public class NMSItemStack {
     }
     public ItemStack getBukkitItemStack(){
         return nmsToBukkitItemStack(getItemStack());
+    }
+    public ItemStack getCraftItemStack(){
+        try {
+            return (ItemStack) CraftItemStackAsCraftMirror.invoke(null,getItemStack());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     public static ItemStack nmsToBukkitItemStack(Object obj){
         try {
@@ -247,6 +316,19 @@ public class NMSItemStack {
             return CraftItemStackAsNMSCopy.invoke(null,obj);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+    public static ItemStack getItemInHand(PlayerInventory inventory){
+        try {
+            return (ItemStack) GetItemInHand.invoke(inventory);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public static void setItemInHand(PlayerInventory inventory,ItemStack itemStack){
+        try {
+            SetItemInHand.invoke(inventory,itemStack);
+        } catch (Exception e) {
         }
     }
 }

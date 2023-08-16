@@ -8,6 +8,7 @@ download-browser-core:
     version: "" #仅在type为1时生效 JCEF版本号(Tags) 留空为自动获取 最新JCEF已不支持32位Linux，需使用1.0.26版本
 jcef-extra-args: ""
 jcef-transparent: false
+jcef-enable-gpu: false
 browser-main-page: "https://bing.com/"
 language: "zh_cn" #支持zh_cn en_us qps_ploc zh_tw zh_hk
 opencl-device: -3 #-4=Java快速运算 -3=自动选择 -2=Java运算 -1=C++运算 0+=OpenCL设备 (-4,-2,-1均不支持更换分块大小)

@@ -42,6 +42,7 @@ controller-connect-failed-input: "连接失败: 该红石已被连接为输入�
 controller-connect-failed-output: "连接失败: 该红石已被连接为输出端"
 controller-place-start: "正在加载屏幕核心"
 controller-place-success: "已放置屏幕在 %location% 方向: %facing% 大小: %size%"
+controller-place-failed-facing-not-supported: "屏幕无法被放置在 %% 方向"
 controller-editor-gui-title: "ScreenInMC 编辑器"
 vnc-client-address: "地址"
 vnc-client-password: "密码"

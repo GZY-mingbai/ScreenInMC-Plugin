@@ -4,11 +4,10 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
+import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONObject;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.cef.browser.CefBrowser;
@@ -29,6 +28,7 @@ import org.cef.network.CefResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
@@ -95,8 +95,7 @@ public class Chromium extends Browser {
                 if (version.length() == 0) {
                     String repoReleasesUrl = repoUrl.replace("github.com", "api.github.com/repos") + "/releases";
                     String repoReleasesString = FileUtils.getString(repoReleasesUrl, httpProxyUrl);
-                    Gson gson = new Gson();
-                    FileUtils.GithubReleasesObject[] repoReleasesObject = gson.fromJson(repoReleasesString, FileUtils.GithubReleasesObject[].class);
+                    FileUtils.GithubReleasesObject[] repoReleasesObject = (FileUtils.GithubReleasesObject[]) Main.getJSONUtils().fromJson(repoReleasesString).write(FileUtils.GithubReleasesObject[].class);
                     if (repoReleasesObject.length == 0) {
                         throw new RuntimeException("Get Github Repositories TagName failed.");
                     }
@@ -256,12 +255,14 @@ public class Chromium extends Browser {
 
         private static void load() {
             Utils.Pair<String, String> system = Utils.getSystem();
+            boolean addLib = false;
             String systemName = "";
             switch (system.getKey()) {
                 case "windows":
                     systemName = "win";
                     break;
                 case "linux":
+                    addLib=true;
                     systemName = "linux";
                     break;
             }
@@ -275,9 +276,24 @@ public class Chromium extends Browser {
                     systemName += "32";
                     break;
             }
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + ";" +
-                    new File(Main.PluginFilesPath + "Chromium/bin/lib/" + systemName + "/").getAbsolutePath());
-            cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.load(Main.PluginFilesPath, systemName, Utils.getLibraryPrefix(system.getKey()));
+            File[] files = new File(Main.PluginFilesPath + "Chromium/bin/lib/").listFiles();
+            if(files==null||files.length==0){
+                return;
+            }
+            String libSystemName = "";
+            for(File i:files){
+                String name = i.getName();
+                if(name.contains(systemName)) libSystemName = name;
+            }
+            if(libSystemName.length()==0) {
+                libSystemName = files[0].getName();
+            }
+            System.setProperty("java.library.path", System.getProperty("java.library.path") + System.getProperty("path.separator") +
+                    new File(Main.PluginFilesPath + "Chromium/bin/lib/" + libSystemName + "/").getAbsolutePath());
+            cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.load(Main.PluginFilesPath, libSystemName, Utils.getLibraryPrefix(system.getKey()),addLib);
+            if(libSystemName.contains("linux")){
+                cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.loadLinuxLibraries();
+            }
             org.cef.CefSettings settings = new org.cef.CefSettings();
 
             settings.windowless_rendering_enabled = true;
@@ -285,9 +301,17 @@ public class Chromium extends Browser {
             if(!Main.getConfiguration().getBoolean("jcef-transparent")){
                 settings.background_color= settings.new ColorType(255,255,255,255);
                 argsList.add("--transparent-painting-disabled");
-                argsList.add("--off-screen-rendering-enabled");
-                argsList.add("--off-screen-frame-rate=20");
-                argsList.add("--universal-access-from-file-urls-allowed");
+            }
+            if(!Main.getConfiguration().getBoolean("jcef-enable-gpu")){
+                argsList.add("--disable-gpu");
+                argsList.add("--disable-gpu-compositing");
+                argsList.add("--disable-gpu-vsync");
+            }
+            argsList.add("--off-screen-rendering-enabled");
+            argsList.add("--off-screen-frame-rate=20");
+            argsList.add("--universal-access-from-file-urls-allowed");
+            if(libSystemName.contains("linux")){
+                argsList.add("--no-sandbox");
             }
             argsList.addAll(Arrays.asList(Main.getConfiguration().getString("jcef-extra-args").split(" ")));
             String[] args = argsList.toArray(new String[0]);
@@ -316,7 +340,7 @@ public class Chromium extends Browser {
 //            } catch (Exception e) {
 //                e.printStackTrace();
 //            }
-
+            Main.getPluginLogger().info("Load Chromium with args: "+String.join(" ",args));
             try {
                 app = org.cef.CefApp.getInstance(args, settings);
                 app = ChromiumLibrariesLoader.getApp();
@@ -419,24 +443,28 @@ public class Chromium extends Browser {
                     if(browser.getURL().startsWith("screen://")){
                         for(Screen screen:clients.keySet()){
                             if(browser.equals(clients.get(screen))){
-                                LinkedTreeMap map;
+                                JSONObject map=null;
                                 try{
-                                    map = Main.getGson().fromJson(request, LinkedTreeMap.class);
+                                    JSONUtils.JSON json = Main.getJSONUtils().fromJson(request);
+                                    if(!json.isArray()) {
+                                        map = (JSONObject) json;
+                                    }
                                 }catch (Exception e){
-                                    LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                    messageMap.put("error", "The requested content could not be parsed. " +
+                                    JSONObject messageMap = new JSONObject();
+                                    messageMap.setValue("error", "The requested content could not be parsed. " +
                                             "It should be in JSON format. \n"+e.getMessage());
-                                    callback.failure(-3,Main.getGson().toJson(messageMap));
+                                    callback.failure(-3,Main.getJSONUtils().toJson(messageMap));
                                     return true;
                                 }
+                                if(map==null) continue;
 
                                 if(map.containsKey("action")){
                                     try {
-                                        switch ((String) map.get("action")) {
+                                        switch (map.getString("action")) {
                                             case "run_command":
                                                 if(map.containsKey("command")){
                                                     try {
-                                                        String command = (String) map.get("command");
+                                                        String command = map.getString("command");
                                                         final Object[] success = new Object[]{true,null};
                                                         BukkitRunnable runnable = new BukkitRunnable() {
 
@@ -452,80 +480,80 @@ public class Chromium extends Browser {
                                                         };
                                                         runnable.runTask(Main.thisPlugin());
                                                         if((Boolean) success[0]){
-                                                            LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                                            messageMap.put("result",0);
-                                                            callback.success(Main.getGson().toJson(messageMap));
+                                                            JSONObject messageMap = new JSONObject();
+                                                            messageMap.setValue("result",0);
+                                                            callback.success(Main.getJSONUtils().toJson(messageMap));
                                                         }else if(success[1]!=null){
                                                             throw (Exception) success[1];
                                                         }
                                                     }catch (Exception e){
-                                                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                                        messageMap.put("error", "Command dispatch error. "+e.getMessage());
-                                                        callback.failure(-7,Main.getGson().toJson(messageMap));
+                                                        JSONObject messageMap = new JSONObject();
+                                                        messageMap.setValue("error", "Command dispatch error. "+e.getMessage());
+                                                        callback.failure(-7,Main.getJSONUtils().toJson(messageMap));
                                                     }
                                                 }else{
-                                                    LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                                    messageMap.put("error", "Command key not found.");
-                                                    callback.failure(-6,Main.getGson().toJson(messageMap));
+                                                    JSONObject messageMap = new JSONObject();
+                                                    messageMap.setValue("error", "Command key not found.");
+                                                    callback.failure(-6,Main.getJSONUtils().toJson(messageMap));
                                                 }
                                                 break;
                                             case "listen_redstone_input":
                                                 if(map.containsKey("id")){
                                                     int id=-1;
                                                     try {
-                                                        id = ((Number)map.get("id")).intValue();
+                                                        id = map.getInt("id");
                                                     }catch (Exception e){
                                                     }
                                                     if(id>=1&&id<=54){
                                                         RedstoneInputCallback cb = addRedstoneInputListener(new RedstoneInputCallback(screen,id) {
                                                             @Override
                                                             public void onInput(int value) {
-                                                                LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                                                messageMap.put("type", "redstone_input");
-                                                                messageMap.put("id", getID());
-                                                                messageMap.put("value",value);
-                                                                messageMap.put("callback_id",getCallbackID());
-                                                                browser.executeJavaScript("window.postMessage("+Main.getGson().toJson(messageMap)+")","",0);
+                                                                JSONObject messageMap = new JSONObject();
+                                                                messageMap.setValue("type", "redstone_input");
+                                                                messageMap.setValue("id", getID());
+                                                                messageMap.setValue("value",value);
+                                                                messageMap.setValue("callback_id",getCallbackID());
+                                                                browser.executeJavaScript("window.postMessage("+Main.getJSONUtils().toJson(messageMap)+")","",0);
                                                             }
                                                         });
-                                                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                                        messageMap.put("result",0);
-                                                        messageMap.put("callback_id",cb.getCallbackID());
-                                                        callback.success(Main.getGson().toJson(messageMap));
+                                                        JSONObject messageMap = new JSONObject();
+                                                        messageMap.setValue("result",0);
+                                                        messageMap.setValue("callback_id",cb.getCallbackID());
+                                                        callback.success(Main.getJSONUtils().toJson(messageMap));
 
                                                         break;
                                                     }
                                                 }
-                                                LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                                messageMap.put("error", "id key not found or is wrong. Should be in 1-54.");
-                                                callback.failure(-8,Main.getGson().toJson(messageMap));
+                                                JSONObject messageMap = new JSONObject();
+                                                messageMap.setValue("error", "id key not found or is wrong. Should be in 1-54.");
+                                                callback.failure(-8,Main.getJSONUtils().toJson(messageMap));
                                                 break;
                                             case "stop_listen_redstone_input":
                                                 if(map.containsKey("callback_id")){
                                                     long id=-1;
                                                     try {
-                                                        id = ((Number)map.get("callback_id")).longValue();
+                                                        id = map.getLong("callback_id");
                                                     }catch (Exception e){
                                                     }
                                                     if(id!=-1){
                                                         removeRedstoneInputListener(id);
-                                                        messageMap = Maps.newLinkedHashMap();
-                                                        messageMap.put("result",0);
-                                                        callback.success(Main.getGson().toJson(messageMap));
+                                                        messageMap = new JSONObject();
+                                                        messageMap.setValue("result",0);
+                                                        callback.success(Main.getJSONUtils().toJson(messageMap));
                                                         break;
                                                     }
                                                 }
-                                                messageMap = Maps.newLinkedHashMap();
-                                                messageMap.put("error", "callback_id key not found or is wrong.");
-                                                callback.failure(-9,Main.getGson().toJson(messageMap));
+                                                messageMap = new JSONObject();
+                                                messageMap.setValue("error", "callback_id key not found or is wrong.");
+                                                callback.failure(-9,Main.getJSONUtils().toJson(messageMap));
                                                 break;
                                             case "redstone_output":
                                                 if(map.containsKey("id")&&map.containsKey("value")){
                                                     int id=-1;
                                                     int value = -1;
                                                     try {
-                                                        id = ((Number)map.get("id")).intValue();
-                                                        value = ((Number)map.get("value")).intValue();
+                                                        id = map.getInt("id");
+                                                        value = map.getInt("value");
                                                     }catch (Exception e){
                                                     }
                                                     if(id>=1&&id<=54&&value>=0&&value<=15){
@@ -533,47 +561,47 @@ public class Chromium extends Browser {
                                                             WebBrowser webBrowser = (WebBrowser) screen.getCore();
                                                             webBrowser.redstoneOutput(id,value);
                                                         }
-                                                        messageMap = Maps.newLinkedHashMap();
-                                                        messageMap.put("result",0);
-                                                        callback.success(Main.getGson().toJson(messageMap));
+                                                        messageMap = new JSONObject();
+                                                        messageMap.setValue("result",0);
+                                                        callback.success(Main.getJSONUtils().toJson(messageMap));
                                                         break;
                                                     }
                                                 }
-                                                messageMap = Maps.newLinkedHashMap();
-                                                messageMap.put("error", "id, value key not found or is wrong. id should be in 1-54, value should be in 0-15.");
-                                                callback.failure(-10,Main.getGson().toJson(messageMap));
+                                                messageMap = new JSONObject();
+                                                messageMap.setValue("error", "id, value key not found or is wrong. id should be in 1-54, value should be in 0-15.");
+                                                callback.failure(-10,Main.getJSONUtils().toJson(messageMap));
                                                 break;
                                             default:
-                                                messageMap = Maps.newLinkedHashMap();
-                                                messageMap.put("error", "Unknown action: "+map.get("action"));
-                                                callback.failure(-5,Main.getGson().toJson(messageMap));
+                                                messageMap = new JSONObject();
+                                                messageMap.setValue("error", "Unknown action: "+map.getString("action"));
+                                                callback.failure(-5,Main.getJSONUtils().toJson(messageMap));
                                         }
 
 
                                         return true;
                                     }catch (Exception e){
-                                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                        messageMap.put("error", "Unknown error: "+e.getMessage());
-                                        callback.failure(-999,Main.getGson().toJson(messageMap));
+                                        JSONObject messageMap = new JSONObject();
+                                        messageMap.setValue("error", "Unknown error: "+e.getMessage());
+                                        callback.failure(-999,Main.getJSONUtils().toJson(messageMap));
                                     }
                                 }else{
-                                    LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                                    messageMap.put("error", "Action key not found.");
-                                    callback.failure(-4,Main.getGson().toJson(messageMap));
+                                    JSONObject messageMap = new JSONObject();
+                                    messageMap.setValue("error", "Action key not found.");
+                                    callback.failure(-4,Main.getJSONUtils().toJson(messageMap));
                                     return true;
                                 }
                             }
                         }
-                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                        messageMap.put("error", "The corresponding screen for this webpage cannot be found. " +
+                        JSONObject messageMap = new JSONObject();
+                        messageMap.setValue("error", "The corresponding screen for this webpage cannot be found. " +
                                 "Perhaps this screen has already been removed.");
-                        callback.failure(-2,Main.getGson().toJson(messageMap));
+                        callback.failure(-2,Main.getJSONUtils().toJson(messageMap));
                     }else{
-                        LinkedHashMap messageMap = Maps.newLinkedHashMap();
-                        messageMap.put("error","You don't have permission to call this API. " +
+                        JSONObject messageMap = new JSONObject();
+                        messageMap.setValue("error","You don't have permission to call this API. " +
                                 "Please place the webpages in the plugins/ScreenInMC/Files/ directory, " +
                                 "and open it using screen://local/(file-name).");
-                        callback.failure(-1,Main.getGson().toJson(messageMap));
+                        callback.failure(-1,Main.getJSONUtils().toJson(messageMap));
                     }
                     return true;
                 }

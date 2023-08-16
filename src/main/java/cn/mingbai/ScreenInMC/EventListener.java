@@ -3,6 +3,8 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.InClickEntityPacket;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.InPacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -21,8 +23,27 @@ import java.util.List;
 
 import static cn.mingbai.ScreenInMC.Controller.Item.CONTROLLER;
 import static cn.mingbai.ScreenInMC.Controller.Item.onPlayerSwitchMode;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.getItemInHand;
 
 public class EventListener implements Listener {
+    protected static void init(){
+        PacketListener.addListener(new PacketListener(null, InClickEntityPacket.class, new PacketListener.PacketHandler() {
+            @Override
+            public boolean handle(PacketListener listener, Player player, InPacket p) {
+                if(p instanceof InClickEntityPacket){
+                    InClickEntityPacket packet = (InClickEntityPacket)p;
+                    int action = packet.getAction();
+                    if(action==InClickEntityPacket.INTERACT||action==InClickEntityPacket.INTERACT_AT){
+                        return handleClick(player, Utils.MouseClickType.RIGHT);
+                    }
+                    if(action==InClickEntityPacket.ATTACK){
+                        return handleClick(player, Utils.MouseClickType.LEFT);
+                    }
+                }
+                return false;
+            }
+        }));
+    }
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         PacketListener.addGlobalListener(e.getPlayer());
@@ -34,6 +55,7 @@ public class EventListener implements Listener {
     }
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
+        PacketListener.removeGlobalListener(e.getPlayer());
         EditGUI.forceClose(e.getPlayer());
     }
 
@@ -67,17 +89,7 @@ public class EventListener implements Listener {
         }
     }
     private List<PacketListener> packetListeners = new ArrayList<>();
-    public void loadPacketListener(Player player){
-//        packetListeners.add(PacketListener.addListener())
-    }
-    public void unloadPacketListener() {
-        synchronized (packetListeners){
-            for(PacketListener i:packetListeners){
-                PacketListener.removeListener(i);
-                packetListeners.remove(i);
-            }
-        }
-    }
+
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
         Utils.MouseClickType type = Utils.MouseClickType.LEFT;
@@ -89,8 +101,8 @@ public class EventListener implements Listener {
         e.setCancelled(handleClick(e.getPlayer(),type));
 
     }
-    private boolean handleClick(Player player,Utils.MouseClickType type){
-        ItemStack item = player.getInventory().getItemInMainHand();
+    private static boolean handleClick(Player player,Utils.MouseClickType type){
+        ItemStack item = getItemInHand(player.getInventory());
         if (item != null && item.hasItemMeta()) {
             if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {
                 if(Item.onPlayerClick(player, item, type)) {

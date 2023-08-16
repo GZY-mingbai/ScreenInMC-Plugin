@@ -1,5 +1,7 @@
 package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
+import cn.mingbai.ScreenInMC.Utils.Utils;
+
 import java.lang.reflect.Field;
 
 public class InWindowClosePacket implements InPacket{
@@ -29,7 +31,7 @@ public class InWindowClosePacket implements InPacket{
 
     public int getContainerId() {
         try {
-            return (int) containerId.get(packet);
+            return Utils.getInt(containerId.get(packet));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

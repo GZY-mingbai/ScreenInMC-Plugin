@@ -46,10 +46,6 @@ public class WebBrowser extends Core {
             return data;
         }
 
-        @Override
-        public Object getStorableObject() {
-            return this;
-        }
 
 
     }
@@ -113,7 +109,20 @@ public class WebBrowser extends Core {
             }else{
                 defaultURI=Main.getConfiguration().getString("browser-main-page");
             }
-            browser.createBrowser(getScreen(), getScreen().getWidth() * 128, getScreen().getHeight() * 128,defaultURI);
+            try {
+                browser.createBrowser(getScreen(), getScreen().getWidth() * 128, getScreen().getHeight() * 128,defaultURI);
+            }catch (Error e){
+                e.printStackTrace();
+                return;
+            }
+            catch (RuntimeException e){
+                e.printStackTrace();
+                return;
+            }
+            catch (Throwable e){
+                e.printStackTrace();
+                return;
+            }
             renderRunnable = new ImmediatelyCancellableBukkitRunnable() {
                 @Override
                 public void run() {
@@ -123,7 +132,7 @@ public class WebBrowser extends Core {
                         Utils.Pair<Utils.Pair<Integer, Integer>, int[]> image = browser.onRender(getScreen());
                         if (image.getValue().length != 0) {
                             byte[] data = ImageUtils.imageToMapColors(image.getValue(), image.getKey().getKey(), image.getKey().getValue());
-                            getScreen().sendView(data);
+                            if(data!=null)getScreen().sendView(data);
                         }
                         int fps = 20;
                         if(setLock !=null&&storedData.frameRateLimit>=1&&storedData.frameRateLimit<=20) {
@@ -268,11 +277,12 @@ public class WebBrowser extends Core {
                 }
                 break;
             case "@controller-editor-cores-browser-core":
-                Browser newBrowser = Browser.getBrowser(new BrowserInstalledCoresList().getList()[(int) value]);
-                data.browser=newBrowser.getName();
                 if(browser!=null) {
                     browser.destroyBrowser(getScreen());
                 }
+                if((int)value==-1) {browser=null;return;}
+                Browser newBrowser = Browser.getBrowser(new BrowserInstalledCoresList().getList()[(int) value]);
+                data.browser=newBrowser.getName();
                 browser = newBrowser;
                 loadBrowser();
                 break;

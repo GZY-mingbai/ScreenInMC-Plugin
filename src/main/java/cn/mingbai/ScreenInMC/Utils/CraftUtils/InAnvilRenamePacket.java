@@ -58,13 +58,84 @@ public class InAnvilRenamePacket implements InPacket{
         return false;
     }
 
+    public int readVarIntFromBuffer(ByteBuf buf)
+    {
+        int i = 0;
+        int j = 0;
+
+        while (true)
+        {
+            byte b0 = buf.readByte();
+            i |= (b0 & 127) << j++ * 7;
+
+            if (j > 5)
+            {
+                throw new RuntimeException("VarInt too big");
+            }
+
+            if ((b0 & 128) != 128)
+            {
+                break;
+            }
+        }
+
+        return i;
+    }
+    public String readStringFromBuffer(ByteBuf buf,int maxLength)
+    {
+        int i;
+        try {
+            i=readVarIntFromBuffer(buf);
+        }catch (RuntimeException e){
+            return "";
+        }
+        if (i > maxLength * 4)
+        {
+            return "";
+        }
+        else if (i < 0)
+        {
+            return "";
+        }
+        else
+        {
+            byte[] data = new byte[i];
+            buf.readBytes(data);
+            String s = new String(data, StandardCharsets.UTF_8);
+
+            if (s.length() > maxLength)
+            {
+                return "";
+            }
+            else
+            {
+                return s;
+            }
+        }
+    }
+    public static boolean isAllowedCharacter(char character)
+    {
+        return character != 167 && character >= 32 && character != 127;
+    }
+    public static String filterAllowedCharacters(String input)
+    {
+        StringBuilder stringbuilder = new StringBuilder();
+
+        for (char c0 : input.toCharArray())
+        {
+            if (isAllowedCharacter(c0))
+            {
+                stringbuilder.append(c0);
+            }
+        }
+
+        return stringbuilder.toString();
+    }
     public String getName() {
         try {
             if(PacketPlayInItemNameClass==null){
                 ByteBuf buf = (ByteBuf) PacketData.get(packet);
-                byte[] data = new byte[1024];
-                buf.readBytes(data);
-                return new String(data, StandardCharsets.UTF_8);
+                return filterAllowedCharacters(readStringFromBuffer(buf,32767));
             }else {
                 return (String) Name.get(packet);
             }
