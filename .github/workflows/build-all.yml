@@ -69,34 +69,6 @@ jobs:
           cd src/main/cpp/
             sed -i "s/\r//g" "./build-linux-github.sh"
           ./build-linux-github.sh
-#      - uses: shaowenchen/debugger-action@v2
-#        name: debugger
-#        timeout-minutes: 30
-#        continue-on-error: true
-#        with:
-#          ngrok_token: ${{ secrets.NGROK_TOKEN }}
-      - name: Get latest commit hash
-        id: latest_commit
-        run: |
-          $url = "https://hub.spigotmc.org/stash/scm/spigot/spigot.git"
-          $hash = git ls-remote $url HEAD | foreach { $_.Split()[0] }
-          echo "::set-output name=hash::$hash"
-      - name: Cache Spigot
-        id: cache-spigot
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-spigot-files
-        with:
-          path: ~/.m2
-          key: 1.19.2-${{ steps.latest_commit.outputs.hash }}
-      - if: ${{ steps.cache-spigot.outputs.cache-hit != 'true' }}
-        name: Build Spigot
-        run: |
-          mkdir BuildTools
-          cd BuildTools
-          C:\msys64\usr\bin\wget.exe "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
-          java -jar BuildTools.jar --rev 1.19.2 --remapped
-          cd ..
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
@@ -107,17 +79,11 @@ jobs:
         with:
           arguments: jar
           gradle-version: '7.5.1'
-      - name: Remapping Jar File
-        run: |
-          New-Item -ItemType Directory -Path build/libs/remapped/ -Force
-          C:\msys64\usr\bin\wget.exe "https://repo.maven.apache.org/maven2/net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar" -O "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar"
-          java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.2-R0.1-SNAPSHOT\spigot-1.19.2-R0.1-SNAPSHOT-remapped-mojang.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC.jar -o build\libs\ScreenInMC-obf.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.2-R0.1-SNAPSHOT\minecraft-server-1.19.2-R0.1-SNAPSHOT-maps-mojang.txt --reverse
-          java -cp "$HOME\.m2\repository\net\md-5\SpecialSource\1.11.0\SpecialSource-1.11.0-shaded.jar;$HOME\.m2\repository\org\spigotmc\spigot\1.19.2-R0.1-SNAPSHOT\spigot-1.19.2-R0.1-SNAPSHOT-remapped-obf.jar" net.md_5.specialsource.SpecialSource --live -i build\libs\ScreenInMC-obf.jar -o build\libs\remapped\ScreenInMC.jar -m $HOME\.m2\repository\org\spigotmc\minecraft-server\1.19.2-R0.1-SNAPSHOT\minecraft-server-1.19.2-R0.1-SNAPSHOT-maps-spigot.csrg
       - name: Upload Plugin Jar File
         uses: actions/upload-artifact@master
         with:
           name: ScreenInMC
-          path: build/libs/remapped/
+          path: build/libs/
 #     - name: Delete workflow runs
 #       uses: Mattraks/delete-workflow-runs@v2.0.3
 #       with:
