@@ -121,3 +121,44 @@ click-to-set: "Click to modify"
 throw-to-remove: "Press %% to remove"
 input: "Input"
 output: "Output"
+command-error-arguments-count-error: "Error: Incorrect number of command arguments (should be: %%)"
+command-error-core-not-found: "Error: Core not found: %%"
+command-error-screen-facing-not-supported: "Error: Screen cannot be placed in direction %%"
+command-error-unknown: "Error: Unknown (%%)"
+command-error-screen-not-found: "Error: Screen not found: %%"
+command-success-put-screen: "Successfully placed screen: %%"
+command-success-remove-screen: "Successfully removed screen: %%"
+command-success-found-opencl-device: "Found OpenCL device: %%"
+command-error-number: "Error: Text is not a valid number: %%"
+command-success-set-piece-size: "Successfully set dithering piece size: %%x%%"
+command-error-core-is-not-web-browser: "Error: Screen core is not a web browser (WebBrowser)"
+command-success-web-browser-openurl: "Successfully opened URL"
+command-success-web-browser-refresh: "Successfully refreshed webpage"
+command-success-input: "Successfully input text"
+command-success-controller: "Successfully obtained ScreenInMC controller"
+command-error-is-not-player: "Command executor is not a player (this command must be executed by a player)"
+command-help: |-
+  Put a screen:
+    /screen putScreen <worldName> <X> <Y> <Z> <facing> <length> <width> <core>
+  Remove a screen:
+    /screen removeScreen <screenUUID>
+  List all OpenCL devices:
+    /screen listDevices
+  Set dithering piece size (only effective when using OpenCL devices for dithering):
+    /screen setPieceSize <size(1/2/4/8/16)>
+  Web browser core operations:
+    Open a URL:
+      /screen browser <screenUUID> openurl <URL>
+    Refresh webpage:
+      /screen browser <screenUUID> refresh
+  Input text to screen:
+    /screen input <screenUUID> <text> ...
+  ★Get ScreenInMC controller:
+    /screen controller
+controller-editor-cores-video-player-name: "Video Player(*.smv)"
+controller-editor-cores-video-player-details: |-
+  Used to play videos in .smv format (preprocessed by ScreenInMC preprocessor)
+  Use java -jar ScreenInMC.jar to see the usage of the ScreenInMC preprocessor
+controller-editor-cores-video-player-loop: "Loop"
+controller-editor-cores-video-player-path: "Video Path"
+controller-editor-cores-video-player-pause: "Pause"

@@ -69,7 +69,7 @@ public abstract class Core implements Cloneable {
             if (i.getClass().getName().equals(data.coreClassName)) {
                 try {
                     Core core = (Core) i.clone();
-                    if(core.storedData!=null) {
+                    if(data.data!=null&&core.storedData!=null) {
                         core.storedData = (StoredData) ((JSONUtils.JSONObject)data.data).write(core.storedData.getClass());
                     }
                     for(CoreData.RedstoneBridgeData r: data.redstone){

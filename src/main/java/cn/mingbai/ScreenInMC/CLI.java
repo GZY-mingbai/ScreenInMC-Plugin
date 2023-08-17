@@ -35,17 +35,11 @@ public class CLI {
             System.load(file.getAbsolutePath());
         } catch (Exception e) {
         }
-        PaletteLoader paletteLoader = new ConfigPaletteLoader();
-        try {
-            ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
-        } catch (Throwable e) {
-            initImageUtils();
-        }
+
         int device = -3;
         int pieceSize = 4;
         File ffmpegFile = null;
         File videoFile = null;
-        File tempDir = new File("./temp/");
         File outputFile = new File("output.smv");
         boolean watch = false;
         boolean highSpeed = false;
@@ -54,6 +48,7 @@ public class CLI {
         boolean loop = false;
         int border = 0;
         String watchPath = "";
+        String config = "1.17";
         List<String> ffmpegArgs = new ArrayList<>();
         if (args[0].startsWith("-")) {
             for (int i = 0; i < args.length; i++) {
@@ -73,13 +68,6 @@ public class CLI {
                         throw new RuntimeException("参数错误");
                     } else {
                         videoFile = new File(args[i + 1]);
-                    }
-                }
-                if (args[i].equals("-t")) {
-                    if (i == args.length - 1) {
-                        throw new RuntimeException("参数错误");
-                    } else {
-                        tempDir = new File(args[i + 1]);
                     }
                 }
                 if (args[i].equals("-o")) {
@@ -121,7 +109,7 @@ public class CLI {
                     System.out.println("-3\t自动选择");
                     System.out.println("-2\tJava层 CPU抖色");
                     System.out.println("-1\tC++层 CPU抖色");
-                    String[] plats = ImageUtils.getOpenCLPlatforms();
+                    String[] plats = GPUDither.getPlatforms();
                     for (int ii = 0; ii < plats.length; ii++) {
                         System.out.println(ii + "\t" + plats[ii]);
                     }
@@ -130,7 +118,7 @@ public class CLI {
                 if (args[i].equals("-h")) {
                     System.out.println("ScreenInMC 预处理器");
                     System.out.println();
-                    System.out.println("处理视频 Processor [-v 视频文件] [-o 输出文件(.smv)] ([-f ffmpeg路径] [-t 临时目录] [-d 使用设备] [-p 分块大小] [-g(使用GZip压缩)] [-a ffmpeg额外参数(放在最后)] [-s 使用极速模式(实验性)])");
+                    System.out.println("处理视频 Processor [-v 视频文件] [-o 输出文件(.smv)] ([-f ffmpeg路径] [-d 使用设备] [-p 分块大小] [-g(使用GZip压缩)] [-a ffmpeg额外参数(放在最后)] [-s 使用极速模式] [-c 调色板(1.8, 1.8.1, 1.12, 1.16, 1.17)])");
                     System.out.println("播放已处理视频 Processor [-w 视频文件/链接(.smv)] ([-x(循环播放)] [-b 边框大小])");
                     System.out.println("列出可用设备 Processor -l");
                     return;
@@ -148,6 +136,13 @@ public class CLI {
                         border = Integer.parseInt(args[i + 1]);
                     }
                 }
+                if(args[i].equals("-c")){
+                    if (i == args.length - 1) {
+                        throw new RuntimeException("参数错误");
+                    } else {
+                        config = args[i + 1];
+                    }
+                }
                 if (args[i].equals("-a")) {
                     ffmpegArg = true;
                 }
@@ -160,6 +155,8 @@ public class CLI {
         if (!watch && (videoFile == null || !videoFile.exists())) {
             throw new RuntimeException("没有-v参数或文件不存在");
         }
+        PaletteLoader paletteLoader = new ConfigPaletteLoader();
+
         if (watch) {
             VideoProcessor.DitheredVideo video = VideoProcessor.readDitheredVideo(watchPath, loop);
             BufferedImage nowImage = new BufferedImage(video.getWidth(), video.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -223,8 +220,10 @@ public class CLI {
                 }
             }
         }
-        if (tempDir.exists()) {
-            FileUtils.deleteDir(tempDir);
+        try {
+            ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
+        } catch (Throwable e) {
+            initImageUtils();
         }
         if (device == -3) {
             device = getBestOpenCLDevice();
@@ -248,8 +247,10 @@ public class CLI {
             ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
         }
         ImageUtils.setPieceSize(pieceSize);
-        VideoProcessor.generateDitheredVideo(ffmpegFile, tempDir, videoFile, outputFile, gzip, ffmpegArgs.toArray(new String[0]));
-
+        VideoProcessor.GenerateProcess process = VideoProcessor.generateDitheredVideo(ffmpegFile, videoFile, outputFile, gzip, ffmpegArgs.toArray(new String[0]));
+        if(process.getNowState()== VideoProcessor.GenerateProcess.ERROR){
+            process.getError().printStackTrace();
+        }
     }
 
     private static void initImageUtils() {

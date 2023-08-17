@@ -121,3 +121,44 @@ click-to-set: "點擊來修改"
 throw-to-remove: "按下%%來刪除"
 input: "輸入"
 output: "輸出"
+command-error-arguments-count-error: "錯誤: 命令參數數量錯誤(應為: %%)"
+command-error-core-not-found: "錯誤: 未找到核心: %%"
+command-error-screen-facing-not-supported: "錯誤: 屏幕無法放置在方向 %%"
+command-error-unknown: "錯誤: 未知(%%)"
+command-error-screen-not-found: "錯誤: 未找到屏幕: %%"
+command-success-put-screen: "放置屏幕成功: %%"
+command-success-remove-screen: "刪除屏幕成功: %%"
+command-success-found-opencl-device: "發現OpenCL設備: %%"
+command-error-number: "錯誤: 文本不為有效數字: %%"
+command-success-set-piece-size: "設置抖色分塊大小成功: %%x%%"
+command-error-core-is-not-web-browser: "錯誤: 屏幕核心不為瀏覽器(WebBrowser)"
+command-success-web-browser-openurl: "打開鏈接成功"
+command-success-web-browser-refresh: "網頁刷新成功"
+command-success-input: "輸入文本成功"
+command-success-controller: "獲取 ScreenInMC 控制器 成功"
+command-error-is-not-player: "指令執行者不是玩家(該指令必須由玩家執行)"
+command-help: |-
+  放置一塊屏幕:
+    /screen putScreen <世界名> <X> <Y> <Z> <方向> <長度> <寬度> <核心>
+  移除一塊屏幕:
+    /screen removeScreen <屏幕UUID>
+  列出所有OpenCL設備:
+    /screen listDevices
+  設置抖色分塊大小(僅使用OpenCL設備進行抖色時生效):
+    /screen setPieceSize <大小(1/2/4/8/16)>
+  瀏覽器核心操作:
+    打開一個URL:
+      /screen browser <屏幕UUID> openurl <URL>
+    刷新網頁:
+      /screen browser <屏幕UUID> refresh
+  輸入文本到屏幕:
+    /screen input <屏幕UUID> <文本> ...
+  ★獲取 ScreenInMC 控制器:
+    /screen controller
+controller-editor-cores-video-player-name: "視頻播放器(*.smv)"
+controller-editor-cores-video-player-details: |-
+  可用於播放 .smv 格式的視頻(經過 ScreenInMC預處理器 處理後的視頻)
+  使用 java -jar ScreenInMC.jar 可查看 ScreenInMC預處理器 的使用方法
+controller-editor-cores-video-player-loop: "循環"
+controller-editor-cores-video-player-path: "視頻路徑"
+controller-editor-cores-video-player-pause: "暫停"

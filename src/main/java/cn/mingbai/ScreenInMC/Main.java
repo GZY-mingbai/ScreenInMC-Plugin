@@ -20,6 +20,7 @@ import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -147,13 +148,17 @@ public class Main extends JavaPlugin {
         }
     }
 
-    public static void sendMessage(Player player, String message) {
+    public static void sendMessage(CommandSender player, String message) {
         player.sendMessage("§6[ScreenInMC] §f" + message);
     }
-    public static void sendMessage(Player player, LangUtils.JsonText message) {
+    public static void sendMessage(CommandSender player, LangUtils.JsonText message) {
         LangUtils.JsonText jsonText = new LangUtils.JsonText("[ScreenInMC] ").setColor("gold").addExtra(message);
-        Object packet = OutSystemMessagePacket.create(jsonText);
-        CraftUtils.sendPacket(player,packet);
+        if(player instanceof Player) {
+            Object packet = OutSystemMessagePacket.create(jsonText);
+            CraftUtils.sendPacket((Player) player, packet);
+        }else{
+            player.sendMessage(jsonText.toRichString());
+        }
     }
 
     @Override

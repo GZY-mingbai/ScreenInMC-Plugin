@@ -1,11 +1,17 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
+import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import cn.mingbai.ScreenInMC.VideoProcessor;
+import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 
 public class VideoPlayer extends Core {
 
@@ -40,23 +46,27 @@ public class VideoPlayer extends Core {
     public static class VideoPlayerStoredData implements StoredData{
         public String path=null;
         public boolean loop=false;
+        public int frameRateLimit = 18;
 
         @Override
         public StoredData clone() {
-            return null;
+            VideoPlayerStoredData newData =new VideoPlayerStoredData();
+            newData.path = path;
+            newData.loop = loop;
+            newData.frameRateLimit =frameRateLimit;
+            return newData;
         }
-
-
     }
 
 
     @Override
     public StoredData createStoredData() {
-        return null;
+        return new VideoPlayerStoredData();
     }
 
     @Override
     public void onCreate() {
+        setLock=new Object();
         try {
             VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
             if (data != null) {
@@ -70,11 +80,9 @@ public class VideoPlayer extends Core {
     }
 
     public void stop() {
-        if (video == null) {
-            return;
-        }
         if (isPlaying && playRunnable != null) {
             isPlaying = false;
+            isPause = true;
             playRunnable.cancel();
             while (playRunnable != null) {
                 try {
@@ -86,13 +94,26 @@ public class VideoPlayer extends Core {
     }
 
     public void play() {
-        if (video == null) {
-            return;
-        }
         stop();
         if (!isPlaying) {
             VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
-            video = VideoProcessor.readDitheredVideo(data.path, data.loop);
+            int fps = 20;
+            if(setLock !=null&&data.frameRateLimit>=1&&data.frameRateLimit<=20) {
+                synchronized (setLock) {
+                    fps=data.frameRateLimit;
+                }
+            }
+            int needToWait = 1000/fps;
+            try {
+                video = VideoProcessor.readDitheredVideoWithPlugin(new URI(data.path), data.loop);
+                if(video.getWidth()!= getScreen().getWidth()*128||video.getHeight()!=getScreen().getHeight()*128){
+                    throw new Exception("Screen size is not true: "+video.getWidth()+"x"+video.getHeight()+" (Need "+getScreen().getWidth()*128+"x"+getScreen().getHeight()*128+")");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                stop();
+                return;
+            }
             isPlaying = true;
             isPause = false;
             playRunnable = new ImmediatelyCancellableBukkitRunnable() {
@@ -101,15 +122,23 @@ public class VideoPlayer extends Core {
                     while (isPlaying && !playRunnable.isCancelled()) {
                         if (isPause) {
                             try {
-                                Thread.sleep(50);
+                                Thread.sleep(needToWait);
                                 continue;
                             } catch (Exception e) {
                             }
                         }
                         long start = System.currentTimeMillis();
                         byte[] data = video.readAFrame();
+                        if (data.length==0){
+                            playRunnable = null;
+                            isPlaying = false;
+                            isPause = true;
+                            video=null;
+                            stop();
+                            return;
+                        }
                         getScreen().sendView(data);
-                        long wait = 50 - (System.currentTimeMillis() - start);
+                        long wait = needToWait - (System.currentTimeMillis() - start);
                         if (wait > 0) {
                             try {
                                 Thread.sleep(wait);
@@ -119,23 +148,22 @@ public class VideoPlayer extends Core {
                     }
                     playRunnable = null;
                     isPlaying = false;
-                    isPause = false;
+                    isPause = true;
+                    video=null;
                 }
             };
-            playRunnable.runTask(Main.thisPlugin());
+            playRunnable.runTaskAsynchronously(Main.thisPlugin());
         }
     }
 
     public void setPause(boolean isPause) {
+        if(video==null) {this.isPause = true;return;}
         this.isPause = isPause;
     }
 
     @Override
     public void onUnload() {
-        if (playRunnable != null) {
-            isPlaying = false;
-            playRunnable.cancel();
-        }
+        stop();
     }
 
     @Override
@@ -147,4 +175,85 @@ public class VideoPlayer extends Core {
     public void onTextInput(String text) {
 
     }
+
+    public boolean isPause() {
+        if(video==null)return true;
+        return isPause;
+    }
+
+    @Override
+    public void addToEditGUI() {
+        EditGUI.registerCoreInfo(new EditGUI.EditGUICoreInfo(
+                "@controller-editor-cores-video-player-name",
+                this,
+                "@controller-editor-cores-video-player-details",
+                "gold",
+                Material.ITEM_FRAME,
+                new LinkedHashMap(){
+                    {
+                        put("@controller-editor-cores-video-player-path",String.class);
+                        put("@controller-editor-cores-video-player-loop",Boolean.class);
+                        put("@controller-editor-cores-video-player-pause", Boolean.class);
+                        put("@controller-editor-cores-frame-rate-limit", Integer.class);
+                    }
+                }));
+    }
+    @Override
+    public Object getEditGUISettingValue(String name) {
+        VideoPlayerStoredData data = (VideoPlayerStoredData)getStoredData();
+        switch (name){
+            case "@controller-editor-cores-frame-rate-limit":
+                return (int)data.frameRateLimit;
+            case "@controller-editor-cores-video-player-path":
+                return (String)data.path;
+            case "@controller-editor-cores-video-player-loop":
+                return (boolean)data.loop;
+            case "@controller-editor-cores-video-player-pause":
+                return isPause();
+        }
+        return null;
+    }
+    @Override
+    public void setEditGUISettingValue(String name, Object value) {
+        VideoPlayerStoredData data = (VideoPlayerStoredData)getStoredData();
+        switch (name) {
+            case "@controller-editor-cores-frame-rate-limit":
+                int v = (int)value;
+                if(v>=1&&v<=20){
+                    if(setLock !=null) {
+                        stop();
+                        synchronized (setLock) {
+                            data.frameRateLimit = v;
+                        }
+                        play();
+                    }
+                }
+                break;
+            case "@controller-editor-cores-video-player-path":
+                if(setLock !=null) {
+                    stop();
+                    synchronized (setLock) {
+                        data.path = (String) value;
+                    }
+                    play();
+                }
+                break;
+            case "@controller-editor-cores-video-player-loop":
+                if(setLock !=null) {
+                    stop();
+                    synchronized (setLock) {
+                        data.loop = (boolean) value;
+                    }
+                    play();
+                }
+                break;
+            case "@controller-editor-cores-video-player-pause":
+                setPause((Boolean) value);
+                if(video==null&&((Boolean)value)==false){
+                    play();
+                }
+                break;
+        }
+    }
+    private Object setLock =null;
 }

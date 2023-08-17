@@ -479,6 +479,28 @@ public class Utils {
             return clicked;
         }
     }
+    public static InputStream getStreamFromURI(URI uri) {
+        if(uri.getScheme().equals("screen")&&"local".equals(uri.getHost())){
+            Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
+            if(path.startsWith(Paths.get(Main.PluginFilesPath+"Files"))){
+                try {
+                    FileInputStream inputStream = new FileInputStream(path.toFile());
+                    return inputStream;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        try {
+            URL url = uri.toURL();
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            return conn.getInputStream();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
     public static byte[] getDataFromURI(URI uri,boolean throwException) {
         if(uri.getScheme().equals("screen")&&"local".equals(uri.getHost())){
             Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
