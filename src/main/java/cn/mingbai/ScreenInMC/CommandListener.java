@@ -316,14 +316,14 @@ public class CommandListener implements TabExecutor {
                 }
                 return true;
             }
-//            if (args[0].equalsIgnoreCase("installChromium")) {
-//                new Thread() {
-//                    @Override
-//                    public void run() {
-//                        new Chromium().installCore();
-//                    }
-//                }.start();
-//            }
+            if (args[0].equalsIgnoreCase("installChromium")) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        new Chromium().installCore();
+                    }
+                }.start();
+            }
         }
         catch (Error e){
             e.printStackTrace();
