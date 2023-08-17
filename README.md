@@ -1,6 +1,8 @@
 # ScreenInMC-Plugin
 ![ScreenInMC Logo(Temporary) By zhuWin](https://ghproxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/logo.png?raw=true)
 # 欢迎使用 ScreenInMC Bukkit插件！
+* [到 Actions 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/actions/workflows/build-all.yml)
+
 此插件可以通过地图画，在Minecraft中拼接出一个显示器
 
 ![Example](https://ghproxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/example.png?raw=true)  
