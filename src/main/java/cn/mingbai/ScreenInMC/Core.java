@@ -136,7 +136,7 @@ public abstract class Core implements Cloneable {
         if (screen != null) {
             isUnloaded=true;
             for(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> i: redstoneBridge.getRedstoneSignalInterfaces()){
-                i.getValue().disconnect();
+                i.getValue().disconnect(false);
             }
             onUnload();
         }

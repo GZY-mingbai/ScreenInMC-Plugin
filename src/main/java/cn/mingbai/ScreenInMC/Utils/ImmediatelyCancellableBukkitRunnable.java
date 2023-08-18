@@ -11,6 +11,7 @@ public abstract class ImmediatelyCancellableBukkitRunnable extends BukkitRunnabl
     @Override
     public synchronized void cancel(){
         cancelled=true;
+        if(cancelled) return;
         try {
             super.cancel();
         }catch (Exception e){

@@ -3,8 +3,12 @@ package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 import io.netty.channel.Channel;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Repeater;
 import org.bukkit.entity.Player;
+import org.bukkit.material.Diode;
+import org.bukkit.material.MaterialData;
 
 import java.io.File;
 import java.lang.reflect.*;
@@ -174,23 +178,13 @@ public class CraftUtils {
                 }
 
             }
-            Class blockClass = Block.class;
-            try {
-                SetData = blockClass.getDeclaredMethod("setData",byte.class,boolean.class);
-            }catch (Exception e){}
-            try {
-                GetBlockData = blockClass.getDeclaredMethod("getBlockData");
-                Class blockDataClass = GetBlockData.getReturnType();
-                SetBlockData = blockClass.getDeclaredMethod("setBlockData",blockDataClass,boolean.class);
-            }catch (Exception e){}
-            try{
-                RedstoneWireClass = Class.forName("org.bukkit.block.data.type.RedstoneWire");
-                Class AnaloguePowerableClass = Class.forName("org.bukkit.block.data.AnaloguePowerable");
-                RedstoneWireSetPower = AnaloguePowerableClass.getDeclaredMethod("setPower",int.class);
-            }catch (Exception e){}
+        Class blockClass = Block.class;
+        try {
+            SetData = blockClass.getDeclaredMethod("setData",byte.class,boolean.class);
+        }catch (Exception e){}
+
     }
-    static Class RedstoneWireClass;
-    static Method RedstoneWireSetPower;
+    static Method SetData;
     static Constructor PacketPlayOutWorldParticlesConstructor;
     static Class PacketPlayOutWorldParticlesClass;
     static Class EnumParticleClass;
@@ -362,46 +356,90 @@ public class CraftUtils {
             throw new RuntimeException(e);
         }
     }
-    //在1.13及以上版本，若存在则返回RedstoneWire 在1.12及以下版本，若存在则返回Block
-    //不存在都返回null
-    static Method SetData;
-    static Method GetBlockData;
-
-    static Method SetBlockData;
-
-    public static Object checkRedstoneWire(Location location){
+    public static boolean isRepeater(Material material){
+        String name = material.name().toLowerCase();
+        if(name.contains("diode")||name.contains("repeater")) return true;
+        return false;
+    }
+    public static boolean checkRedstoneRepeater(Location location){
         if(location==null){
-            return null;
+            return false;
         }
         if(location.getBlock()==null){
-            return null;
+            return false;
         }
-        if(GetBlockData!=null&& RedstoneWireClass !=null){
-            try {
-                Object data = GetBlockData.invoke(location.getBlock());
-                if(RedstoneWireClass.isAssignableFrom(data.getClass())) {
-                    return data;
-                }else {
-                    return null;
-                }
-            }catch (Exception e){
-                return null;
+        return isRepeater(location.getBlock().getType());
+    }
+    public static Material getRepeater(){
+        if(CraftUtils.minecraftVersion<=12) {
+            return Material.valueOf("DIODE_BLOCK_OFF");
+        }else{
+            return Material.valueOf("REPEATER");
+        }
+    }
+    public static BlockFace getRepeaterFacing(Block block){
+        if(CraftUtils.minecraftVersion<=12){
+            MaterialData data = block.getState().getData();
+            if(data instanceof Diode){
+                return ((Diode)data).getFacing().getOppositeFace();
             }
-        }else if(SetData!=null){
-            if(location.getBlock().getType().equals(Material.REDSTONE_WIRE)) return location.getBlock();
+        }else{
+            BlockData data = block.getState().getBlockData();
+            if(data instanceof Repeater){
+                return ((Repeater)data).getFacing();
+            }
         }
         return null;
     }
-    public static void setRedstoneWirePower(Block block,Object wire,int strength){
-        try {
-            if(RedstoneWireClass !=null&&RedstoneWireClass.isAssignableFrom(wire.getClass())){
-                RedstoneWireSetPower.invoke(wire,strength);
-                SetBlockData.invoke(block,wire,true);
-            }else if(wire instanceof Block){
-                SetData.invoke(wire,(byte)strength,true);
+
+    public static void setRepeaterFacing(Block block,BlockFace face){
+        if(CraftUtils.minecraftVersion<=12){
+            MaterialData data = block.getState().getData();
+            if(data instanceof Diode){
+                ((Diode)data).setFacingDirection(face.getOppositeFace());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            try {
+                SetData.invoke(block,data.getData(),true);
+            } catch (Exception e) {
+            }
+        }else{
+            BlockData data = block.getState().getBlockData();
+            if(data instanceof Repeater){
+                ((Repeater)data).setFacing(face);
+            }
+            block.setBlockData(data,true);
+        }
+    }
+    public static void activeRepeater(Block block){
+        if(CraftUtils.minecraftVersion<=12){
+            MaterialData data = block.getState().getData();
+            block.setType(Material.valueOf("DIODE_BLOCK_ON"));
+            try {
+                SetData.invoke(block,data.getData(),true);
+            } catch (Exception e) {
+            }
+        }else{
+            BlockData data = block.getState().getBlockData();
+            if(data instanceof Repeater){
+                ((Repeater)data).setPowered(true);
+            }
+            block.setBlockData(data,true);
+        }
+    }
+    public static void inactiveRepeater(Block block){
+        if(CraftUtils.minecraftVersion<=12){
+            MaterialData data = block.getState().getData();
+            block.setType(Material.valueOf("DIODE_BLOCK_OFF"));
+            try {
+                SetData.invoke(block,data.getData(),true);
+            } catch (Exception e) {
+            }
+        }else{
+            BlockData data = block.getState().getBlockData();
+            if(data instanceof Repeater){
+                ((Repeater)data).setPowered(false);
+            }
+            block.setBlockData(data,true);
         }
     }
 }

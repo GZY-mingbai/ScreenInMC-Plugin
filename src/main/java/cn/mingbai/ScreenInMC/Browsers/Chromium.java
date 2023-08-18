@@ -290,8 +290,13 @@ public class Chromium extends Browser {
             }
             System.setProperty("java.library.path", System.getProperty("java.library.path") + System.getProperty("path.separator") +
                     new File(Main.PluginFilesPath + "Chromium/bin/lib/" + libSystemName + "/").getAbsolutePath());
-            cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.load(Main.PluginFilesPath, libSystemName, Utils.getLibraryPrefix(system.getKey()),addLib);
+            cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.load(Main.PluginFilesPath, libSystemName,
+                    Utils.getLibraryPrefix(system.getKey()),addLib);
+            if(libSystemName.contains("win")){
+                cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.linkJdkLibrary("jawt.dll");
+            }
             if(libSystemName.contains("linux")){
+                cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.linkJdkLibrary("libjawt.so");
                 cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.loadLinuxLibraries();
             }
             org.cef.CefSettings settings = new org.cef.CefSettings();

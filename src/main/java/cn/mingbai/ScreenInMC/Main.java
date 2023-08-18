@@ -206,7 +206,6 @@ public class Main extends JavaPlugin {
         Core.addCore(new VideoPlayer());
         Core.addCore(new WebBrowser());
         Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
-        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
         EventListener.init();
         int device = config.getInt("opencl-device");
         if (device == -3) {
@@ -238,5 +237,6 @@ public class Main extends JavaPlugin {
         for(Player i:Bukkit.getOnlinePlayers()){
             PacketListener.addGlobalListener(i);
         }
+        Bukkit.getServer().getPluginManager().registerEvents(new EventListener(), thisPlugin);
     }
 }

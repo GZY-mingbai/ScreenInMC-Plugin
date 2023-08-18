@@ -3,12 +3,13 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.InClickEntityPacket;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.InPacket;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,12 +18,15 @@ import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.material.Diode;
+import org.bukkit.material.MaterialData;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static cn.mingbai.ScreenInMC.Controller.Item.CONTROLLER;
 import static cn.mingbai.ScreenInMC.Controller.Item.onPlayerSwitchMode;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.getRepeaterFacing;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.getItemInHand;
 
 public class EventListener implements Listener {
@@ -78,12 +82,35 @@ public class EventListener implements Listener {
         synchronized (RedstoneBridge.outputBlocks) {
             for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.outputBlocks){
                 if(e.getBlock().getLocation().equals(i.getBlockLocation())){
-                    e.setNewCurrent(e.getOldCurrent());
+                    if(!i.checkRedstoneRepeaterAndUpdate()) return;
+                    e.setNewCurrent(15);
+                }
+                BlockFace face = getRepeaterFacing(i.getBlockLocation().getBlock());
+                if(face==null){
+                    if(!i.checkRedstoneRepeaterAndUpdate())return;
+                }else{
+                    if(e.getBlock().getRelative(face).getLocation().equals(i.getBlockLocation())){
+                        e.setNewCurrent(i.getNowPower());
+                    }
                 }
             }
-            for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.inputBlocks){
-                if(e.getBlock().getLocation().equals(i.getBlockLocation())){
-                    i.tryReceiveRedstoneSignal(e.getNewCurrent());
+        }
+        synchronized (RedstoneBridge.inputBlocks) {
+            for (RedstoneBridge.RedstoneSignalInterface i : RedstoneBridge.inputBlocks) {
+                if (e.getBlock().getLocation().equals(i.getBlockLocation())) {
+                    if (!i.checkRedstoneRepeaterAndUpdate()) return;
+                    e.setNewCurrent(0);
+                }
+                BlockFace face = getRepeaterFacing(i.getBlockLocation().getBlock());
+                if(face==null){
+                    if(!i.checkRedstoneRepeaterAndUpdate())return;
+                }else{
+                    if(e.getBlock().getRelative(face).getLocation().equals(i.getBlockLocation())){
+                        e.setNewCurrent(e.getOldCurrent());
+                    }
+                    if(e.getBlock().getRelative(face.getOppositeFace()).getLocation().equals(i.getBlockLocation())){
+                        i.tryReceiveRedstoneSignal(e.getNewCurrent());
+                    }
                 }
             }
         }
@@ -92,14 +119,35 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
+        if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
+            if(CraftUtils.isRepeater(e.getClickedBlock().getType())){
+                synchronized (RedstoneBridge.outputBlocks) {
+                    for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.outputBlocks){
+                        if(e.getClickedBlock().getLocation().equals(i.getBlockLocation())){
+                            e.setCancelled(true);
+                        }
+                    }
+                }
+                synchronized (RedstoneBridge.inputBlocks) {
+                    for (RedstoneBridge.RedstoneSignalInterface i : RedstoneBridge.inputBlocks) {
+                        if(e.getClickedBlock().getLocation().equals(i.getBlockLocation())){
+                            e.setCancelled(true);
+                        }
+                    }
+                }
+            }
+        }
+
         Utils.MouseClickType type = Utils.MouseClickType.LEFT;
         if (e.getAction().equals(Action.LEFT_CLICK_AIR) || e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             type = Utils.MouseClickType.LEFT;
         } else if (e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             type = Utils.MouseClickType.RIGHT;
         }
-        e.setCancelled(handleClick(e.getPlayer(),type));
-
+        boolean cancel = handleClick(e.getPlayer(),type);
+        if(!e.isCancelled()) {
+            e.setCancelled(cancel);
+        }
     }
     private static boolean handleClick(Player player,Utils.MouseClickType type){
         ItemStack item = getItemInHand(player.getInventory());

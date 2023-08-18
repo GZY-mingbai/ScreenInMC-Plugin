@@ -3,9 +3,11 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.RedstoneWire;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -16,8 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.checkRedstoneWire;
-import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.setRedstoneWirePower;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.*;
 
 public class RedstoneBridge implements Cloneable {
     private Core core;
@@ -67,10 +68,7 @@ public class RedstoneBridge implements Cloneable {
                 disconnect();
             }
             synchronized (this) {
-                Object wire = checkRedstoneWire(block);
-                if (wire != null) {
-                    this.block = block;
-                    isConnected = true;
+                if (checkRedstoneRepeater(block)) {
                     if (isInput) {
                         synchronized (outputBlocks){
                             for(RedstoneSignalInterface loc:outputBlocks){
@@ -101,14 +99,17 @@ public class RedstoneBridge implements Cloneable {
                             outputBlocks.add(this);
                         }
                     }
+                    this.block = block;
+                    isConnected = true;
+                    setResetRunnable(block);
+                    resetRunnable.runTask(Main.thisPlugin());
                 }
             }
         }
         public void tryReceiveRedstoneSignal(int value){
             boolean disconnect = false;
             synchronized (this) {
-                Object wire = checkRedstoneWire(block);
-                if(wire==null){
+                if(!checkRedstoneRepeater(block)){
                     disconnect=true;
                 }else {
                     if (isInput) {
@@ -127,7 +128,10 @@ public class RedstoneBridge implements Cloneable {
         public void onReceiveRedstoneSignal(Core core,int strength/*From 1 to 15*/) {
 
         }
-        public void disconnect(){
+        public void disconnect() {
+            disconnect(true);
+        }
+        public void disconnect(boolean update){
             synchronized (this) {
                 if(isInput){
                     synchronized (inputBlocks) {
@@ -138,63 +142,77 @@ public class RedstoneBridge implements Cloneable {
                         outputBlocks.remove(this);
                     }
                 }
+                Location oldBlock =this.block;
                 this.block = null;
                 isConnected = false;
+                if(update){
+                    if(!isInput){
+                        setResetRunnable(oldBlock);
+                        resetRunnable.runTask(Main.thisPlugin());
+                    }
+                }
             }
         }
         private ImmediatelyCancellableBukkitRunnable resetRunnable = null;
+        private int nowPower = 0;
+        private void setResetRunnable(Location loc){
+            if(resetRunnable!=null&&!resetRunnable.isCancelled()){
+                resetRunnable.cancel();
+            }
+            resetRunnable = new ImmediatelyCancellableBukkitRunnable() {
+                @Override
+                public void run() {
+                    if(this.isCancelled()){
+                        return;
+                    }
+                    if (checkRedstoneRepeater(loc)) {
+                        Block block = loc.getBlock();
+                        BlockFace face = getRepeaterFacing(block);
+                        block.setType(Material.AIR);
+                        block.setType(getRepeater());
+                        setRepeaterFacing(block,face);
+                        if(!isInput){
+                            activeRepeater(block);
+                        }else{
+                            inactiveRepeater(block);
+                        }
+                    }
+                }
+            };
+        }
+
         public void sendRedstoneSignal(int strength) {
             synchronized (this) {
                 if (!isConnected) {
                     return;
                 }
                 if (!isInput) {
-                    if (block.getBlock().getType().equals(Material.REDSTONE_WIRE)) {
-                        Object wire = checkRedstoneWire(block);
-                        if (wire != null) {
-                            final RedstoneSignalInterface signalInterface = this;
-                            BukkitRunnable runnable = new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    Object wire = checkRedstoneWire(signalInterface.block);
-                                    if (wire != null) {
-                                        setRedstoneWirePower(signalInterface.block.getBlock(),wire,strength);
-                                    }
-                                    if (wire == null) {
-                                        disconnect();
-                                    }
-                                }
-                            };
-                            if(resetRunnable!=null&&!resetRunnable.isCancelled()){
-                                resetRunnable.cancel();
+                    if (checkRedstoneRepeater(block)) {
+                        nowPower = strength;
+                        CraftUtils.inactiveRepeater(block.getBlock());
+                        final Location lastBlock = this.block;
+                        BukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if(RedstoneSignalInterface.this.block.equals(lastBlock))
+                                CraftUtils.activeRepeater(RedstoneSignalInterface.this.block.getBlock());
                             }
-                            resetRunnable = new ImmediatelyCancellableBukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    if(this.isCancelled()){
-                                        return;
-                                    }
-                                    Object wire = checkRedstoneWire(signalInterface.block);
-                                    if (wire != null) {
-                                        signalInterface.block.getBlock().getState().update();
-                                    }
-                                    if (wire == null) {
-                                        disconnect();
-                                    }
-                                }
-                            };
-                            runnable.runTask(Main.thisPlugin());
-                            resetRunnable.runTaskLater(Main.thisPlugin(), 1L);
-                        }
-                        if (wire == null) {
-                            disconnect();
-                        }
-
+                        };
+                        runnable.runTaskLater(Main.thisPlugin(),1L);
+                    }else {
+                        disconnect();
                     }
                 } else {
                     this.onReceiveRedstoneSignal(bridge.core,strength);
                 }
             }
+        }
+        public boolean checkRedstoneRepeaterAndUpdate(){
+            if(!CraftUtils.checkRedstoneRepeater(block)){
+                disconnect();
+                return false;
+            }
+            return true;
         }
 
         @Override
@@ -202,6 +220,10 @@ public class RedstoneBridge implements Cloneable {
             RedstoneSignalInterface newInterface = (RedstoneSignalInterface) super.clone();
             newInterface.isConnected=false;
             return newInterface;
+        }
+
+        public int getNowPower() {
+            return nowPower;
         }
     }
     private Map<String,RedstoneSignalInterface> interfaces = new LinkedHashMap<>();

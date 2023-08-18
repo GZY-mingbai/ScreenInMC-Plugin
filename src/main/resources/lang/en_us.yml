@@ -35,14 +35,14 @@ controller-edit-mode-info: |-
   to edit the settings of a screen
 controller-connect-mode-info: |-
   In this mode, use %right-click% to 
-  connect a screen to a redstone wire
-controller-connect-start: "Use %right-click% to click on a redstone wire"
+  connect a screen to a redstone repeater
+controller-connect-start: "Use %right-click% to click on a redstone repeater"
 controller-connect-success: "Connection successful"
 controller-place-start: "Loading screen core"
 controller-place-success: "Screen placed at %location% Facing: %facing% Size: %size%"
 controller-place-failed-facing-not-supported: "The screen cannot be placed in the %% direction."
-controller-connect-failed-input: "Connection Failed: The redstone has already been connected as an input"
-controller-connect-failed-output: "Connection Failed: The redstone has already been connected as an output"
+controller-connect-failed-input: "Connection Failed: The redstone repeater has already been connected as an input"
+controller-connect-failed-output: "Connection Failed: The redstone repeater has already been connected as an output"
 controller-editor-gui-title: "ScreenInMC Editor"
 vnc-client-address: "Address"
 vnc-client-password: "Password"
@@ -67,7 +67,7 @@ controller-editor-core: "Monitor Core: "
 controller-editor-clicked: "Click Properties: "
 controller-editor-replace-core-title: "Replace Core"
 controller-editor-replace-core-info: "Click to replace the display core"
-controller-editor-redstone-connect-title: "Connect Redstone"
+controller-editor-redstone-connect-title: "Connect Redstone repeater"
 controller-editor-redstone-connect-info: "Click to set the connection between the redstone and the display"
 controller-editor-redstone-connect-not-supported: "Redstone connection is not supported by this display core"
 controller-editor-previous-page: "Previous Page"

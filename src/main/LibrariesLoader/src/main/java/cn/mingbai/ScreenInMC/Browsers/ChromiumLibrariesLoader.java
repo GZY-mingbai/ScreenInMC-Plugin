@@ -60,21 +60,34 @@ public class ChromiumLibrariesLoader {
             }
         }
     }
-    public static void loadLinuxLibraries(){
+    public static void linkJdkLibrary(String filename){
         try {
             String javaHome = System.getProperty("java.home").replace("\\","/");
             if(javaHome.endsWith("/")){
                 javaHome = javaHome.substring(0,javaHome.length()-1);
             }
-            File src = new File(javaHome+"/lib/libjawt.so");
-            File dest = new File(libPath+"/libjawt.so");
+            File src1 = new File(javaHome+"/lib/"+filename);
+            File src2 = new File(javaHome+"/bin/"+filename);
+            File src = null;
+            if(src1.exists()){
+                src = src1;
+            }else if(src2.exists()){
+                src = src2;
+            }
+            if(src==null){
+                System.out.println("File "+src.getAbsolutePath()+" not found.");
+                return;
+            }
+            File dest = new File(libPath+"/"+filename);
             System.out.println("Linking "+src.getAbsolutePath()+" to "+dest.getAbsolutePath()+" .");
             Files.createSymbolicLink(
                     dest.toPath(),
                     src.toPath()
-                );
+            );
         }catch (Throwable e){
         }
+    }
+    public static void loadLinuxLibraries(){
         setPermissions(new File(chromiumPath));
         try {
             SystemBootstrap.loadLibrary("jcef");

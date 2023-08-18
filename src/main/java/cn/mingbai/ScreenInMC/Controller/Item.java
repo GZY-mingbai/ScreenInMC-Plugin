@@ -25,6 +25,7 @@ import java.util.UUID;
 import static cn.mingbai.ScreenInMC.Main.getJSONUtils;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getMaxScreenSize;
 import static cn.mingbai.ScreenInMC.Screen.Screen.getScreenFromUUID;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.isRepeater;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.getItemInHand;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.setItemInHand;
 import static cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.*;
@@ -163,7 +164,7 @@ public class Item {
                                                         Screen screen = getScreenFromUUID(uuid);
                                                         if (screen!=null&&screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
                                                             if(data.conn.i>=0&&screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().size()> data.conn.i) {
-                                                                Location location = getClosestBlock(player.getEyeLocation(), Material.REDSTONE_WIRE);
+                                                                Location location = getClosestRepeater(player.getEyeLocation());
                                                                 if (location != null) {
                                                                     spawnRectParticle(player.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ(),
                                                                             location.getBlockX() + 1, location.getBlockY(), location.getBlockZ() + 1,
@@ -529,8 +530,8 @@ public class Item {
                             Screen screen = getScreenFromUUID(uuid);
                             if (screen.getCore()!=null&&screen.getCore().getCoreName().equals(data.conn.core)) {
                                 if(data.conn.i>=0&&screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().size()> data.conn.i) {
-                                    Location location = getClosestBlock(player.getEyeLocation(), Material.REDSTONE_WIRE);
-                                    if (location!=null&&location.getBlock().getType().equals(Material.REDSTONE_WIRE)) {
+                                    Location location = getClosestRepeater(player.getEyeLocation());
+                                    if (location!=null&&isRepeater(location.getBlock().getType())) {
                                         Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> pair = screen.getCore().getRedstoneBridge().getRedstoneSignalInterfaces().get(data.conn.i);
                                         try {
                                             pair.getValue().connect(location);
@@ -730,7 +731,7 @@ public class Item {
         return new Utils.Pair<>(l1, l2);
     }
 
-    private static Location getClosestBlock(Location eyeLoc,Material type) {
+    private static Location getClosestRepeater(Location eyeLoc) {
         for (int i = 1; i < 21; i++) {
             Vector eyeVec = eyeLoc.toVector();
             Vector direction = eyeLoc.getDirection();
@@ -738,7 +739,7 @@ public class Item {
             eyeVec.add(direction);
             Location point = eyeVec.toLocation(eyeLoc.getWorld());
             Block block = point.getBlock();
-            if (block != null && block.getType().equals(type)) {
+            if (block != null && isRepeater(block.getType())) {
                 return new Location(eyeLoc.getWorld(), block.getX(),block.getY(),block.getZ());
             }
         }

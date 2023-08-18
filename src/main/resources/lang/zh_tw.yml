@@ -34,12 +34,12 @@ controller-edit-mode-info: |-
   在該模式下使用 %right-click% 點擊一塊屏幕
   即可編輯屏幕設置
 controller-connect-mode-info: |-
-  在該模式下使用 %right-click% 點擊一塊紅石粉
-  即可將屏幕連接到該紅石粉
-controller-connect-start: "使用 %right-click% 點擊一塊紅石粉"
+  在該模式下使用 %right-click% 點擊一塊紅石中繼器
+  即可將屏幕連接到該紅石中繼器
+controller-connect-start: "使用 %right-click% 點擊一塊紅石中繼器"
 controller-connect-success: "連接成功"
-controller-connect-failed-input: "連接失敗: 該紅石已被連接為輸入端"
-controller-connect-failed-output: "連接失敗: 該紅石已被連接為輸出端"
+controller-connect-failed-input: "連接失敗: 該紅石中繼器已被連接為輸入端"
+controller-connect-failed-output: "連接失敗: 該紅石中繼器已被連接為輸出端"
 controller-place-start: "正在載入屏幕核心"
 controller-place-success: "已放置屏幕在 %location% 方向: %facing% 大小: %size%"
 controller-place-failed-facing-not-supported: "無法將屏幕放置在 %% 方向"
@@ -67,7 +67,7 @@ controller-editor-core: "屏幕核心: "
 controller-editor-clicked: "點擊屬性: "
 controller-editor-replace-core-title: "更換核心"
 controller-editor-replace-core-info: "點擊以更換顯示器核心"
-controller-editor-redstone-connect-title: "連接紅石"
+controller-editor-redstone-connect-title: "連接紅石中繼器"
 controller-editor-redstone-connect-info: "點擊來設置紅石與顯示器之間的連接"
 controller-editor-redstone-connect-not-supported: "此顯示器核心不支援紅石連接"
 controller-editor-previous-page: "上一頁"
