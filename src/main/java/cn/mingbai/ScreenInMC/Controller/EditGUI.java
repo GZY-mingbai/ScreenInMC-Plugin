@@ -7,6 +7,7 @@ import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.InWindowClickPacket.ClickType;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -137,7 +138,7 @@ public class EditGUI {
 
     public static abstract class EditGUISubWindow{
         private static Map<Player,List<EditGUISubWindow>> openedWindows = new HashMap<>();
-        private BukkitRunnable runnable;
+        private ImmediatelyCancellableBukkitRunnable runnable;
         private boolean opened;
 
         public boolean isOpened() {
@@ -162,11 +163,12 @@ public class EditGUI {
             }
             if(list.size()==0){
                 final Player finalPlayer = player;
-                window.runnable = new BukkitRunnable() {
+                window.runnable = new ImmediatelyCancellableBukkitRunnable() {
                     @Override
                     public void run() {
                         if(finalPlayer.isOnline()&&finalPlayer!=null) {
                             List<EditGUISubWindow> list = openedWindows.get(finalPlayer);
+                            if(list==null) {this.cancel();return;}
                             synchronized (list) {
                                 list.get(list.size() - 1).reopenWindow(finalPlayer);
                             }
@@ -303,7 +305,7 @@ public class EditGUI {
                         closeTopWindow(player);
                     }
                     if(command[0].equals("input")) {
-                        BukkitRunnable runnable = new BukkitRunnable() {
+                        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
                             @Override
                             public void run() {
                                 String str = askForString(isDouble?String.valueOf(nowDoubleValue):String.valueOf(nowIntValue));
@@ -741,7 +743,7 @@ public class EditGUI {
                             }
                         }
                         if (command[0].equals("set")) {
-                            BukkitRunnable runnable = new BukkitRunnable() {
+                            ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
                                 @Override
                                 public void run() {
                                     if(command[1].equals("world")){
@@ -1095,7 +1097,7 @@ public class EditGUI {
                            if(getPacket().getClickType().equals(ClickType.THROW)) {
                                 strings.remove((int)pair.getKey());
                            }else{
-                               BukkitRunnable runnable = new BukkitRunnable() {
+                               ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
                                    @Override
                                    public void run() {
                                        String str = askForString(strings.get(pair.getKey()));
@@ -1248,7 +1250,7 @@ public class EditGUI {
             return;
         }
 
-        BukkitRunnable runnable = new BukkitRunnable() {
+        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
             @Override
             public void run() {
                 synchronized (this){
@@ -1531,6 +1533,11 @@ public class EditGUI {
                     InWindowClickPacket packet = (InWindowClickPacket) p;
                     if (packet.getContainerId() == containerID) {
                         updateInventory();
+                        if(packet.getSlotNum()==3){
+                            Screen.removeScreen(screen);
+                            forceClose();
+                            return true;
+                        }
                         if(packet.getSlotNum()>=0&&packet.getSlotNum()<=8){
                             nowMode = (short) packet.getSlotNum();
                             nowPage=0;
@@ -1697,6 +1704,12 @@ public class EditGUI {
         };
         stack.setName(jsonText);
         stack.setLore(lore);
+        return stack;
+    }
+    private NMSItemStack getItem3(){
+        NMSItemStack stack = new NMSItemStack(new String[]{"tnt"},1);
+        JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-remove-title")).setColor("red");
+        stack.setName(jsonText);
         return stack;
     }
     private NMSItemStack getItem2NotSupported(){
@@ -1886,6 +1899,12 @@ public class EditGUI {
             text=LangUtils.getText(text.substring(1));
         }
         JsonText jsonText = new JsonText(text+" ("+(info.getValue().isInput()?LangUtils.getText("input"):LangUtils.getText("output"))+")").setColor("red");
+        if(info.getValue().isConnected()){
+            Location loc = info.getValue().getBlockLocation();
+            JsonText lore = new JsonText(LangUtils.getText("redstone-bridge-connected").replace("%%",loc.getWorld()+" "+loc.getBlockX()+" "+loc.getBlockY()+" "+loc.getBlockZ()));
+            lore.setColor("red");
+            stack.setLore(new JsonText[]{lore});
+        }
         stack.setName(jsonText);
         return stack;
     }
@@ -1899,6 +1918,8 @@ public class EditGUI {
         list.set(0,getItem0());
         list.set(1,getItem1());
         list.set(2,getItem2());
+        list.set(3,getItem3());
+
 
         for(int i=9;i<18;i++){
             list.set(i,getItem9To17(i-9));

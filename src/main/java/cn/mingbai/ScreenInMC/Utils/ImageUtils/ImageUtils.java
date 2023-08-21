@@ -1,10 +1,13 @@
 package cn.mingbai.ScreenInMC.Utils.ImageUtils;
 
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.LanczosFilter;
 import cn.mingbai.ScreenInMC.Utils.IOUtils;
+import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -159,5 +162,118 @@ public class ImageUtils {
         graphics.drawImage(img, 0, 0, null);
         graphics.dispose();
         return bufferedImage;
+    }
+    public static BufferedImage scaleImage(BufferedImage image,int toWidth,int toHeight,int scaleAlgorithm){
+        switch (scaleAlgorithm){
+            case 0:
+                return imageToBufferedImage(image.getScaledInstance(toWidth,toHeight,Image.SCALE_SMOOTH));
+            case 1:
+                return imageToBufferedImage(image.getScaledInstance(toWidth,toHeight,Image.SCALE_FAST));
+            case 2:
+                return LanczosFilter.scale(image,((float) toWidth)/((float) image.getWidth(null)),((float) toHeight)/((float) image.getHeight(null)));
+            default:
+                throw new RuntimeException("Unknown algorithm: "+scaleAlgorithm);
+        }
+    }
+    public static byte[] getSubimageForMapColors(byte[] image,int imageWidth,int imageHeight,int startX,int startY, int toWidth, int toHeight){
+        byte[] newImage = new byte[toWidth*toHeight];
+        for(int y=0;y<toHeight;y++){
+            for(int x=0;x<toWidth;x++){
+                newImage[y*toWidth+x] = image[(startY+y)*imageWidth+startX+x];
+            }
+        }
+        return newImage;
+    }
+    public static byte[] scaleImageForMapColors(byte[] image,int imageWidth,int imageHeight,int toWidth,int toHeight){
+        byte[] output = new byte[toWidth * toHeight];
+
+        double widthRatio = ((double) imageWidth) / ((double) toWidth);
+        double heightRatio = ((double) imageHeight) / ((double) toHeight);
+        for (int y = 0; y < toHeight; y++) {
+            for (int x = 0; x < toWidth; x++) {
+                int px = (int) (((double)x) * widthRatio);
+                int py = (int) (((double)y) * heightRatio);
+                output[y * toWidth + x] = image[py * imageWidth + px];
+            }
+        }
+        return output;
+    }
+    public static Utils.Pair<byte[],Rectangle2D.Float> scaleMapColorsAndGetPosition(byte[] image, int scaleMode,int imageWidth,int imageHeight, int toWidth, int toHeight){
+        if(scaleMode==0) {
+            boolean subImage = false;
+            int newImageWidth = imageWidth;
+            int newImageHeight = imageHeight;
+            if (imageWidth > toWidth) {
+                newImageWidth = toWidth;
+                subImage = true;
+            }
+            if (imageHeight > toHeight) {
+                newImageHeight = toHeight;
+                subImage = true;
+            }
+            if (subImage) {
+                image = getSubimageForMapColors(image,imageWidth,imageHeight,0, 0, newImageWidth, newImageHeight);
+            }
+            return new Utils.Pair<>(image,new Rectangle2D.Float(0,0,newImageWidth,newImageHeight));
+        }
+        if(scaleMode==1){
+            double imageScaling = ((double) imageWidth)/((double) imageHeight);
+            double scaling = ((double) toWidth)/((double) toHeight);
+            if(imageScaling>scaling){
+                int newHeight = (int)Math.floor(toWidth/imageScaling);
+                image = scaleImageForMapColors(image,imageWidth,imageHeight,toWidth,newHeight);
+                int top = (toHeight-newHeight)/2;
+                return new Utils.Pair<>(image,new Rectangle2D.Float(0, top, toWidth, newHeight));
+            }else {
+                int newWidth = (int)Math.floor(toHeight*imageScaling);
+                image = scaleImageForMapColors(image,imageWidth,imageHeight,newWidth,toHeight);
+                int left = (toWidth-newWidth)/2;
+                return new Utils.Pair<>(image,new Rectangle2D.Float(left, 0,newWidth, toHeight));
+            }
+        }
+        if(scaleMode==2){
+            image = scaleImageForMapColors(image,imageWidth,imageHeight,toWidth,toHeight);
+            return new Utils.Pair<>(image,new Rectangle2D.Float(0,0,toWidth,toHeight));
+        }
+        throw new RuntimeException("Unknown scale mode: "+scaleMode);
+    }
+
+    public static Utils.Pair<BufferedImage,Rectangle2D.Float> scaleImageAndGetPosition(BufferedImage image, int scaleMode, int toWidth, int toHeight, int scaleAlgorithm){
+        int w = image.getWidth();
+        int h = image.getHeight();
+        if(scaleMode==0) {
+            boolean subImage = false;
+            if (w > toWidth) {
+                w = toWidth;
+                subImage = true;
+            }
+
+            if (h > toHeight) {
+                h = toHeight;
+                subImage = true;
+            }
+            if (subImage) {
+                image = image.getSubimage(0, 0, w, h);
+            }
+            return new Utils.Pair<>(image,new Rectangle2D.Float(0,0,w,h));
+        }
+        if(scaleMode==1){
+            double imageScaling = ((double) w)/((double) h);
+            double scaling = ((double) toWidth)/((double) toHeight);
+            if(imageScaling>scaling){
+                image = ImageUtils.imageToBufferedImage(scaleImage(image,toWidth,(int)Math.floor(toWidth/imageScaling),scaleAlgorithm));
+                int top = (toHeight-image.getHeight())/2;
+                return new Utils.Pair<>(image,new Rectangle2D.Float(0, top, image.getWidth(), image.getHeight()));
+            }else {
+                image = ImageUtils.imageToBufferedImage(scaleImage(image,(int)Math.floor(toHeight*imageScaling),toHeight,scaleAlgorithm));
+                int left = (toWidth-image.getWidth())/2;
+                return new Utils.Pair<>(image,new Rectangle2D.Float(left, 0, image.getWidth(), image.getHeight()));
+            }
+        }
+        if(scaleMode==2){
+            image = ImageUtils.imageToBufferedImage(scaleImage(image,toWidth,toHeight,scaleAlgorithm));
+            return new Utils.Pair<>(image,new Rectangle2D.Float(0,0,image.getWidth(),image.getHeight()));
+        }
+        throw new RuntimeException("Unknown scale mode: "+scaleMode);
     }
 }

@@ -113,37 +113,39 @@ public class MTextBlock extends MControl {
         renderBackground(mRenderer);
         mRenderer.setFont(font);
         mRenderer.setPaint(foreground);
-        LineMetrics metrics = mRenderer.getFont().getLineMetrics(text, mRenderer.getFontRenderContext());
-        Rectangle2D rectangle = mRenderer.getFont().getStringBounds(text, mRenderer.getFontRenderContext());
-        int left = 0;
-        int top = 0;
-        switch (textHorizontalAlignment) {
-            case Left:
-                left = paddingLeft;
-                break;
-            case Right:
-                left = (int) (getWidth() - rectangle.getWidth() - paddingRight);
-                break;
-            case Center:
-            case Stretch:
-            case None:
-                left = (int) ((getWidth() - rectangle.getWidth()) / 2);
-                break;
+        if(text!=null) {
+            LineMetrics metrics = mRenderer.getFont().getLineMetrics(text, mRenderer.getFontRenderContext());
+            Rectangle2D rectangle = mRenderer.getFont().getStringBounds(text, mRenderer.getFontRenderContext());
+            int left = 0;
+            int top = 0;
+            switch (textHorizontalAlignment) {
+                case Left:
+                    left = paddingLeft;
+                    break;
+                case Right:
+                    left = (int) (getWidth() - rectangle.getWidth() - paddingRight);
+                    break;
+                case Center:
+                case Stretch:
+                case None:
+                    left = (int) ((getWidth() - rectangle.getWidth()) / 2);
+                    break;
+            }
+            switch (textVerticalAlignment) {
+                case Top:
+                    top = (int) metrics.getAscent() + paddingTop;
+                    break;
+                case Bottom:
+                    top = (int) (getHeight() - rectangle.getHeight() + metrics.getAscent() - paddingBottom);
+                    break;
+                case Center:
+                case Stretch:
+                case None:
+                    top = (int) ((getHeight() - rectangle.getHeight()) / 2 + metrics.getAscent());
+                    break;
+            }
+            mRenderer.drawTextWithAscent(text, left, top);
         }
-        switch (textVerticalAlignment) {
-            case Top:
-                top = (int) metrics.getAscent() + paddingTop;
-                break;
-            case Bottom:
-                top = (int) (getHeight() - rectangle.getHeight() + metrics.getAscent() - paddingBottom);
-                break;
-            case Center:
-            case Stretch:
-            case None:
-                top = (int) ((getHeight() - rectangle.getHeight()) / 2 + metrics.getAscent());
-                break;
-        }
-        mRenderer.drawTextWithAscent(text, left, top);
         renderChildren(mRenderer);
     }
 }

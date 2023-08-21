@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.MGUI;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
@@ -15,22 +16,20 @@ import java.util.Collections;
 import java.util.List;
 
 public class MContainer extends MControl {
-    public static final int minClickInterval = 100;
     private static final String crashedText = ":((( Crashed / ScreenInMC 2.0";
-    public final String[] defaultFonts = {"PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei", "SimSun"};
+    public static final String[] defaultFonts = {"PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei","微软雅黑", "WenQuanYi Micro Hei", "SimSun"};
     private final Screen screen;
     protected MControl activeControl;
     BufferedImage image;
     List<Rectangle2D.Double> reRenderRectangles = Collections.synchronizedList(new ArrayList<>());
     private Graphics2D graphics;
     private FontRenderContext frc;
-    private boolean canClick = true;
-    private long clickTime = 0;
+    private short reRenderCount = 0;
     private Object renderLock = new Object();
     private Object renderLock2 = new Object();
-    private BukkitRunnable renderThread;
-    private short reRenderCount = 0;
+    private ImmediatelyCancellableBukkitRunnable renderThread;
     private boolean rerender = false;
+    private Object rerenderLock = new Object();
 
     public MContainer(Screen screen) {
         this.screen = screen;
@@ -55,18 +54,10 @@ public class MContainer extends MControl {
         if (renderThread != null) {
             renderThread.cancel();
         }
-        renderThread = new BukkitRunnable() {
-            private boolean cancelRender = false;
-
-            @Override
-            public synchronized void cancel() throws IllegalStateException {
-                cancelRender = true;
-                super.cancel();
-            }
-
+        renderThread = new ImmediatelyCancellableBukkitRunnable() {
             @Override
             public void run() {
-                while (!cancelRender) {
+                while (!isCancelled()) {
                     long startTime = System.currentTimeMillis();
                     render();
                     for (Runnable i : getAllRenderTasks()) {
@@ -96,7 +87,11 @@ public class MContainer extends MControl {
     }
 
     private synchronized void render() {
-        if (rerender) {
+        boolean shouldRerender = false;
+        synchronized (rerenderLock){
+            shouldRerender = rerender;
+        }
+        if (shouldRerender) {
 
             if (graphics == null) {
                 return;
@@ -127,7 +122,7 @@ public class MContainer extends MControl {
                 graphics.setStroke(new BasicStroke(1));
                 graphics.setClip(0, 0, image.getWidth(), image.getHeight());
                 graphics.clearRect(0, 0, image.getWidth(), image.getHeight());
-                MRenderer renderer = new MRenderer(this, graphics, frc);
+                MRenderer renderer = new MRenderer(graphics, frc);
                 renderer.setControl(this);
                 onRender(renderer);
                 if (reRenderCount < 10) {
@@ -183,7 +178,9 @@ public class MContainer extends MControl {
             synchronized (renderLock) {
                 renderLock.notifyAll();
             }
-            rerender = false;
+            synchronized (rerenderLock) {
+                rerender = false;
+            }
         }
     }
 
@@ -208,6 +205,9 @@ public class MContainer extends MControl {
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         frc = graphics.getFontRenderContext();
+        setDefaultFont(graphics);
+    }
+    protected static void setDefaultFont(Graphics2D graphics) {
         Font font = null;
         for (String i : defaultFonts) {
             font = Font.getFont(i);
@@ -238,7 +238,9 @@ public class MContainer extends MControl {
 
     @Override
     public void reRender() {
-        rerender = true;
+        synchronized (rerenderLock) {
+            rerender = true;
+        }
     }
     public void reRenderAll(){
         this.addReRender(new Rectangle2D.Double(0,0,this.getWidth(),this.getHeight()));
@@ -272,25 +274,5 @@ public class MContainer extends MControl {
 
     public void inputText(String text) {
         onTextInput(text);
-    }
-
-    public void clickAt(int x, int y, ClickType type) {
-        try {
-            if (canClick && (System.currentTimeMillis() - clickTime) >= minClickInterval) {
-                canClick = false;
-                clickTime = System.currentTimeMillis();
-                List<MControl> controls = getAllChildMControls();
-                for (MControl i : controls) {
-                    double left = i.getAbsoluteLeft();
-                    double top = i.getAbsoluteTop();
-                    if (i.isVisible() && left < x && (left + i.getWidth()) > x && top < y && (top + i.getHeight()) > y) {
-                        i.onClick((int) (x - left), (int) (y - top), type);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        canClick = true;
     }
 }

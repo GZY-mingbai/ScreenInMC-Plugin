@@ -148,6 +148,22 @@ public class FileUtils {
         }
     }
 
+    public static void deleteDirOnExit(File file) {
+        if (file.isFile()) {
+            file.deleteOnExit();
+        } else {
+            File[] files = file.listFiles();
+            if (files == null) {
+                file.deleteOnExit();
+            } else {
+                for (int i = 0; i < files.length; i++) {
+                    deleteDir(files[i]);
+                }
+                file.deleteOnExit();
+            }
+        }
+    }
+
     public static void streamToFile(InputStream stream, File file) {
         try {
             ReadableByteChannel inputChannel = Channels.newChannel(stream);

@@ -123,10 +123,13 @@ public class Main extends JavaPlugin {
                 }
                 try {
                     Screen screen = new Screen(i);
+                    if(screen.getCore()==null) continue;
                     try{
                         screen.putScreen();
                     }catch (Screen.FacingNotSupportedException e){
                         getPluginLogger().warning("The screen ("+screen.getUUID()+") cannot be placed, because placing it in the "+e.getFacing().name()+" direction is not supported in versions below 1.12.2.");
+                    }catch (Exception e){
+
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

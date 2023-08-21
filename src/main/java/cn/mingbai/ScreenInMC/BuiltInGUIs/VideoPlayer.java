@@ -3,12 +3,14 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import cn.mingbai.ScreenInMC.VideoProcessor;
 import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.awt.geom.Rectangle2D;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
@@ -47,6 +49,7 @@ public class VideoPlayer extends Core {
         public String path=null;
         public boolean loop=false;
         public int frameRateLimit = 18;
+        public int scaleMode = 1;
 
         @Override
         public StoredData clone() {
@@ -97,18 +100,22 @@ public class VideoPlayer extends Core {
         stop();
         if (!isPlaying) {
             VideoPlayerStoredData data = ((VideoPlayerStoredData)getStoredData());
+            if(data.path==null||data.path.length()==0) return;
             int fps = 20;
+            int toWidth = getScreen().getWidth()*128;
+            int toHeight = getScreen().getHeight()*128;
             if(setLock !=null&&data.frameRateLimit>=1&&data.frameRateLimit<=20) {
                 synchronized (setLock) {
                     fps=data.frameRateLimit;
                 }
             }
+            final int scaleMode;
+            synchronized (setLock) {
+                scaleMode=data.scaleMode;
+            }
             int needToWait = 1000/fps;
             try {
                 video = VideoProcessor.readDitheredVideoWithPlugin(new URI(data.path), data.loop);
-                if(video.getWidth()!= getScreen().getWidth()*128||video.getHeight()!=getScreen().getHeight()*128){
-                    throw new Exception("Screen size is not true: "+video.getWidth()+"x"+video.getHeight()+" (Need "+getScreen().getWidth()*128+"x"+getScreen().getHeight()*128+")");
-                }
             } catch (Exception e) {
                 e.printStackTrace();
                 stop();
@@ -119,6 +126,7 @@ public class VideoPlayer extends Core {
             playRunnable = new ImmediatelyCancellableBukkitRunnable() {
                 @Override
                 public void run() {
+                    getScreen().clearScreen();
                     while (isPlaying && !playRunnable.isCancelled()) {
                         if (isPause) {
                             try {
@@ -137,7 +145,8 @@ public class VideoPlayer extends Core {
                             stop();
                             return;
                         }
-                        getScreen().sendView(data);
+                        Utils.Pair<byte[], Rectangle2D.Float> scaled = ImageUtils.scaleMapColorsAndGetPosition(data,scaleMode,video.getWidth(),video.getHeight(),toWidth,toHeight);
+                        getScreen().sendView(scaled.getKey(), (int) scaled.getValue().x, (int) scaled.getValue().y, (int) scaled.getValue().width, (int) scaled.getValue().height);
                         long wait = needToWait - (System.currentTimeMillis() - start);
                         if (wait > 0) {
                             try {
@@ -192,6 +201,7 @@ public class VideoPlayer extends Core {
                 new LinkedHashMap(){
                     {
                         put("@controller-editor-cores-video-player-path",String.class);
+                        put("@controller-editor-cores-scale-mode", ImageViewer.ScaleModeSettingsList.class);
                         put("@controller-editor-cores-video-player-loop",Boolean.class);
                         put("@controller-editor-cores-video-player-pause", Boolean.class);
                         put("@controller-editor-cores-frame-rate-limit", Integer.class);
@@ -210,6 +220,8 @@ public class VideoPlayer extends Core {
                 return (boolean)data.loop;
             case "@controller-editor-cores-video-player-pause":
                 return isPause();
+            case "@controller-editor-cores-scale-mode":
+                return data.scaleMode;
         }
         return null;
     }
@@ -250,6 +262,15 @@ public class VideoPlayer extends Core {
             case "@controller-editor-cores-video-player-pause":
                 setPause((Boolean) value);
                 if(video==null&&((Boolean)value)==false){
+                    play();
+                }
+                break;
+            case "@controller-editor-cores-scale-mode":
+                if(setLock !=null) {
+                    stop();
+                    synchronized (setLock) {
+                        data.scaleMode = (int) value;
+                    }
                     play();
                 }
                 break;

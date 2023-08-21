@@ -309,7 +309,6 @@ public class VideoProcessor {
                 }
                 return frame;
             } catch (Exception e) {
-                e.printStackTrace();
                 close();
                 return new byte[0];
             }

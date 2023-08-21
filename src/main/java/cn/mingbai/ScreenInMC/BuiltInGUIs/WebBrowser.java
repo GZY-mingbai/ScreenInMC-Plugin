@@ -1,15 +1,21 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Browsers.Browser;
+import cn.mingbai.ScreenInMC.Browsers.Chromium;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;
+import cn.mingbai.ScreenInMC.MGUI.ClickType;
+import cn.mingbai.ScreenInMC.MGUI.Controls.MButton;
+import cn.mingbai.ScreenInMC.MGUI.Controls.MButtonWithProgressBar;
 import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
 import cn.mingbai.ScreenInMC.MGUI.MContainer;
+import cn.mingbai.ScreenInMC.MGUI.MControl;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
+import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Material;
 
@@ -71,17 +77,139 @@ public class WebBrowser extends Core {
             e.printStackTrace();
         }
     }
+    private void reloadButtonText(MControl area){
+        try {
+            MButton button1= (MButton) area.getChildControl(0);
+            MButton button2= (MButton) area.getChildControl(1);
+            MTextBlock textBlock = (MTextBlock) area.getChildControl(2);
+            if(Browser.getBrowser("Chromium").getCoreState()==Browser.NOT_INSTALLED){
+                button2.setDisabled(true);
+                button1.setDisabled(false);
+            }else {
+                button1.setDisabled(true);
+                button2.setDisabled(false);
+            }
+            textBlock.setText(LangUtils.getText("web-browser-tips"));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
     public void createInstaller(){
         if(installer!=null){
             installer.reRenderAll();
         }
         installer = new MContainer(getScreen());
-        MTextBlock textBlock = new MTextBlock("404");
-        textBlock.setHorizontalAlignment(Alignment.HorizontalAlignment.Stretch);
-        textBlock.setVerticalAlignment(Alignment.VerticalAlignment.Stretch);
-        installer.addChildControl(textBlock);
+        MControl control = new MControl();
+        MTextBlock textBlock = new MTextBlock();
+        MButtonWithProgressBar button1 = new MButtonWithProgressBar(LangUtils.getText("web-browser-install-chromium")){
+            @Override
+            public void onClick(int x, int y, ClickType type) {
+                super.onClick(x, y, type);
+                if(!isProcessingChromium) {
+                    installChromium(this,textBlock,control);
+                }
+            }
+        };
+        MButtonWithProgressBar button2 = new MButtonWithProgressBar(LangUtils.getText("web-browser-uninstall-chromium")){
+            @Override
+            public void onClick(int x, int y, ClickType type) {
+                super.onClick(x, y, type);
+                if(!isProcessingChromium) {
+                    uninstallChromium(this,textBlock,control);
+                }
+            }
+        };
+        button1.setWidth(128);
+        button1.setHeight(64);
+        button2.setWidth(128);
+        button2.setHeight(64);
+        textBlock.setHeight(16);
+        textBlock.setWidth(384);
+        textBlock.setLeft(-128);
+        control.addChildControl(button1);
+        control.addChildControl(button2);
+        control.addChildControl(textBlock);
+        control.setHeight(156);
+        control.setWidth(128);
+        button2.setTop(72);
+        textBlock.setTop(140);
+        installer.addChildControl(control);
+        reloadButtonText(control);
+        control.setHorizontalAlignment(Alignment.HorizontalAlignment.Center);
+        control.setVerticalAlignment(Alignment.VerticalAlignment.Center);
         installer.setBackground(Color.WHITE);
         installer.load();
+    }
+    private static boolean isProcessingChromium = false;
+    private void uninstallChromium(MButtonWithProgressBar button,MTextBlock textBlock,MControl buttonArea){
+        if(installer==null) return;
+        button.setDisabled(true);
+        isProcessingChromium = true;
+        Browser.BrowserCallback callback = new Browser.BrowserCallback() {
+            @Override
+            protected void handle(String message, float progress) {
+                textBlock.setText(message);
+                button.setProgress(progress);
+            }
+
+            @Override
+            protected void complete() {
+                textBlock.setText("");
+                button.setProgress(0);
+            }
+        };
+        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    Browser.getBrowser("Chromium").uninstallCore(callback);
+                }catch (Throwable e){
+                    e.printStackTrace();
+                    textBlock.setText("");
+                    button.setProgress(0);
+                }
+                isProcessingChromium = false;
+                reloadButtonText(buttonArea);
+                buttonArea.reRender();
+            }
+        };
+        runnable.runTaskAsynchronously(Main.thisPlugin());
+    }
+    private void installChromium(MButtonWithProgressBar button,MTextBlock textBlock,MControl buttonArea){
+        if(installer==null) return;
+        button.setDisabled(true);
+        isProcessingChromium = true;
+        Browser.BrowserCallback callback = new Browser.BrowserCallback() {
+            @Override
+            protected void handle(String message, float progress) {
+                textBlock.setText(message);
+                button.setProgress(progress);
+            }
+
+            @Override
+            protected void complete() {
+                textBlock.setText("");
+                button.setProgress(0);
+            }
+        };
+        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    Browser.getBrowser("Chromium"). installCore(callback);
+                }catch (Throwable e){
+                    e.printStackTrace();
+                    textBlock.setText("");
+                    button.setProgress(0);
+                }
+                isProcessingChromium = false;
+                reloadButtonText(buttonArea);
+                buttonArea.reRender();
+            }
+        };
+        runnable.runTaskAsynchronously(Main.thisPlugin());
+
+
     }
     @Override
     public void reRender() {
@@ -178,6 +306,8 @@ public class WebBrowser extends Core {
             if(browser.getCoreState()==Browser.LOADED) {
                 browser.clickAt(getScreen(), x, y, type);
             }
+        }else if(installer!=null){
+            installer.clickAt(x,y,ClickType.Left);
         }
     }
 

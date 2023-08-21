@@ -2,12 +2,15 @@ package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +41,9 @@ public abstract class Core implements Cloneable {
     }
 
     public void reRender(){
-
+        if(screen!=null){
+            screen.clearScreen();
+        }
     }
     public static Core[] getAllCore() {
         Core[] result = new Core[allCores.size()];
@@ -128,6 +133,7 @@ public abstract class Core implements Cloneable {
     public void create(Screen screen) {
         isUnloaded=false;
         this.screen = screen;
+        screen.clearScreen();
         screen.setCore(this);
         onCreate();
     }

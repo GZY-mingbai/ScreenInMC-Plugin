@@ -3,6 +3,7 @@ download-progress: "已下載 %%"
 download-success: "下載完成"
 decompress-progress: "已解壓縮 %%"
 decompress-success: "解壓縮完成"
+uninstalling: "卸載中"
 kb-basic: "基礎鍵盤:"
 controller-item-name: "ScreenInMC 控制器"
 controller-item-now-mode: "目前模式:"
@@ -68,6 +69,7 @@ controller-editor-clicked: "點擊屬性: "
 controller-editor-replace-core-title: "更換核心"
 controller-editor-replace-core-info: "點擊以更換顯示器核心"
 controller-editor-redstone-connect-title: "連接紅石中繼器"
+controller-editor-redstone-remove-title: "刪除螢幕"
 controller-editor-redstone-connect-info: "點擊來設置紅石與顯示器之間的連接"
 controller-editor-redstone-connect-not-supported: "此顯示器核心不支援紅石連接"
 controller-editor-previous-page: "上一頁"
@@ -90,15 +92,15 @@ controller-editor-cores-image-viewer-details: |-
   (URI: screen://local/文件名
   可用於讀取 plugins/ScreenInMC/Files/ 中的檔案)
 controller-editor-cores-image-viewer-uri: "圖片連結 (URI)"
-controller-editor-cores-image-viewer-scale-mode: "縮放模式"
-controller-editor-cores-image-viewer-scale-modes: "置中|填滿"
-controller-editor-cores-image-viewer-scale-algorithm: "縮放演算法"
-controller-editor-cores-image-viewer-scale-algorithms: "平滑|快速"
+controller-editor-cores-scale-mode: "縮放模式"
+controller-editor-cores-scale-algorithm: "縮放演算法"
+controller-editor-cores-scale-algorithms: "平滑|快速|插值(Lanczos)"
 controller-editor-cores-browser-uri: "目前網址 (URI)"
 controller-editor-cores-browser-refresh: "重新整理(選擇true)"
 controller-editor-cores-browser-core: "瀏覽器核心"
 controller-editor-cores-browser-devtools: "開啟開發者模式 (DevTools)"
 controller-editor-cores-frame-rate-limit: "顯示幀率限制 1-20(可減低卡頓)"
+controller-editor-cores-scale-modes: "原始|自適應|拉伸"
 type: "類型:"
 type-int: "整數"
 type-double: "小數"
@@ -155,10 +157,18 @@ command-help: |-
     /screen input <螢幕UUID> <文字> ...
   ★取得ScreenInMC控制器:
     /screen controller
-  controller-editor-cores-video-player-name: "影片播放器(*.smv)"
-  controller-editor-cores-video-player-details: |-
-    可用於播放 .smv 格式的影片(經過ScreenInMC預處理器處理後的影片)
-    使用 java -jar ScreenInMC.jar 可查看ScreenInMC預處理器的使用方法
+controller-editor-cores-video-player-name: "影片播放器(*.smv)"
+controller-editor-cores-video-player-details: |-
+  可用於播放 .smv 格式的影片(經過ScreenInMC預處理器處理後的影片)
+  使用 java -jar ScreenInMC.jar 可查看ScreenInMC預處理器的使用方法
+  僅支持和螢幕尺寸對應的解析度的視訊
+  (例如螢幕尺寸為4x3，則視訊尺寸應為512x384 (512=4x128，384=3x128))
 controller-editor-cores-video-player-loop: "循環"
 controller-editor-cores-video-player-path: "影片路徑"
 controller-editor-cores-video-player-pause: "暫停"
+image-viewer-load-failed: "無法載入該圖片"
+web-browser-install-chromium: "安裝Chromium"
+web-browser-uninstall-chromium: "移除Chromium"
+web-browser-tips: "在編輯器中選擇瀏覽器核心"
+web-browser-uninstall-on-exit: "請重新啟動伺服器以卸載Chromium"
+redstone-bridge-connected: "已連接至 %%"

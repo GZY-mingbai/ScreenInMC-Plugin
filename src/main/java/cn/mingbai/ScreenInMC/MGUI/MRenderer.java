@@ -6,19 +6,17 @@ import java.awt.font.LineMetrics;
 
 public class MRenderer {
     private final Graphics2D graphics;
-    private final MContainer mContainer;
     private final FontRenderContext frc;
     private MControl mControl;
 
-    protected MRenderer(MContainer mContainer, Graphics2D graphics, FontRenderContext frc) {
-        this.mContainer = mContainer;
+    protected MRenderer(Graphics2D graphics, FontRenderContext frc) {
         this.graphics = graphics;
         this.frc = frc;
     }
 
     @Override
     protected Object clone() {
-        return new MRenderer(mContainer, graphics, frc);
+        return new MRenderer(graphics, frc);
     }
 
     protected void setControl(MControl mControl) {

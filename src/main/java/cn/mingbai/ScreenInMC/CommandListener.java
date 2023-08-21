@@ -251,7 +251,7 @@ public class CommandListener implements TabExecutor {
                         return true;
                     }
                     if (args.length == 3) {
-                        String[] newString = Arrays.copyOfRange(args,2,args.length-2);
+                        String[] newString = Arrays.copyOfRange(args,2,args.length);
                         screen.getCore().onTextInput(String.join(" ",newString));
                     } else {
                         screen.getCore().onTextInput("");
@@ -316,14 +316,14 @@ public class CommandListener implements TabExecutor {
                 }
                 return true;
             }
-            if (args[0].equalsIgnoreCase("installChromium")) {
-                new Thread() {
-                    @Override
-                    public void run() {
-                        new Chromium().installCore();
-                    }
-                }.start();
-            }
+//            if (args[0].equalsIgnoreCase("installChromium")) {
+//                new Thread() {
+//                    @Override
+//                    public void run() {
+//                        new Chromium().installCore();
+//                    }
+//                }.start();
+//            }
         }
         catch (Error e){
             e.printStackTrace();

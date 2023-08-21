@@ -4,6 +4,7 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONObject;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
@@ -38,6 +39,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+import static cn.mingbai.ScreenInMC.Utils.FileUtils.deleteDir;
+import static cn.mingbai.ScreenInMC.Utils.FileUtils.deleteDirOnExit;
+
 public class Chromium extends Browser {
     public static final String[] CHROMIUM_LIBRARIES;
 
@@ -59,9 +63,8 @@ public class Chromium extends Browser {
     }
 
     @Override
-    public void installCore() {
-        Logger logger = Main.getPluginLogger();
-        logger.info(LangUtils.getText("start-download-chromium-core"));
+    public void installCore(BrowserCallback callback) {
+        callback.handle(LangUtils.getText("start-download-chromium-core"),0);
         int type = Main.getConfiguration().getInt("download-browser-core.jcef-download-url.type");
         String downloadUrl = "";
         String httpProxyUrl = Main.getConfiguration().getString("download-browser-core.http-proxy");
@@ -118,22 +121,42 @@ public class Chromium extends Browser {
             public Void apply(Utils.Pair<Long, Long> progress) {
                 count++;
                 if (count % 10 == 0) {
-                    logger.info(progressText1.replace("%%", String.format("%.2f", (float) ((double) progress.getValue() /
-                            (double) progress.getKey() * 100.0)) + "%"));
+                    double p = (double) progress.getValue() /
+                            (double) progress.getKey();
+                    callback.handle(progressText1.replace("%%", String.format("%.2f", (float)(p*100d),0)+"%"),
+                            (float) (p*0.9d));
                 }
                 return null;
             }
         });
-        logger.info(LangUtils.getText("download-success"));
         FileUtils.decompressTarGz(path1, path2, new Function<String, Void>() {
             @Override
             public Void apply(String name) {
-                logger.info(progressText2.replace("%%", name));
+                callback.handle(progressText2.replace("%%", name),
+                        0.9f);
                 return null;
             }
         });
-        logger.info(LangUtils.getText("decompress-success"));
+        callback.complete();
+    }
 
+    @Override
+    public void uninstallCore(BrowserCallback callback) {
+        if(getCoreState()==Browser.LOADED){
+            killCore();
+        }
+        callback.handle(LangUtils.getText("uninstalling"),0.5f);
+        File file = new File(Main.PluginFilesPath + "Chromium");
+        deleteDir(file);
+        if(file.exists()){
+            deleteDirOnExit(file);
+            callback.handle(LangUtils.getText("web-browser-uninstall-on-exit"),1f);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+            }
+        }
+        callback.complete();
     }
 
     @Override
@@ -204,6 +227,11 @@ public class Chromium extends Browser {
     @Override
     public void unloadCore() {
         Chromium_.unload();
+    }
+
+    @Override
+    public void killCore() {
+        Chromium_.kill();
     }
 
     @Override
@@ -471,7 +499,7 @@ public class Chromium extends Browser {
                                                     try {
                                                         String command = map.getString("command");
                                                         final Object[] success = new Object[]{true,null};
-                                                        BukkitRunnable runnable = new BukkitRunnable() {
+                                                        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
 
                                                             @Override
                                                             public void run() {
@@ -706,15 +734,23 @@ public class Chromium extends Browser {
             }
             return null;
         }
-
+        private static void kill(){
+            unload();
+            try {
+                app.dispose();
+            }catch (Error e){}
+            catch (RuntimeException e){}
+            catch (Exception e){}
+            catch (Throwable e){}
+        }
         private static void unload() {
             try {
                 client.dispose();
-            } catch (Exception e) {
-            }
-//            try {
-//                app.dispose();
-//            }catch (Exception e){}
+            } catch (Error e){}
+            catch (RuntimeException e){}
+            catch (Exception e){}
+            catch (Throwable e){}
+
         }
         private static String getNowURL(Screen screen) {
             org.cef.browser.ScreenInMCChromiumBrowser browser = clients.get(screen);

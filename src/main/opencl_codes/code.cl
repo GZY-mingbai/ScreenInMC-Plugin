@@ -94,20 +94,20 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
     for (int y = 0; y < pieceSize; ++y) {
         for (int x = 0; x < pieceSize; ++x) {
             RGBA rgba = intToRgba(colors[r]);
-            if(rgba.a==255) {
+            if(rgba.a>=127) {
                 ClosestColorResult near = getClosestColor(palette,colorCount,rgba);
                 colors[r] = near.color;
                 result[r] = (char)((near.index / 4) << 2 | (near.index % 4) & 3);
                 if(x != pieceSize-1) {
                     int index_ = r+1;
                     RGBA rgba_ = intToRgba(colors[index_]);
-                    if(rgba_.a==255) {
+                    if(rgba_.a>=127) {
                         colors[index_]=rgbToInt(rgba_.r+near.r*0.4375,rgba_.g+near.g*0.4375,rgba_.b+near.b*0.4375);
                     }
                     if(y != pieceSize-1) {                        
                         index_ += width;
                         rgba_ = intToRgba(colors[index_]);
-                        if(rgba_.a==255) {
+                        if(rgba_.a>=127) {
                             colors[index_]=rgbToInt(rgba_.r+near.r*0.0625,rgba_.g+near.g*0.0625,rgba_.b+near.b*0.0625);
                         }
                     }
@@ -115,13 +115,13 @@ __kernel void dither(__global int *colors,__global int *palette,__global int *se
                 if(y != pieceSize-1) {
                     int index_ = r+width;
                     RGBA rgba_ = intToRgba(colors[index_]);
-                    if(rgba_.a==255) {
+                    if(rgba_.a>=127) {
                         colors[index_]=rgbToInt(rgba_.r+near.r*0.1875,rgba_.g+near.g*0.1875,rgba_.b+near.b*0.1875);
                     }
                     if(x != 0) {
                         index_ -= 1;
                         rgba_ = intToRgba(colors[index_]);
-                        if(rgba_.a==255) {
+                        if(rgba_.a>=127) {
                             colors[index_]=rgbToInt(rgba_.r+near.r*0.3125,rgba_.g+near.g*0.3125,rgba_.b+near.b*0.3125);
                         }
                     }

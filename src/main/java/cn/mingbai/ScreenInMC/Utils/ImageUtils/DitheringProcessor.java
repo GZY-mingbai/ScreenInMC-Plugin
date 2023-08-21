@@ -58,7 +58,7 @@ public abstract class DitheringProcessor {
             for (int y = 0; y < height; ++y) {
                 for (int x = 0; x < width; ++x) {
                     Color current_color = new Color(data[i], true);
-                    if (current_color.getAlpha() != 255) {
+                    if (current_color.getAlpha() < 127) {
                         data[i] = 0;
                         i++;
                         continue;
@@ -74,7 +74,7 @@ public abstract class DitheringProcessor {
                     if (!(x == width - 1)) {
                         int t = i + 1;
                         Color c = new Color(data[t], true);
-                        if (c.getAlpha() == 255) {
+                        if (c.getAlpha() >=127) {
                             data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.4375f)),
                                     colorClip((int) (c.getGreen() + errorG * 0.4375f)),
                                     colorClip((int) (c.getBlue() + errorB * 0.4375f)));
@@ -82,7 +82,7 @@ public abstract class DitheringProcessor {
                         if (!(y == height - 1)) {
                             t = i + 1 + width;
                             c = new Color(data[t], true);
-                            if (c.getAlpha() == 255) {
+                            if (c.getAlpha() >=127) {
                                 data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.0625f)),
                                         colorClip((int) (c.getGreen() + errorG * 0.0625f)),
                                         colorClip((int) (c.getBlue() + errorB * 0.0625f)));
@@ -92,7 +92,7 @@ public abstract class DitheringProcessor {
                     if (!(y == height - 1)) {
                         int t = i + width;
                         Color c = new Color(data[t], true);
-                        if (c.getAlpha() == 255) {
+                        if (c.getAlpha() >=127) {
                             data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.1875f)),
                                     colorClip((int) (c.getGreen() + errorG * 0.1875f)),
                                     colorClip((int) (c.getBlue() + errorB * 0.1875f)));
@@ -100,7 +100,7 @@ public abstract class DitheringProcessor {
                         if (!(x == 0)) {
                             t = i - 1 + width;
                             c = new Color(data[t], true);
-                            if (c.getAlpha() == 255) {
+                            if (c.getAlpha() >=127) {
                                 data[t] = rgbToInt(colorClip((int) (c.getRed() + errorR * 0.3125f)),
                                         colorClip((int) (c.getGreen() + errorG * 0.3125f)),
                                         colorClip((int) (c.getBlue() + errorB * 0.3125f)));
@@ -136,7 +136,7 @@ public abstract class DitheringProcessor {
                         int closestColor = 0;
                         int closestDistance = -1;
                         for(int i=0;i<paletteColors.length;i++){
-                            if(paletteColors[i].getAlpha()==255){
+                            if(paletteColors[i].getAlpha()>=127){
                                 int distance = colorDistance(paletteColors[i],nowColor);
                                 if(closestDistance==-1||distance<=closestDistance){
                                     closestColor = i;

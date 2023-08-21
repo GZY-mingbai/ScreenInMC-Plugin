@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class Utils {
     private static boolean loadedLibrariesLoader = false;
@@ -520,6 +521,18 @@ public class Utils {
                 }
             }else{
                 return new byte[0];
+            }
+        }
+        if(uri.getScheme().equals("screen")&&"builtin".equals(uri.getHost())) {
+            try {
+                InputStream inputStream = Main.class.getResourceAsStream("/builtin"+uri.getRawPath());
+                byte[] data = IOUtils.readInputStream(inputStream);
+                inputStream.close();
+                return data;
+            }catch (Throwable e){
+                if(throwException){
+                    throw new RuntimeException(e);
+                }else return new byte[0];
             }
         }
         try {

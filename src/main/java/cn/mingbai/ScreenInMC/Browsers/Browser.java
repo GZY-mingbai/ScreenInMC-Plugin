@@ -41,8 +41,13 @@ public abstract class Browser {
     public String getName() {
         return name;
     }
+    public abstract static class BrowserCallback{
+        protected abstract void handle(String message,float progress);
+        protected abstract void complete();
+    }
 
-    public abstract void installCore();
+    public abstract void installCore(BrowserCallback callback);
+    public abstract void uninstallCore(BrowserCallback callback);
 
     public abstract void loadCore();
 
@@ -61,6 +66,7 @@ public abstract class Browser {
     public abstract Utils.Pair<Utils.Pair<Integer, Integer>, int[]> onRender(Screen screen);
 
     public abstract void unloadCore();
+    public abstract void killCore();
 
     public abstract void openURL(Screen screen, String url);
 

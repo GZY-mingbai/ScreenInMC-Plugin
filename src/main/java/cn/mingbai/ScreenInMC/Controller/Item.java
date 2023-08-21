@@ -7,6 +7,7 @@ import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutActionBarPacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
@@ -38,7 +39,7 @@ public class Item {
     public static final int CONNECT_MODE = -1; //连接模式
     public static final int FINAL_MODE = 2;
     public static final int FIRST_MODE = 0;
-    private static BukkitRunnable runnable = null;
+    private static ImmediatelyCancellableBukkitRunnable runnable = null;
     private static Color BLUE;
     private static Color RED;
     private static Color YELLOW;
@@ -51,7 +52,7 @@ public class Item {
         YELLOW = Color.fromRGB(255, 255, 85);
         GREEN = Color.fromRGB(85, 255, 85);
 
-        runnable = new BukkitRunnable() {
+        runnable = new ImmediatelyCancellableBukkitRunnable() {
             @Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {

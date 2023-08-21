@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.Screen;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
+import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -10,6 +11,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -177,8 +180,22 @@ public class Screen {
         return facing;
     }
     public void clearScreen(){
-        byte[] data = new byte[width*height*128*128];
-        sendView(data);
+        clearScreen(false);
+    }
+    public void clearScreen(boolean withWhite){
+        if(withWhite){
+            int w=this.getWidth()*128;
+            int h=this.getHeight()*128;
+            BufferedImage image = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = image.createGraphics();
+            g2d.setPaint(new Color(255,255,255));
+            g2d.fillRect(0,0,w,h);
+            g2d.dispose();
+            this.sendView(ImageUtils.imageToMapColors(image));
+        }else {
+            byte[] data = new byte[width * height * 128 * 128];
+            sendView(data);
+        }
     }
 
     public void sendPutScreenPacket(Player player) {
@@ -203,8 +220,9 @@ public class Screen {
                     CraftUtils.sendPacket(player, packet2);
                 }
             }
-            getCore().reRender();
-
+            if(getCore()!=null) {
+                getCore().reRender();
+            }
         } else {
             throw new RuntimeException("This Screen has not been placed.");
         }

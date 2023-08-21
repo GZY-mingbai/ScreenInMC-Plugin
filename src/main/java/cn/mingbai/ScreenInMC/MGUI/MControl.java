@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class MControl {
+    public static final int minClickInterval = 100;
     public static final int ROUND_AUTO = -1;
+    private long clickTime = 0;
     private final List<MControl> childMControls = Collections.synchronizedList(new ArrayList<>());
     protected boolean loaded = false;
     private MControl parentMControl;
@@ -302,6 +304,9 @@ public class MControl {
             throw new RuntimeException("This control have had parent.");
         }
     }
+    public MControl getChildControl(int index){
+        return childMControls.get(index);
+    }
 
     public synchronized void removeChildControl(MControl mControl) {
         for (int i = 0; i < childMControls.size(); i++) {
@@ -446,6 +451,12 @@ public class MControl {
             return parentMControl.getMContainer();
         }
     }
+    public MControl getTopMControl() {
+        if (parentMControl == null) {
+            return this;
+        }
+        return parentMControl.getTopMControl();
+    }
 
     public void reRender() {
         MContainer container = getMContainer();
@@ -465,6 +476,24 @@ public class MControl {
             }
             container.addReRender(new Rectangle2D.Double(left, top, width, height));
             container.reRender();
+        }
+    }
+
+    public synchronized void clickAt(int x, int y, ClickType type) {
+        try {
+            if ((System.currentTimeMillis() - clickTime) >= minClickInterval) {
+                clickTime = System.currentTimeMillis();
+                List<MControl> controls = getAllChildMControls();
+                for (MControl i : controls) {
+                    double left = i.getAbsoluteLeft();
+                    double top = i.getAbsoluteTop();
+                    if (i.isVisible() && left < x && (left + i.getWidth()) > x && top < y && (top + i.getHeight()) > y) {
+                        i.onClick((int) (x - left), (int) (y - top), type);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

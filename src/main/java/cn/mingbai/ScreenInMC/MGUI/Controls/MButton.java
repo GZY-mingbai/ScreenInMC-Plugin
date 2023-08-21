@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.MGUI.Controls;
 import cn.mingbai.ScreenInMC.MGUI.ClickType;
 import cn.mingbai.ScreenInMC.MGUI.MRenderer;
 import cn.mingbai.ScreenInMC.Main;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
@@ -11,7 +12,8 @@ import static cn.mingbai.ScreenInMC.MGUI.MContainer.minClickInterval;
 
 public class MButton extends MTextBlock {
     private boolean pressed = false;
-    private BukkitRunnable pressedRunnable;
+    private ImmediatelyCancellableBukkitRunnable pressedRunnable;
+    private boolean disabled = false;
 
     public MButton() {
         this("");
@@ -25,17 +27,26 @@ public class MButton extends MTextBlock {
         this.setForeground(new Color(255, 255, 255));
     }
 
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        reRender();
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
     @Override
     public void onClick(int x, int y, ClickType type) {
         super.onClick(x, y, type);
-
+        if(disabled) return;
         if (type.equals(ClickType.Left)) {
             pressed = true;
             reRender();
             if (pressedRunnable != null) {
                 pressedRunnable.cancel();
             }
-            pressedRunnable = new BukkitRunnable() {
+            pressedRunnable = new ImmediatelyCancellableBukkitRunnable() {
                 @Override
                 public void run() {
                     try {
@@ -53,6 +64,10 @@ public class MButton extends MTextBlock {
     @Override
     public void onRender(MRenderer mRenderer) {
         super.onRender(mRenderer);
+        if(disabled){
+            mRenderer.setPaint(new Color(0, 0, 0, 80));
+            mRenderer.drawRoundRect(0, 0, (int) getWidth(), (int) getHeight(), (int) getHeight(), (int) getHeight(), true);
+        }
         if (pressed) {
             mRenderer.setPaint(new Color(0, 0, 0, 20));
             mRenderer.drawRoundRect(0, 0, (int) getWidth(), (int) getHeight(), (int) getHeight(), (int) getHeight(), true);

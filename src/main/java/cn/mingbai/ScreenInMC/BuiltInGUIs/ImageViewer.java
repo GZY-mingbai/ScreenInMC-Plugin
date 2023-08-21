@@ -2,6 +2,9 @@ package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
+import cn.mingbai.ScreenInMC.MGUI.Alignment;
+import cn.mingbai.ScreenInMC.MGUI.Controls.MTextBlock;
+import cn.mingbai.ScreenInMC.MGUI.MImageGenerator;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.GIFUtils;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
@@ -9,7 +12,6 @@ import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Material;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -27,11 +29,21 @@ public class ImageViewer extends Core {
         super("ImageViewer");
     }
 
-    private final static String defaultURI = "https://i1.hdslb.com/bfs/archive/360d6633673f1b403cbbeb9d33d02161eda3486a.jpg";
-
+    private final static String defaultURI = "screen://builtin/example.jpg";
+    public BufferedImage getErrorImage(){
+        MImageGenerator generator = new MImageGenerator(getScreen().getWidth()*128,getScreen().getHeight()*128,Color.WHITE);
+        MTextBlock textBlock = new MTextBlock(LangUtils.getText("image-viewer-load-failed"));
+        textBlock.setVerticalAlignment(Alignment.VerticalAlignment.Stretch);
+        textBlock.setHorizontalAlignment(Alignment.HorizontalAlignment.Stretch);
+        textBlock.setTextHorizontalAlignment(Alignment.HorizontalAlignment.Center);
+        textBlock.setTextVerticalAlignment(Alignment.VerticalAlignment.Center);
+        generator.addChildControl(textBlock);
+        BufferedImage image = generator.getImage();
+        return image;
+    }
     public static class ImageViewerStoredData implements StoredData {
         public String uri = defaultURI;
-        public int scaleMode = 0;
+        public int scaleMode = 1;
         public int scaleAlgorithm = 0;
 
         @Override
@@ -76,7 +88,7 @@ public class ImageViewer extends Core {
                     return;
                 }
                 URI uri = new URI(data.uri);
-                imageData = Utils.getDataFromURI(uri);
+                imageData = Utils.getDataFromURI(uri,true);
                 if (uri.getRawPath().endsWith("gif")) {
                     GIFUtils.GifDecoder decoder = new GIFUtils.GifDecoder();
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);
@@ -101,41 +113,10 @@ public class ImageViewer extends Core {
                 savedImage = ImageUtils.byteArrayToImage(imageData);
             } catch (Exception e) {
                 e.printStackTrace();
+                isAnimated = false;
+                savedImage = getErrorImage();
             }
         }
-    }
-
-    private BufferedImage processImage(BufferedImage image, int scaleMode, int scaleAlgorithm) {
-        int algorithm = 0;
-        if (scaleAlgorithm == 0) {
-            algorithm = Image.SCALE_SMOOTH;
-        }
-        if (scaleAlgorithm == 1) {
-            algorithm = Image.SCALE_FAST;
-        }
-        BufferedImage newImage = null;
-        if (scaleMode == 1) {
-            newImage = ImageUtils.imageToBufferedImage(image.getScaledInstance(getScreen().getWidth() * 128, getScreen().getHeight() * 128, algorithm));
-        }
-        if (scaleMode == 0) {
-            int screenWidth = getScreen().getWidth() * 128;
-            int screenHeight = getScreen().getHeight() * 128;
-            double scaleFactor = Math.min((double) (screenWidth) / (double) image.getWidth(), (double) (screenHeight) / (double) image.getHeight());
-            int newWidth = (int) (image.getWidth() * scaleFactor);
-            int newHeight = (int) (image.getHeight() * scaleFactor);
-            int left = (int) ((screenWidth - newWidth) / 2);
-            int top = (int) ((screenHeight - newHeight) / 2);
-            left = left < 0 ? 0 : left;
-            top = top < 0 ? 0 : top;
-            if (newWidth + left > screenWidth) {
-                newWidth = screenWidth;
-            }
-            if (newHeight + top > screenHeight) {
-                newHeight = screenHeight;
-            }
-            newImage = ImageUtils.imageToBufferedImage(image.getScaledInstance(newWidth, newHeight, algorithm));
-        }
-        return newImage;
     }
 
     private byte[] lastImage = null;
@@ -171,17 +152,6 @@ public class ImageViewer extends Core {
         }
     }
 
-    public Rectangle2D.Float calcRect(BufferedImage image) {
-        double screenWidth = getScreen().getWidth() * 128;
-        double screenHeight = getScreen().getHeight() * 128;
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
-        int left = (int) ((screenWidth - imageWidth) / 2);
-        int top = (int) ((screenHeight - imageHeight) / 2);
-        left = left < 0 ? 0 : left;
-        top = top < 0 ? 0 : top;
-        return new Rectangle2D.Float(left, top, (float) imageWidth, (float) imageHeight);
-    }
 
     private void setAnimatedRunnableToNull() {
         synchronized (loadImageLock) {
@@ -192,6 +162,8 @@ public class ImageViewer extends Core {
 
     public void updateImage(boolean changedSettings) {
         try {
+            int toWidth = getScreen().getWidth()*128;
+            int toHeight = getScreen().getHeight()*128;
             if (changedSettings) {
                 cancelAndWaitAnimatedRunnable();
             }
@@ -201,8 +173,8 @@ public class ImageViewer extends Core {
                     if (changedSettings || animatedRunnable == null) {
                         Utils.Pair<Rectangle2D.Float, byte[]>[] preData = new Utils.Pair[animatedFrames.size()];
                         for (int i = 0; i < animatedFrames.size(); i++) {
-                            BufferedImage image = processImage(animatedFrames.get(i), data.scaleMode, data.scaleAlgorithm);
-                            preData[i] = new Utils.Pair<>(calcRect(image), ImageUtils.imageToMapColors(image));
+                            Utils.Pair<BufferedImage,Rectangle2D.Float> image = ImageUtils.scaleImageAndGetPosition(animatedFrames.get(i), data.scaleMode, toWidth,toHeight, data.scaleAlgorithm);
+                            preData[i] = new Utils.Pair<>(image.getValue(), ImageUtils.imageToMapColors(image.getKey()));
                         }
                         preProcess = preData;
                         animatedRunnable = new ImmediatelyCancellableBukkitRunnable() {
@@ -241,9 +213,9 @@ public class ImageViewer extends Core {
                 } else {
                     if (changedSettings || preProcess == null) {
                         Utils.Pair<Rectangle2D.Float, byte[]> preData = new Utils.Pair<Rectangle2D.Float, byte[]>(null, null);
-                        BufferedImage image = processImage(savedImage, data.scaleMode, data.scaleAlgorithm);
-                        preData.setValue(ImageUtils.imageToMapColors(image));
-                        preData.setKey(calcRect(image));
+                        Utils.Pair<BufferedImage,Rectangle2D.Float> image = ImageUtils.scaleImageAndGetPosition(savedImage, data.scaleMode, toWidth,toHeight, data.scaleAlgorithm);
+                        preData.setValue(ImageUtils.imageToMapColors(image.getKey()));
+                        preData.setKey(image.getValue());
                         preProcess = preData;
                     }
                     try {
@@ -279,7 +251,7 @@ public class ImageViewer extends Core {
 
     @Override
     public void reRender() {
-        new BukkitRunnable() {
+        new ImmediatelyCancellableBukkitRunnable() {
             @Override
             public void run() {
                 updateImage(false);
@@ -301,7 +273,7 @@ public class ImageViewer extends Core {
         //0=居中 1=填充
         @Override
         public String[] getList() {
-            String[] modes = LangUtils.getText("controller-editor-cores-image-viewer-scale-modes").split("\\|", 2
+            String[] modes = LangUtils.getText("controller-editor-cores-scale-modes").split("\\|", 3
             );
             return modes;
         }
@@ -311,7 +283,7 @@ public class ImageViewer extends Core {
         //0=平滑 1=快速
         @Override
         public String[] getList() {
-            String[] algorithms = LangUtils.getText("controller-editor-cores-image-viewer-scale-algorithms").split("\\|", 2
+            String[] algorithms = LangUtils.getText("controller-editor-cores-scale-algorithms").split("\\|", 3
             );
             return algorithms;
         }
@@ -328,8 +300,8 @@ public class ImageViewer extends Core {
                 new LinkedHashMap() {
                     {
                         put("@controller-editor-cores-image-viewer-uri", String.class);
-                        put("@controller-editor-cores-image-viewer-scale-mode", ScaleModeSettingsList.class);
-                        put("@controller-editor-cores-image-viewer-scale-algorithm", ScaleAlgorithmSettingsList.class);
+                        put("@controller-editor-cores-scale-mode", ScaleModeSettingsList.class);
+                        put("@controller-editor-cores-scale-algorithm", ScaleAlgorithmSettingsList.class);
                     }
                 }
         ));
@@ -342,9 +314,9 @@ public class ImageViewer extends Core {
         switch (name) {
             case "@controller-editor-cores-image-viewer-uri":
                 return data.uri;
-            case "@controller-editor-cores-image-viewer-scale-mode":
+            case "@controller-editor-cores-scale-mode":
                 return data.scaleMode;
-            case "@controller-editor-cores-image-viewer-scale-algorithm":
+            case "@controller-editor-cores-scale-algorithm":
                 return data.scaleAlgorithm;
         }
         return super.getEditGUISettingValue(name);
@@ -358,10 +330,10 @@ public class ImageViewer extends Core {
                 data.uri = (String) value;
                 loadImage();
                 break;
-            case "@controller-editor-cores-image-viewer-scale-mode":
+            case "@controller-editor-cores-scale-mode":
                 data.scaleMode = (int) value;
                 break;
-            case "@controller-editor-cores-image-viewer-scale-algorithm":
+            case "@controller-editor-cores-scale-algorithm":
                 data.scaleAlgorithm = (int) value;
                 break;
         }
