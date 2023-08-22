@@ -161,8 +161,6 @@ controller-editor-cores-video-player-name: "視頻播放器(*.smv)"
 controller-editor-cores-video-player-details: |-
   可用於播放 .smv 格式的視頻(經過 ScreenInMC預處理器 處理後的視頻)
   使用 java -jar ScreenInMC.jar 可查看 ScreenInMC預處理器 的使用方法
-  僅支援與螢幕尺寸相對應的解析度的視頻
-  (例如螢幕尺寸為4x3，則視頻尺寸應為512x384 (512=4x128,384=3x128))
 controller-editor-cores-video-player-loop: "循環"
 controller-editor-cores-video-player-path: "視頻路徑"
 controller-editor-cores-video-player-pause: "暫停"

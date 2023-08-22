@@ -83,7 +83,7 @@ public class EventListener implements Listener {
             for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.outputBlocks){
                 if(e.getBlock().getLocation().equals(i.getBlockLocation())){
                     if(!i.checkRedstoneRepeaterAndUpdate()) return;
-                    e.setNewCurrent(15);
+//                    e.setNewCurrent(0);
                 }
                 BlockFace face = getRepeaterFacing(i.getBlockLocation().getBlock());
                 if(face==null){
@@ -99,15 +99,14 @@ public class EventListener implements Listener {
             for (RedstoneBridge.RedstoneSignalInterface i : RedstoneBridge.inputBlocks) {
                 if (e.getBlock().getLocation().equals(i.getBlockLocation())) {
                     if (!i.checkRedstoneRepeaterAndUpdate()) return;
-                    e.setNewCurrent(0);
                 }
                 BlockFace face = getRepeaterFacing(i.getBlockLocation().getBlock());
                 if(face==null){
                     if(!i.checkRedstoneRepeaterAndUpdate())return;
                 }else{
-                    if(e.getBlock().getRelative(face).getLocation().equals(i.getBlockLocation())){
-                        e.setNewCurrent(e.getOldCurrent());
-                    }
+//                    if(e.getBlock().getRelative(face).getLocation().equals(i.getBlockLocation())){
+//                        e.setNewCurrent(e.getOldCurrent());
+//                    }
                     if(e.getBlock().getRelative(face.getOppositeFace()).getLocation().equals(i.getBlockLocation())){
                         i.tryReceiveRedstoneSignal(e.getNewCurrent());
                     }
@@ -119,24 +118,24 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
-        if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
-            if(CraftUtils.isRepeater(e.getClickedBlock().getType())){
-                synchronized (RedstoneBridge.outputBlocks) {
-                    for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.outputBlocks){
-                        if(e.getClickedBlock().getLocation().equals(i.getBlockLocation())){
-                            e.setCancelled(true);
-                        }
-                    }
-                }
-                synchronized (RedstoneBridge.inputBlocks) {
-                    for (RedstoneBridge.RedstoneSignalInterface i : RedstoneBridge.inputBlocks) {
-                        if(e.getClickedBlock().getLocation().equals(i.getBlockLocation())){
-                            e.setCancelled(true);
-                        }
-                    }
-                }
-            }
-        }
+//        if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
+//            if(CraftUtils.isRepeater(e.getClickedBlock().getType())){
+//                synchronized (RedstoneBridge.outputBlocks) {
+//                    for(RedstoneBridge.RedstoneSignalInterface i:RedstoneBridge.outputBlocks){
+//                        if(e.getClickedBlock().getLocation().equals(i.getBlockLocation())){
+//                            e.setCancelled(true);
+//                        }
+//                    }
+//                }
+//                synchronized (RedstoneBridge.inputBlocks) {
+//                    for (RedstoneBridge.RedstoneSignalInterface i : RedstoneBridge.inputBlocks) {
+//                        if(e.getClickedBlock().getLocation().equals(i.getBlockLocation())){
+//                            e.setCancelled(true);
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         Utils.MouseClickType type = Utils.MouseClickType.LEFT;
         if (e.getAction().equals(Action.LEFT_CLICK_AIR) || e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {

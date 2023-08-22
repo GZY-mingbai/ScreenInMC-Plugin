@@ -101,8 +101,7 @@ public class RedstoneBridge implements Cloneable {
                     }
                     this.block = block;
                     isConnected = true;
-                    setResetRunnable(block);
-                    resetRunnable.runTask(Main.thisPlugin());
+//                    resetBlock(block);
                 }
             }
         }
@@ -128,10 +127,7 @@ public class RedstoneBridge implements Cloneable {
         public void onReceiveRedstoneSignal(Core core,int strength/*From 1 to 15*/) {
 
         }
-        public void disconnect() {
-            disconnect(true);
-        }
-        public void disconnect(boolean update){
+        public void disconnect(){
             synchronized (this) {
                 if(isInput){
                     synchronized (inputBlocks) {
@@ -145,41 +141,17 @@ public class RedstoneBridge implements Cloneable {
                 Location oldBlock =this.block;
                 this.block = null;
                 isConnected = false;
-                if(update){
-                    if(!isInput){
-                        setResetRunnable(oldBlock);
-                        resetRunnable.runTask(Main.thisPlugin());
-                    }
-                }
+
             }
         }
-        private ImmediatelyCancellableBukkitRunnable resetRunnable = null;
         private int nowPower = 0;
-        private void setResetRunnable(Location loc){
-            if(resetRunnable!=null&&!resetRunnable.isCancelled()){
-                resetRunnable.cancel();
-            }
-            resetRunnable = new ImmediatelyCancellableBukkitRunnable() {
-                @Override
-                public void run() {
-                    if(this.isCancelled()){
-                        return;
-                    }
-                    if (checkRedstoneRepeater(loc)) {
-                        Block block = loc.getBlock();
-                        BlockFace face = getRepeaterFacing(block);
-                        block.setType(Material.AIR);
-                        block.setType(getRepeater());
-                        setRepeaterFacing(block,face);
-                        if(!isInput){
-                            activeRepeater(block);
-                        }else{
-                            inactiveRepeater(block);
-                        }
-                    }
-                }
-            };
-        }
+//        private void resetBlock(Location loc){
+//            if (checkRedstoneRepeater(loc)) {
+////                Block block = loc.getBlock();
+////                setRepeaterFacing(block,face);
+//            }
+//        }
+
 
         public void sendRedstoneSignal(int strength) {
             synchronized (this) {
@@ -189,16 +161,16 @@ public class RedstoneBridge implements Cloneable {
                 if (!isInput) {
                     if (checkRedstoneRepeater(block)) {
                         nowPower = strength;
-                        CraftUtils.inactiveRepeater(block.getBlock());
-                        final Location lastBlock = this.block;
-                        BukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
-                            @Override
-                            public void run() {
-                                if(RedstoneSignalInterface.this.block.equals(lastBlock))
-                                CraftUtils.activeRepeater(RedstoneSignalInterface.this.block.getBlock());
-                            }
-                        };
-                        runnable.runTaskLater(Main.thisPlugin(),1L);
+//                        CraftUtils.inactiveRepeater(block.getBlock());
+//                        final Location lastBlock = this.block;
+//                        BukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
+//                            @Override
+//                            public void run() {
+//                                if(RedstoneSignalInterface.this.block.equals(lastBlock))
+//                                CraftUtils.activeRepeater(RedstoneSignalInterface.this.block.getBlock());
+//                            }
+//                        };
+//                        runnable.runTaskLater(Main.thisPlugin(),1L);
                     }else {
                         disconnect();
                     }

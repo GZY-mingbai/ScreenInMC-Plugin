@@ -161,9 +161,6 @@ controller-editor-cores-video-player-name: "Video Player(*.smv)"
 controller-editor-cores-video-player-details: |-
   Used to play videos in .smv format (preprocessed by ScreenInMC preprocessor)
   Use java -jar ScreenInMC.jar to see the usage of the ScreenInMC preprocessor
-  Only videos with resolutions corresponding to the screen size are supported
-  (For example, if the screen size is 4x3, 
-  the video resolution should be 512x384 (512=4x128, 384=3x128))
 controller-editor-cores-video-player-loop: "Loop"
 controller-editor-cores-video-player-path: "Video Path"
 controller-editor-cores-video-player-pause: "Pause"

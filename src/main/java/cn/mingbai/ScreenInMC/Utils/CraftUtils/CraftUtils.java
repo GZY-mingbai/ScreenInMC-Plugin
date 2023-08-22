@@ -392,54 +392,57 @@ public class CraftUtils {
         return null;
     }
 
-    public static void setRepeaterFacing(Block block,BlockFace face){
-        if(CraftUtils.minecraftVersion<=12){
-            MaterialData data = block.getState().getData();
-            if(data instanceof Diode){
-                ((Diode)data).setFacingDirection(face.getOppositeFace());
-            }
-            try {
-                SetData.invoke(block,data.getData(),true);
-            } catch (Exception e) {
-            }
-        }else{
-            BlockData data = block.getState().getBlockData();
-            if(data instanceof Repeater){
-                ((Repeater)data).setFacing(face);
-            }
-            block.setBlockData(data,true);
-        }
-    }
-    public static void activeRepeater(Block block){
-        if(CraftUtils.minecraftVersion<=12){
-            MaterialData data = block.getState().getData();
-            block.setType(Material.valueOf("DIODE_BLOCK_ON"));
-            try {
-                SetData.invoke(block,data.getData(),true);
-            } catch (Exception e) {
-            }
-        }else{
-            BlockData data = block.getState().getBlockData();
-            if(data instanceof Repeater){
-                ((Repeater)data).setPowered(true);
-            }
-            block.setBlockData(data,true);
-        }
-    }
-    public static void inactiveRepeater(Block block){
-        if(CraftUtils.minecraftVersion<=12){
-            MaterialData data = block.getState().getData();
-            block.setType(Material.valueOf("DIODE_BLOCK_OFF"));
-            try {
-                SetData.invoke(block,data.getData(),true);
-            } catch (Exception e) {
-            }
-        }else{
-            BlockData data = block.getState().getBlockData();
-            if(data instanceof Repeater){
-                ((Repeater)data).setPowered(false);
-            }
-            block.setBlockData(data,true);
-        }
-    }
+//    public static void setRepeaterFacing(Block block,BlockFace face){
+//        if(CraftUtils.minecraftVersion<=12){
+//            MaterialData data = block.getState().getData();
+//            if(data instanceof Diode){
+//                ((Diode)data).setFacingDirection(face.getOppositeFace());
+//                ((Diode)data).setDelay(0);
+//            }
+//            try {
+//                SetData.invoke(block,data.getData(),true);
+//            } catch (Exception e) {
+//            }
+//        }else{
+//            BlockData data = block.getState().getBlockData();
+//            if(data instanceof Repeater){
+//                ((Repeater)data).setFacing(face);
+//                ((Repeater)data).setDelay(0);
+//            }
+//            block.setBlockData(data,true);
+//        }
+//    }
+//    public static void activeRepeater(Block block){
+//        if(CraftUtils.minecraftVersion<=12){
+//            MaterialData data = block.getState().getData();
+//            block.setType(Material.valueOf("DIODE_BLOCK_ON"));
+//            try {
+//                SetData.invoke(block,data.getData(),true);
+//            } catch (Exception e) {
+//            }
+//        }else{
+//            BlockData data = block.getState().getBlockData();
+//            if(data instanceof Repeater){
+//                ((Repeater)data).setPowered(true);
+//            }
+//            block.setBlockData(data,true);
+//        }
+//
+//    }
+//    public static void inactiveRepeater(Block block){
+//        if(CraftUtils.minecraftVersion<=12){
+//            MaterialData data = block.getState().getData();
+//            block.setType(Material.valueOf("DIODE_BLOCK_OFF"));
+//            try {
+//                SetData.invoke(block,data.getData(),true);
+//            } catch (Exception e) {
+//            }
+//        }else{
+//            BlockData data = block.getState().getBlockData();
+//            if(data instanceof Repeater){
+//                ((Repeater)data).setPowered(false);
+//            }
+//            block.setBlockData(data,true);
+//        }
+//    }
 }

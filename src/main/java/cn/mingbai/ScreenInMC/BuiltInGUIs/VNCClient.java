@@ -51,30 +51,11 @@ public class VNCClient extends Core {
         }
         this.container = new MContainer(getScreen());
         container.setBackground(new Color(255, 255, 255));
-        MInput IPInput = new MInput(LangUtils.getText("vnc-client-address")) {
-            @Override
-            public void onActive() {
-                super.onActive();
-            }
-
-            @Override
-            public void onRender(MRenderer mRenderer) {
-                if (!isConnected) {
-                    super.onRender(mRenderer);
-                }
-            }
-        };
+        MInput IPInput = new MInput(LangUtils.getText("vnc-client-address"));
         IPInput.setHeight(64);
         IPInput.setWidth(256);
         IPInput.setPaddingLeft(32);
-        MInput passwordInput = new MInput(LangUtils.getText("vnc-client-password")) {
-            @Override
-            public void onRender(MRenderer mRenderer) {
-                if (!isConnected) {
-                    super.onRender(mRenderer);
-                }
-            }
-        };
+        MInput passwordInput = new MInput(LangUtils.getText("vnc-client-password"));
         passwordInput.setHeight(64);
         passwordInput.setWidth(256);
         passwordInput.setTop(72);
@@ -96,12 +77,6 @@ public class VNCClient extends Core {
                 thread.runTaskAsynchronously(Main.thisPlugin());
             }
 
-            @Override
-            public void onRender(MRenderer mRenderer) {
-                if (!isConnected) {
-                    super.onRender(mRenderer);
-                }
-            }
         };
         connectButton.setHeight(64);
         connectButton.setWidth(128);
@@ -161,8 +136,10 @@ public class VNCClient extends Core {
     private Object imageMappingSetLock;
     public void connectServer(String ip, String passwd) {
         try {
-            container.unload();
-            container = null;
+            if(container!=null) {
+                container.unload();
+                container = null;
+            }
             if (client != null) {
                 client.stop();
             }
@@ -225,8 +202,8 @@ public class VNCClient extends Core {
                                 imageMappingY = (int) scaled.getValue().getY();
                                 imageMappingW = (int) scaled.getValue().getWidth();
                                 imageMappingH = (int) scaled.getValue().getHeight();
-                                imageMappingCW = toWidth;
-                                imageMappingCH = toHeight;
+                                imageMappingCW = nowImage.getWidth(null);
+                                imageMappingCH = nowImage.getHeight(null);
                             }
                             getScreen().sendView(ImageUtils.imageToMapColors(scaled.getKey()),
                                     (int) scaled.getValue().x,
@@ -256,11 +233,10 @@ public class VNCClient extends Core {
                     }
                     runnable=null;
                     if(!this.isCancelled()) {
-                        isConnected = false;
-                        update = true;
                         createContainer(true);
-                        return;
                     }
+                    isConnected = false;
+                    update = true;
 
                 }
 
@@ -379,4 +355,10 @@ public class VNCClient extends Core {
         }
     }
 
+    @Override
+    public void reRender() {
+        if(container!=null){
+            container.reRenderAll();
+        }
+    }
 }

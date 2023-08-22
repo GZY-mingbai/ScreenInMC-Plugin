@@ -1533,17 +1533,17 @@ public class EditGUI {
                     InWindowClickPacket packet = (InWindowClickPacket) p;
                     if (packet.getContainerId() == containerID) {
                         updateInventory();
-                        if(packet.getSlotNum()==3){
+                        if(packet.getSlotNum()==3||packet.getSlotNum()==12){
                             Screen.removeScreen(screen);
                             forceClose();
                             return true;
                         }
-                        if(packet.getSlotNum()>=0&&packet.getSlotNum()<=8){
+                        if(packet.getSlotNum()>=0&&packet.getSlotNum()<=2){
                             nowMode = (short) packet.getSlotNum();
                             nowPage=0;
                             sendSwitchModeSound();
                         }
-                        if(packet.getSlotNum()>=9&&packet.getSlotNum()<=17){
+                        if(packet.getSlotNum()>=9&&packet.getSlotNum()<=11){
                             nowMode = (short) (packet.getSlotNum()-9);
                             nowPage=0;
                             sendSwitchModeSound();
@@ -1901,7 +1901,7 @@ public class EditGUI {
         JsonText jsonText = new JsonText(text+" ("+(info.getValue().isInput()?LangUtils.getText("input"):LangUtils.getText("output"))+")").setColor("red");
         if(info.getValue().isConnected()){
             Location loc = info.getValue().getBlockLocation();
-            JsonText lore = new JsonText(LangUtils.getText("redstone-bridge-connected").replace("%%",loc.getWorld()+" "+loc.getBlockX()+" "+loc.getBlockY()+" "+loc.getBlockZ()));
+            JsonText lore = new JsonText(LangUtils.getText("redstone-bridge-connected").replace("%%",loc.getWorld().getName()+" "+loc.getBlockX()+" "+loc.getBlockY()+" "+loc.getBlockZ()));
             lore.setColor("red");
             stack.setLore(new JsonText[]{lore});
         }
