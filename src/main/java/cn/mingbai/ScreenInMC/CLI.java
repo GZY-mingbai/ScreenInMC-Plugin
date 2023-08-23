@@ -34,6 +34,11 @@ public class CLI {
             FileUtils.streamToFile(stream, file);
             System.load(file.getAbsolutePath());
         } catch (Exception e) {
+            e.printStackTrace();
+        }catch (Error e){
+            e.printStackTrace();
+        }catch (Throwable e){
+            e.printStackTrace();
         }
 
         int device = -3;
@@ -236,9 +241,18 @@ public class CLI {
             }else{
                 ImageUtils.setCustomOpenCLCode("code.cl");
             }
-            if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
-                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
+            try {
+                if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
+                    ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }catch (Error e){
+                e.printStackTrace();
+            }catch (Throwable e){
+                e.printStackTrace();
             }
+
         }
         if(device == -2){
             ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaDitheringProcessor());

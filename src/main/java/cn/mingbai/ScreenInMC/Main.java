@@ -55,8 +55,12 @@ public class Main extends JavaPlugin {
             InputStream stream = Main.class.getResourceAsStream("/lib/" + fileName);
             FileUtils.streamToFile(stream, file);
             System.load(file.getAbsolutePath());
-
+            file.deleteOnExit();
         } catch (Exception e) {
+            e.printStackTrace();
+        }catch (Error e){
+            e.printStackTrace();
+        }catch (Throwable e){
             e.printStackTrace();
         }
     }
@@ -218,8 +222,16 @@ public class Main extends JavaPlugin {
             DitheringProcessor.OpenCLDitheringProcessor processor = new DitheringProcessor.OpenCLDitheringProcessor();
             ImageUtils.setDitheringProcessor(processor);
             int[] p = getPalette();
-            if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
-                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
+            try {
+                if (!GPUDither.init(device, p, p.length, getPieceSize(),ImageUtils.getOpenCLCode())) {
+                    ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }catch (Error e){
+                e.printStackTrace();
+            }catch (Throwable e){
+                e.printStackTrace();
             }
         }
         if(device==-2){

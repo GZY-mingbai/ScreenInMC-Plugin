@@ -125,10 +125,14 @@ public class ImageUtils {
     public static void initImageUtils(PaletteLoader paletteLoader,DitheringProcessor processor) {
         try {
             ImageUtils.processor = processor;
-            platforms = GPUDither.getPlatforms();
             paletteColors = paletteLoader.getPaletteColors();
             paletteRGBs = paletteLoader.getPaletteColorRGBs();
+            platforms = GPUDither.getPlatforms();
         } catch (Exception e) {
+            e.printStackTrace();
+        }catch (Error e){
+            e.printStackTrace();
+        }catch (Throwable e){
             e.printStackTrace();
         }
     }
