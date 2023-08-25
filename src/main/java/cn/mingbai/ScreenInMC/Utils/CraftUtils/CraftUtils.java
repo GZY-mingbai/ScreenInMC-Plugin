@@ -246,7 +246,7 @@ public class CraftUtils {
     }
     private static String[] getSubClasses(String path){
         List<String> classes = new ArrayList<>();
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        ClassLoader loader = Bukkit.class.getClassLoader();
         try {
             Enumeration<URL> dirs = loader.getResources(path.replace(".", "/"));
             while (dirs.hasMoreElements()) {
@@ -256,9 +256,9 @@ public class CraftUtils {
                         String urlStr = url.getFile();
                         String[] jarAndClass = urlStr.split("!");
                         if(jarAndClass.length==2){
-                            String jar = jarAndClass[0].split("%")[0];
+                            int jarIndex = jarAndClass[0].lastIndexOf("%");
                             String className = jarAndClass[1];
-                            url = new URL("jar:file:"+jar+"!"+className);
+                            url = new URL("jar:file:"+jarAndClass[0].substring(0,jarIndex)+"!"+className);
                         }
                     }catch (Exception e){}
                 }

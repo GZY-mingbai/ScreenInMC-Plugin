@@ -165,7 +165,7 @@ public class Utils {
         }
     }
     public static void loadJar(URL url) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        ClassLoader loader = Main.class.getClassLoader();
         Class loaderClass;
         if (URLClassLoader.class.isAssignableFrom(loader.getClass())) {
             loaderClass = URLClassLoader.class;
