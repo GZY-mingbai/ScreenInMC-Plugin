@@ -190,7 +190,7 @@ public class CommandListener implements TabExecutor {
                 }
                 if (screen != null) {
                     if (screen.getCore() instanceof WebBrowser) {
-                        if (args.length != 3) {
+                        if (args.length < 3) {
                             Main.sendMessage(sender, new JsonText(
                                     LangUtils.getText("command-error-arguments-count-error")
                                             .replace("%%", "2-3"))

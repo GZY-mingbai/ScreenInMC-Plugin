@@ -51,9 +51,6 @@ public class WebBrowser extends Core {
             data.frameRateLimit = this.frameRateLimit;
             return data;
         }
-
-
-
     }
 
     @Override

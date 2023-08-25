@@ -3,6 +3,7 @@ package cn.mingbai.ScreenInMC.Browsers;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.FileUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
@@ -326,6 +327,9 @@ public class Chromium extends Browser {
             if(libSystemName.contains("linux")){
                 cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.linkJdkLibrary("libjawt.so");
                 cn.mingbai.ScreenInMC.Browsers.ChromiumLibrariesLoader.loadLinuxLibraries();
+            }
+            if(CraftUtils.isClassExists("cpw.mods.modlauncher.Launcher") || CraftUtils.isClassExists("net.minecraftforge.server.console.TerminalHandler")) {
+                ChromiumLibrariesLoader.linkJoglLibraries();
             }
             org.cef.CefSettings settings = new org.cef.CefSettings();
 
@@ -660,8 +664,8 @@ public class Chromium extends Browser {
 
         private static void createBrowser(Screen screen, int width, int height,String defaultURI) {
             if (client != null && app != null) {
-
-                org.cef.browser.ScreenInMCChromiumBrowser browser = new org.cef.browser.ScreenInMCChromiumBrowser(client, defaultURI,
+                org.cef.browser.ScreenInMCChromiumBrowser browser;
+                browser = new org.cef.browser.ScreenInMCChromiumBrowser(client, defaultURI,
                         Main.getConfiguration().getBoolean("jcef-transparent"));
                 browser.createImmediately();
                 browser.setSize(width, height);

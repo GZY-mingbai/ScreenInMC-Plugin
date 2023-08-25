@@ -56,6 +56,14 @@ public class CraftUtils {
         }
         throw new RuntimeException("Not found "+cls.getName()+":"+name);
     }
+    public static boolean isClassExists(String className){
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
     public static void init() throws Exception{
             for(int i=8;i<21;i++) {
                 if (Bukkit.getBukkitVersion().contains("1."+i)) {
@@ -243,6 +251,17 @@ public class CraftUtils {
             Enumeration<URL> dirs = loader.getResources(path.replace(".", "/"));
             while (dirs.hasMoreElements()) {
                 URL url = dirs.nextElement();
+                if (!url.getProtocol().equals("jar") && !url.getProtocol().equals("file")){
+                    try {
+                        String urlStr = url.getFile();
+                        String[] jarAndClass = urlStr.split("!");
+                        if(jarAndClass.length==2){
+                            String jar = jarAndClass[0].split("%")[0];
+                            String className = jarAndClass[1];
+                            url = new URL("jar:file:"+jar+"!"+className);
+                        }
+                    }catch (Exception e){}
+                }
                 if (url.getProtocol().equals("jar")) {
                     JarURLConnection urlConnection = (JarURLConnection) url.openConnection();
                     Enumeration<JarEntry> entries = urlConnection.getJarFile().entries();
