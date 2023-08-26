@@ -1625,6 +1625,7 @@ public class EditGUI {
                 i.getEditGUI().forceClose();
             }
         }
+        EditGUISubWindow.closeAllWindows(player);
     }
     private void sendClosePacket(){
         Object closePacket = OutCloseWindowPacket.create(containerID);

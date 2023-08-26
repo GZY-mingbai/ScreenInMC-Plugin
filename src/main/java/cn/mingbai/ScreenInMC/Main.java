@@ -6,25 +6,25 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.*;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.*;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutSystemMessagePacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
-import cn.mingbai.ScreenInMC.Utils.FileUtils;
-import cn.mingbai.ScreenInMC.Utils.IOUtils;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ConfigPaletteLoader;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONArray;
-import cn.mingbai.ScreenInMC.Utils.LangUtils;
-import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.yaml.snakeyaml.reader.StreamReader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +34,9 @@ import java.util.logging.Logger;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
+    public static int nowVersion = 1;
+    public static int defaultFrameRateLimit = 18;
+    public static int renderDistanceLimit = 32;
     public static final String PluginFilesPath = "plugins/ScreenInMC/";
     private static final File screensFile = new File(PluginFilesPath + "screens.json");
     private static Plugin thisPlugin;
@@ -190,6 +193,29 @@ public class Main extends JavaPlugin {
     public void onEnable() {
         thisPlugin = Bukkit.getServer().getPluginManager().getPlugin("ScreenInMC");
         logger = thisPlugin.getLogger();
+        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
+            @Override
+            public void run() {
+                String version ="";
+                try {
+                    version=FileUtils.getString("https://raw.githubusercontent.com/GZY-mingbai/ScreenInMC-Plugin/master/.github/version.yml","");
+                }catch (Throwable e){}
+                if(version==null||version.length()==0) return;
+                try {
+                    ByteArrayInputStream inputStream = new ByteArrayInputStream(version.getBytes(StandardCharsets.UTF_8));
+                    InputStreamReader reader =new InputStreamReader(inputStream,StandardCharsets.UTF_8);
+                    YamlConfiguration configuration = YamlConfiguration.loadConfiguration(reader);
+                    int latest = configuration.getInt("latest-version");
+                    if(latest>nowVersion){
+                        logger.warning("检查到插件更新: 最新版本: "+latest+" 当前版本: "+nowVersion);
+                    }
+                    reader.close();
+                    inputStream.close();
+                }catch (Exception e){
+                }
+            }
+        };
+        runnable.runTaskAsynchronously(thisPlugin());
         try {
             CraftUtils.init();
         } catch (Exception e) {
@@ -200,6 +226,8 @@ public class Main extends JavaPlugin {
         ImageUtils.initImageUtils(new ConfigPaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
+        defaultFrameRateLimit = config.getInt("default-fps-limit");
+        renderDistanceLimit = config.getInt("render-distance-limit");
         try{
             new File(PluginFilesPath+"Files").mkdirs();
         }catch (Exception e){
@@ -216,7 +244,11 @@ public class Main extends JavaPlugin {
         EventListener.init();
         int device = config.getInt("opencl-device");
         if (device == -3) {
-            device = ImageUtils.getBestOpenCLDevice();
+            try {
+                device = ImageUtils.getBestOpenCLDevice();
+            }catch (Exception e){
+                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
+            }
         }
         if (device >= -1) {
             DitheringProcessor.OpenCLDitheringProcessor processor = new DitheringProcessor.OpenCLDitheringProcessor();

@@ -98,6 +98,7 @@ public class Welcome extends Core {
 
     }
     private void sendFrame(int index){
+        if(!getScreen().canSleep()) return;
         BufferedImage frame = readFrame(index);
         Utils.Pair<BufferedImage, Rectangle2D.Float> image = ImageUtils.scaleImageAndGetPosition(frame,1,
                 getScreen().getWidth()*128,getScreen().getHeight()*128,1

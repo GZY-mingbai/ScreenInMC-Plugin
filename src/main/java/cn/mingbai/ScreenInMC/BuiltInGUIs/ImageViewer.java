@@ -126,15 +126,15 @@ public class ImageViewer extends Core {
     private void sendImage(byte[] data, int left, int top, int width, int height) {
         synchronized (loadImageLock) {
             if (isUnloaded()) return;
+            lastImage = data;
+            lastSize = new int[]{left, top, width, height};
             if (sendingRunnable == null) {
                 sendingRunnable = new ImmediatelyCancellableBukkitRunnable() {
                     @Override
                     public void run() {
-                        byte[] newData = data;
-                        int[] newSize = new int[]{left, top, width, height};
+                        byte[] newData = lastImage;
+                        int[] newSize = lastSize;
                         while (true) {
-                            lastImage = newData;
-                            lastSize = newSize;
                             getScreen().sendView(newData, newSize[0], newSize[1], newSize[2], newSize[3]);
                             if (lastImage != null && lastImage != newData) {
                                 newData = lastImage;
@@ -193,7 +193,11 @@ public class ImageViewer extends Core {
                                         Utils.Pair<Rectangle2D.Float, byte[]>[] pre = (Utils.Pair<Rectangle2D.Float, byte[]>[]) (preProcess);
                                         Utils.Pair<Rectangle2D.Float, byte[]> preData = new Utils.Pair<>(pre[nowFrame].getKey(), pre[nowFrame].getValue());
                                         nowFrame++;
-                                        if(!this.isCancelled())sendImage(preData.getValue(), (int) preData.getKey().x, (int) preData.getKey().y, (int) preData.getKey().width, (int) preData.getKey().height);
+                                        if (!this.isCancelled()) {
+                                            if (!getScreen().canSleep()) {
+                                                sendImage(preData.getValue(), (int) preData.getKey().x, (int) preData.getKey().y, (int) preData.getKey().width, (int) preData.getKey().height);
+                                            }
+                                        }
                                     }
                                     long timeToSleep = delay - (System.currentTimeMillis() - timeStart);
                                     if (timeToSleep > 0) {
@@ -221,7 +225,9 @@ public class ImageViewer extends Core {
                     try {
                         getScreen().clearScreen();
                         Utils.Pair<Rectangle2D.Float, byte[]> pre = (Utils.Pair<Rectangle2D.Float, byte[]>) preProcess;
-                        sendImage(pre.getValue(), (int) pre.getKey().x, (int) pre.getKey().y, (int) pre.getKey().width, (int) pre.getKey().height);
+                        if (!getScreen().canSleep()) {
+                            sendImage(pre.getValue(), (int) pre.getKey().x, (int) pre.getKey().y, (int) pre.getKey().width, (int) pre.getKey().height);
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

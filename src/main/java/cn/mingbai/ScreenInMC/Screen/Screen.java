@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC.Screen;
 
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
+import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
@@ -337,8 +338,10 @@ public class Screen {
     public void sendView(byte[] colors) {
         List<Object> packets = getPackets(colors);
         for (Player player : location.getWorld().getPlayers()) {
-            for (Object i : packets) {
-                CraftUtils.sendPacket(player, i);
+            if(player.getLocation().distance(location)<= Main.renderDistanceLimit) {
+                for (Object i : packets) {
+                    CraftUtils.sendPacket(player, i);
+                }
             }
         }
     }
@@ -346,8 +349,10 @@ public class Screen {
     public void sendView(byte[] colors, int x, int y, int w, int h) {
         List<Object> packets = getPackets(colors, x, y, w, h);
         for (Player player : location.getWorld().getPlayers()) {
-            for (Object i : packets) {
-                CraftUtils.sendPacket(player, i);
+            if(player.getLocation().distance(location)<= Main.renderDistanceLimit) {
+                for (Object i : packets) {
+                    CraftUtils.sendPacket(player, i);
+                }
             }
         }
     }
@@ -477,6 +482,14 @@ public class Screen {
         for (Object i : getPackets(colors, x, y, w, h)) {
             CraftUtils.sendPacket(player, i);
         }
+    }
+    public boolean canSleep(){
+        for(Player i:location.getWorld().getPlayers()){
+            if(i.getLocation().distance(location)<=Main.renderDistanceLimit){
+                return false;
+            }
+        }
+        return true;
     }
 
     public enum Facing {

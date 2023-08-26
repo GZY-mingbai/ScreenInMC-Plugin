@@ -195,7 +195,7 @@ public class VNCClient extends Core {
                         synchronized (VNCClient.this) {
                             send = nowImage != null && update;
                         }
-                        if (send) {
+                        if (!getScreen().canSleep()&&send) {
                             Utils.Pair<BufferedImage, Rectangle2D.Float> scaled = scaleImageAndGetPosition(ImageUtils.imageToBufferedImage(nowImage),scaleMode,toWidth,toHeight,1);
                             synchronized (imageMappingSetLock){
                                 imageMappingX = (int) scaled.getValue().getX();
@@ -252,6 +252,7 @@ public class VNCClient extends Core {
     @Override
     public void onMouseClick(int x, int y, Utils.MouseClickType type) {
         if (isConnected) {
+            if(imageMappingW<=0||imageMappingH<=0) return;
             int actuallyX;
             int actuallyY;
             synchronized (imageMappingSetLock){
@@ -288,7 +289,7 @@ public class VNCClient extends Core {
     public static class VNCClientStoredData implements StoredData {
         public String IP="";
         public String password="";
-        public int frameRateLimit=18;
+        public int frameRateLimit=Main.defaultFrameRateLimit;
         public int scaleMode=1;
         public VNCClientStoredData(){};
 

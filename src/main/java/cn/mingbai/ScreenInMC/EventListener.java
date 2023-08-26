@@ -4,6 +4,7 @@ import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
+import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -73,7 +74,22 @@ public class EventListener implements Listener {
     }
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent e){
-        if(e.getFrom().distance(e.getTo())>1){
+        for(Screen i:Screen.getAllScreens()){
+            if(!i.canSleep()){
+                if(i.getLocation().distance(e.getFrom())>Main.renderDistanceLimit&&i.getLocation().distance(e.getTo())<=Main.renderDistanceLimit){
+                    if(i.getCore()!=null){
+                        ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
+                            @Override
+                            public void run() {
+                                i.getCore().reRender();
+                            }
+                        };
+                        runnable.runTaskAsynchronously(Main.thisPlugin());
+                    }
+                }
+            }
+        }
+        if(e.getFrom().distance(e.getTo())>8){
             EditGUI.forceClose(e.getPlayer());
         }
     }

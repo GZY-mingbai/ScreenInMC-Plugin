@@ -41,7 +41,7 @@ public class WebBrowser extends Core {
     public static class WebBrowserStoredData implements StoredData {
         public String browser;
         public String uri;
-        public int frameRateLimit=18;
+        public int frameRateLimit=Main.defaultFrameRateLimit;
 
         @Override
         public StoredData clone() {
@@ -256,8 +256,10 @@ public class WebBrowser extends Core {
                         long startTime = System.currentTimeMillis();
                         Utils.Pair<Utils.Pair<Integer, Integer>, int[]> image = browser.onRender(getScreen());
                         if (image.getValue().length != 0) {
-                            byte[] data = ImageUtils.imageToMapColors(image.getValue(), image.getKey().getKey(), image.getKey().getValue());
-                            if(data!=null)getScreen().sendView(data);
+                            if(!getScreen().canSleep()) {
+                                byte[] data = ImageUtils.imageToMapColors(image.getValue(), image.getKey().getKey(), image.getKey().getValue());
+                                if (data != null) getScreen().sendView(data);
+                            }
                         }
                         int fps = 20;
                         if(setLock !=null&&storedData.frameRateLimit>=1&&storedData.frameRateLimit<=20) {

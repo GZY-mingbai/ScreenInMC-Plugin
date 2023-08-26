@@ -48,7 +48,7 @@ public class VideoPlayer extends Core {
     public static class VideoPlayerStoredData implements StoredData{
         public String path=null;
         public boolean loop=false;
-        public int frameRateLimit = 18;
+        public int frameRateLimit = Main.defaultFrameRateLimit;
         public int scaleMode = 1;
 
         @Override
@@ -145,8 +145,10 @@ public class VideoPlayer extends Core {
                             stop();
                             return;
                         }
-                        Utils.Pair<byte[], Rectangle2D.Float> scaled = ImageUtils.scaleMapColorsAndGetPosition(data,scaleMode,video.getWidth(),video.getHeight(),toWidth,toHeight);
-                        getScreen().sendView(scaled.getKey(), (int) scaled.getValue().x, (int) scaled.getValue().y, (int) scaled.getValue().width, (int) scaled.getValue().height);
+                        if(!getScreen().canSleep()) {
+                            Utils.Pair<byte[], Rectangle2D.Float> scaled = ImageUtils.scaleMapColorsAndGetPosition(data, scaleMode, video.getWidth(), video.getHeight(), toWidth, toHeight);
+                            getScreen().sendView(scaled.getKey(), (int) scaled.getValue().x, (int) scaled.getValue().y, (int) scaled.getValue().width, (int) scaled.getValue().height);
+                        }
                         long wait = needToWait - (System.currentTimeMillis() - start);
                         if (wait > 0) {
                             try {

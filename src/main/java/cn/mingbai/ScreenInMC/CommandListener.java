@@ -273,6 +273,10 @@ public class CommandListener implements TabExecutor {
                 if (args.length >= 3) {
                     try {
                         for (Screen i : Screen.getAllScreens()) {
+                            if(i.getEditGUI().getOpenedPlayer()==null){
+                                EditGUI.forceClose((Player) sender);
+                                return true;
+                            }
                             if (i.getEditGUI().getOpenedPlayer().equals(sender)) {
                                 String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                                 UUID uuid = UUID.fromString(args[1]);
