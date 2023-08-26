@@ -86,7 +86,7 @@ public class Chromium extends Browser {
                     systemName = systemNameAndArch.getKey();
                     systemArch = systemNameAndArch.getValue();
                 } else {
-                    String[] systemNameAndArch = systemType.split("-", 1);
+                    String[] systemNameAndArch = systemType.split("-", 2);
                     systemName = systemNameAndArch[0];
                     systemArch = systemNameAndArch[1];
                 }

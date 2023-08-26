@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
-    public static int nowVersion = 1;
+    public static int nowVersion = 2;
     public static int defaultFrameRateLimit = 18;
     public static int renderDistanceLimit = 32;
     public static final String PluginFilesPath = "plugins/ScreenInMC/";
@@ -199,7 +199,9 @@ public class Main extends JavaPlugin {
                 String version ="";
                 try {
                     version=FileUtils.getString("https://raw.githubusercontent.com/GZY-mingbai/ScreenInMC-Plugin/master/.github/version.yml","");
-                }catch (Throwable e){}
+                }catch (Throwable e){
+                    logger.warning("检查更新失败: "+e.getMessage());
+                }
                 if(version==null||version.length()==0) return;
                 try {
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(version.getBytes(StandardCharsets.UTF_8));
@@ -208,10 +210,13 @@ public class Main extends JavaPlugin {
                     int latest = configuration.getInt("latest-version");
                     if(latest>nowVersion){
                         logger.warning("检查到插件更新: 最新版本: "+latest+" 当前版本: "+nowVersion);
+                    }else {
+                        logger.info("未检查到更新, 当前版本为最新版本");
                     }
                     reader.close();
                     inputStream.close();
                 }catch (Exception e){
+                    logger.warning("检查更新失败: "+e.getMessage());
                 }
             }
         };
