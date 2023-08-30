@@ -330,7 +330,7 @@ public class CraftUtils {
             try {
                 Object packet = PacketPlayOutWorldParticlesConstructor.newInstance(redstoneParticle,true,(float)x,(float)y,(float)z,(float)color.getRed(),(float)color.getGreen(),(float)color.getBlue(),0f,0,new int[0]);
                 for(Player i:world.getPlayers()){
-                    if(i.getLocation().distance(new Location(world,x,y,z))<=particleMinDistance){
+                    if(i.getLocation().getWorld().equals(world)&&i.getLocation().distance(new Location(world,x,y,z))<=particleMinDistance){
                         sendPacket(i,packet);
                     }
                 }
@@ -348,7 +348,7 @@ public class CraftUtils {
             try {
                 Object packet = PacketPlayOutWorldParticlesConstructor.newInstance(fireWorkParticle,true,(float)x,(float)y,(float)z,0f,0f,0f,0f,0,new int[0]);
                 for(Player i:world.getPlayers()){
-                    if(i.getLocation().distance(new Location(world,x,y,z))<=particleMinDistance){
+                    if(i.getLocation().getWorld().equals(world)&&i.getLocation().distance(new Location(world,x,y,z))<=particleMinDistance){
                         sendPacket(i,packet);
                     }
                 }

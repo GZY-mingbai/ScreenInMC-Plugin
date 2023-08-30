@@ -338,7 +338,7 @@ public class Screen {
     public void sendView(byte[] colors) {
         List<Object> packets = getPackets(colors);
         for (Player player : location.getWorld().getPlayers()) {
-            if(player.getLocation().distance(location)<= Main.renderDistanceLimit) {
+            if(player.getLocation().getWorld().equals(location.getWorld())&&player.getLocation().distance(location)<= Main.renderDistanceLimit) {
                 for (Object i : packets) {
                     CraftUtils.sendPacket(player, i);
                 }
@@ -349,7 +349,7 @@ public class Screen {
     public void sendView(byte[] colors, int x, int y, int w, int h) {
         List<Object> packets = getPackets(colors, x, y, w, h);
         for (Player player : location.getWorld().getPlayers()) {
-            if(player.getLocation().distance(location)<= Main.renderDistanceLimit) {
+            if(player.getLocation().getWorld().equals(location.getWorld())&&player.getLocation().distance(location)<= Main.renderDistanceLimit) {
                 for (Object i : packets) {
                     CraftUtils.sendPacket(player, i);
                 }
@@ -485,7 +485,7 @@ public class Screen {
     }
     public boolean canSleep(){
         for(Player i:location.getWorld().getPlayers()){
-            if(i.getLocation().distance(location)<=Main.renderDistanceLimit){
+            if(i.getLocation().getWorld().equals(location.getWorld())&&i.getLocation().distance(location)<=Main.renderDistanceLimit){
                 return false;
             }
         }
