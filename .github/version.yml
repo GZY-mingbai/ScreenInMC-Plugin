@@ -1,1 +1,2 @@
-latest-version: 2
+latest-version: 3
+messages: "修复距离测量 BUG"
