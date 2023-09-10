@@ -2,8 +2,10 @@
 ![ScreenInMC Logo(Temporary) By zhuWin](https://ghproxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/logo.png?raw=true)
 # 欢迎使用 ScreenInMC Bukkit插件！
 * [到 Actions 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/actions/workflows/build-all.yml)
+* [到 Releases 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/releases)
 
 此插件可以通过地图画，在Minecraft中拼接出一个显示器
+目前因为开学，将暂停维护一段时间
 
 ![Example](https://ghproxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/example.png?raw=true)  
 通过对 Minecraft 实际环境高度优化的抖色技术，我们将生成地图画的质量和速度推向了 Minecraft 的极限。
@@ -53,7 +55,7 @@ https://github.com/GZY-mingbai/ScreenInMC-Plugin/actions
 ```
 
 # 浏览器说明:
-1. 可通过 /screen installChromium 指令安装Chromium浏览器(JCEF)  
+1. 可在WebBrowser内核中安装Chromium浏览器(JCEF)  
 默认情况下，将会从 https://github.com/jcefmaven/jcefbuild 仓库下载最新构建(不支持h264解码)  
 若要支持h264解码能力的JCEF(可观看B站等)，需自行下载并覆盖已安装的JCEF(版本不限)
 2. 放置WebBrowser内核的屏幕后，需使用 ScreenInMC 控制器 手动选择安装的核心(若未安装 则不显示)
