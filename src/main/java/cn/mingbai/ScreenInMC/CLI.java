@@ -34,11 +34,11 @@ public class CLI {
             FileUtils.streamToFile(stream, file);
             System.load(file.getAbsolutePath());
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(OpenCLLoadErrorMessage);
         }catch (Error e){
-            e.printStackTrace();
+            System.out.println(OpenCLLoadErrorMessage);
         }catch (Throwable e){
-            e.printStackTrace();
+            System.out.println(OpenCLLoadErrorMessage);
         }
 
         int device = -3;
@@ -225,13 +225,13 @@ public class CLI {
                 }
             }
         }
-        try {
-            ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
-        } catch (Throwable e) {
-            initImageUtils();
-        }
+        ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
         if (device == -3) {
-            device = getBestOpenCLDevice();
+            try {
+                device = ImageUtils.getBestOpenCLDevice();
+            }catch (Exception e){
+                ImageUtils.setDitheringProcessor(new DitheringProcessor.JavaFastDitheringProcessor());
+            }
         }
         if (device >= -1) {
             ImageUtils.setDitheringProcessor(new DitheringProcessor.OpenCLDitheringProcessor());
@@ -267,17 +267,5 @@ public class CLI {
         }
     }
 
-    private static void initImageUtils() {
-        try {
-            Field field;
-            try {
-                field = ImageUtils.class.getDeclaredField("platforms");
-                field.setAccessible(true);
-                field.set(String[].class, GPUDither.getPlatforms());
-            } catch (Throwable e) {
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+
 }

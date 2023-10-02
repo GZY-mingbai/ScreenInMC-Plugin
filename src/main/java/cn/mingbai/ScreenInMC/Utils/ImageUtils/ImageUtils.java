@@ -1,5 +1,6 @@
 package cn.mingbai.ScreenInMC.Utils.ImageUtils;
 
+import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.LanczosFilter;
 import cn.mingbai.ScreenInMC.Utils.IOUtils;
@@ -127,7 +128,6 @@ public class ImageUtils {
             ImageUtils.processor = processor;
             paletteColors = paletteLoader.getPaletteColors();
             paletteRGBs = paletteLoader.getPaletteColorRGBs();
-            platforms = GPUDither.getPlatforms();
         } catch (Exception e) {
             e.printStackTrace();
         }catch (Error e){
@@ -135,7 +135,18 @@ public class ImageUtils {
         }catch (Throwable e){
             e.printStackTrace();
         }
+
+        try {
+            platforms = GPUDither.getPlatforms();
+        }catch (Exception e) {
+            Main.getPluginLogger().warning(OpenCLLoadErrorMessage);
+        }catch (Error e){
+            Main.getPluginLogger().warning(OpenCLLoadErrorMessage);
+        }catch (Throwable e){
+            Main.getPluginLogger().warning(OpenCLLoadErrorMessage);
+        }
     }
+    public static final String OpenCLLoadErrorMessage = "初始化OpenCL加速失败，将禁用OpenCL加速功能";
     public static byte[] imageToMapColors(Image image){
         return imageToMapColors(processor,image,pieceSize);
     }

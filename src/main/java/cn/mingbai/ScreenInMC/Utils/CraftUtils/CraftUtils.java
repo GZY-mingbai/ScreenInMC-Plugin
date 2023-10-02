@@ -106,6 +106,15 @@ public class CraftUtils {
                     ConnectionNetworkManager.setAccessible(true);
                 }
             }
+            if(ConnectionNetworkManager == null){
+                for(Field field:ConnectionClass.getSuperclass().getDeclaredFields()){
+                    if(field.getType().getSimpleName().equals("NetworkManager")) {
+                        NetworkManagerClass=field.getType();
+                        ConnectionNetworkManager = field;
+                        ConnectionNetworkManager.setAccessible(true);
+                    }
+                }
+            }
             for(Field field:NetworkManagerClass.getDeclaredFields()){
                 if(field.getType().getSimpleName().equals("Channel")) {
                     NetworkManagerChannel = field;
