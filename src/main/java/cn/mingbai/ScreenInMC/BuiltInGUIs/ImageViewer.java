@@ -89,6 +89,11 @@ public class ImageViewer extends Core {
                 }
                 URI uri = new URI(data.uri);
                 imageData = Utils.getDataFromURI(uri,true);
+                if(imageData==null||imageData.length==0){
+                    isAnimated = false;
+                    savedImage = getErrorImage();
+                    return;
+                }
                 if (uri.getRawPath().endsWith("gif")) {
                     GIFUtils.GifDecoder decoder = new GIFUtils.GifDecoder();
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);

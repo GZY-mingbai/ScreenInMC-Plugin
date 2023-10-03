@@ -6,6 +6,7 @@ import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import javax.print.DocFlavor;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
@@ -208,19 +209,30 @@ public class MContainer extends MControl {
         setDefaultFont(graphics);
     }
     protected static void setDefaultFont(Graphics2D graphics) {
+
+        String defaultFontSetting = Main.getConfiguration().getString("default-font");
+        if(defaultFontSetting!=null&&defaultFontSetting.length()!=0){
+            graphics.setFont(new Font(defaultFontSetting,0,16));
+            return;
+        }
         Font font = null;
-        for (String i : defaultFonts) {
-            font = Font.getFont(i);
-            if (font != null) {
-                break;
+        GraphicsEnvironment ge=GraphicsEnvironment.getLocalGraphicsEnvironment();
+        Font[] fonts = ge.getAllFonts();
+        for(Font f:fonts) {
+            for (String i : defaultFonts) {
+                if (f.getFontName().equals(i)) {
+                    font = new Font(f.getFontName(),f.getStyle(),16);
+                }
             }
         }
         if (font == null) {
             font = graphics.getFont();
+            if(font!=null){
+                font = new Font(font.getFontName(), font.getStyle(), 16);
+            }
         }
         if (font != null) {
-            Font newFont = new Font(font.getFontName(), font.getStyle(), 16);
-            graphics.setFont(newFont);
+            graphics.setFont(font);
         }
     }
 

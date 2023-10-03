@@ -76,7 +76,7 @@ public class EventListener implements Listener {
     public void onPlayerMove(PlayerMoveEvent e){
         for(Screen i:Screen.getAllScreens()){
             if(!i.canSleep()){
-                if(i.getLocation().distance(e.getFrom())>Main.renderDistanceLimit&&i.getLocation().distance(e.getTo())<=Main.renderDistanceLimit){
+                if(i.getLocation().getWorld().equals(e.getFrom().getWorld())&&i.getLocation().distance(e.getFrom())>Main.renderDistanceLimit&&i.getLocation().getWorld().equals(e.getTo().getWorld())&&i.getLocation().distance(e.getTo())<=Main.renderDistanceLimit){
                     if(i.getCore()!=null){
                         ImmediatelyCancellableBukkitRunnable runnable = new ImmediatelyCancellableBukkitRunnable() {
                             @Override

@@ -300,7 +300,11 @@ public class Screen {
             for (Player player : location.getWorld().getPlayers()) {
                 sendPutScreenPacket(player);
             }
-            core.create(this);
+            try {
+                core.create(this);
+            }catch (Exception e){
+                Main.getPluginLogger().warning("核心加载失败: "+e.getMessage());
+            }
 
         } else {
             throw new RuntimeException("This Screen has been placed.");

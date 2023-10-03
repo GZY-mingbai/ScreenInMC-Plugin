@@ -321,6 +321,7 @@ public class CraftUtils {
         }
     }
     public static void sendPacket(Player player, Object packet) {
+        if(player==null) return;
         Channel channel = getChannel(player);
         channel.pipeline().writeAndFlush(packet);
     }

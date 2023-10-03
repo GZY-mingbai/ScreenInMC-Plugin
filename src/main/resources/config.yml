@@ -15,3 +15,4 @@ opencl-device: -3 #-4=Java快速运算 -3=自动选择 -2=Java运算 -1=C++运�
 piece-size: 4 #分块大小 可设置 1(关闭抖色) 2 4 8 16
 render-distance-limit: 32 #显示器最小距离(超过该距离将不向玩家发送显示器内容) 单位: 方块
 default-fps-limit: 18 #默认fps限制(仅对带帧率限制功能的核心起作用)
+default-font: "" #默认字体设置(若为空则使用系统默认字体)

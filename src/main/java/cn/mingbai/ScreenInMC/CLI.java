@@ -225,7 +225,11 @@ public class CLI {
                 }
             }
         }
-        ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
+        try {
+            ImageUtils.initImageUtils(paletteLoader,new DitheringProcessor.JavaDitheringProcessor());
+        }catch (RuntimeException e){
+            System.out.println(OpenCLLoadErrorMessage);
+        }
         if (device == -3) {
             try {
                 device = ImageUtils.getBestOpenCLDevice();

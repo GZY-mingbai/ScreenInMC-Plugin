@@ -98,7 +98,7 @@ public class Welcome extends Core {
 
     }
     private void sendFrame(int index){
-        if(!getScreen().canSleep()) return;
+        if(getScreen().canSleep()) return;
         BufferedImage frame = readFrame(index);
         Utils.Pair<BufferedImage, Rectangle2D.Float> image = ImageUtils.scaleImageAndGetPosition(frame,1,
                 getScreen().getWidth()*128,getScreen().getHeight()*128,1
@@ -113,10 +113,12 @@ public class Welcome extends Core {
     }
     private static BufferedImage readFrame(int index){
         try {
-            InputStream stream = Main.class.getResourceAsStream("/builtin/welcome/welcome-"+index+".jpg");
-            BufferedImage image = ImageIO.read(stream);
-            stream.close();
-            return image;
+            byte[] data = Utils.getDataFromURI(URI.create("screen://builtin/welcome/welcome-"+index+".jpg"),false);
+            if(data!=null&&data.length!=0) {
+                BufferedImage image = ImageUtils.byteArrayToImage(data);
+                return image;
+            }
+            return null;
         } catch (Exception e) {
             return null;
         }

@@ -34,7 +34,7 @@ public class FileUtils {
                 return new String(IOUtils.readInputStream(inputStream), StandardCharsets.UTF_8);
             }
         } catch (Exception e) {
-            throw (RuntimeException) e;
+            throw new RuntimeException(e);
         }
         return "";
     }

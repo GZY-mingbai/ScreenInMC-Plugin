@@ -93,7 +93,7 @@ public class LangUtils {
             reader.close();
             path.close();
         } catch (Exception e) {
-            throw (RuntimeException) e;
+            throw new RuntimeException(e);
         }
     }
 

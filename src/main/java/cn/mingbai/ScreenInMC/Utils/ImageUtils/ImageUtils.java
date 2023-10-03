@@ -139,11 +139,11 @@ public class ImageUtils {
         try {
             platforms = GPUDither.getPlatforms();
         }catch (Exception e) {
-            Main.getPluginLogger().warning(OpenCLLoadErrorMessage);
+            throw new RuntimeException();
         }catch (Error e){
-            Main.getPluginLogger().warning(OpenCLLoadErrorMessage);
+            throw new RuntimeException();
         }catch (Throwable e){
-            Main.getPluginLogger().warning(OpenCLLoadErrorMessage);
+            throw new RuntimeException();
         }
     }
     public static final String OpenCLLoadErrorMessage = "初始化OpenCL加速失败，将禁用OpenCL加速功能";

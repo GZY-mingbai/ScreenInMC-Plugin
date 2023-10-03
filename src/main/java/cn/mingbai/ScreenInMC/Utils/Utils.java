@@ -482,7 +482,7 @@ public class Utils {
     }
     public static InputStream getStreamFromURI(URI uri) {
         if(uri.getScheme().equals("screen")&&"local".equals(uri.getHost())){
-            Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
+            Path path = Paths.get(Main.PluginFilesPath+"Files"+uri.getRawPath()).normalize();
             if(path.startsWith(Paths.get(Main.PluginFilesPath+"Files"))){
                 try {
                     FileInputStream inputStream = new FileInputStream(path.toFile());
@@ -504,7 +504,7 @@ public class Utils {
     }
     public static byte[] getDataFromURI(URI uri,boolean throwException) {
         if(uri.getScheme().equals("screen")&&"local".equals(uri.getHost())){
-            Path path = Paths.get(Main.PluginFilesPath+"files"+uri.getRawPath()).normalize();
+            Path path = Paths.get(Main.PluginFilesPath+"Files"+uri.getRawPath()).normalize();
             if(path.startsWith(Paths.get(Main.PluginFilesPath+"Files"))){
                 try {
                     FileInputStream inputStream = new FileInputStream(path.toFile());

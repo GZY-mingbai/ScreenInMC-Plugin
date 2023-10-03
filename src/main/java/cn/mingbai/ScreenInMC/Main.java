@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
-    public static int nowVersion = 4;
+    public static int nowVersion = 5;
     public static int defaultFrameRateLimit = 18;
     public static int renderDistanceLimit = 32;
     public static final String PluginFilesPath = "plugins/ScreenInMC/";
@@ -56,9 +56,11 @@ public class Main extends JavaPlugin {
         try {
             File file = File.createTempFile(prefix, suffix);
             InputStream stream = Main.class.getResourceAsStream("/lib/" + fileName);
-            FileUtils.streamToFile(stream, file);
-            System.load(file.getAbsolutePath());
-            file.deleteOnExit();
+            if(stream!=null) {
+                FileUtils.streamToFile(stream, file);
+                System.load(file.getAbsolutePath());
+                file.deleteOnExit();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }catch (Error e){
@@ -228,7 +230,11 @@ public class Main extends JavaPlugin {
             getPluginLogger().warning("ScreenInMC load failed.");
             return;
         }
-        ImageUtils.initImageUtils(new ConfigPaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
+        try {
+            ImageUtils.initImageUtils(new ConfigPaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
+        }catch (RuntimeException e){
+            getLogger().warning(OpenCLLoadErrorMessage);
+        }
         thisPlugin.saveDefaultConfig();
         config = thisPlugin.getConfig();
         defaultFrameRateLimit = config.getInt("default-fps-limit");

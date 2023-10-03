@@ -19,10 +19,7 @@ import org.cef.callback.CefCallback;
 import org.cef.callback.CefQueryCallback;
 import org.cef.callback.CefSchemeHandlerFactory;
 import org.cef.callback.CefSchemeRegistrar;
-import org.cef.handler.CefLoadHandler;
-import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.cef.handler.CefResourceHandler;
-import org.cef.handler.CefResourceHandlerAdapter;
+import org.cef.handler.*;
 import org.cef.misc.IntRef;
 import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
@@ -470,6 +467,31 @@ public class Chromium extends Browser {
                 public boolean onBeforePopup(org.cef.browser.CefBrowser browser, org.cef.browser.CefFrame frame, String target_url, String target_frame_name) {
                     browser.loadURL(target_url);
                     return true;
+                }
+            });
+            client.addLoadHandler(new CefLoadHandlerAdapter() {
+                @Override
+                public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
+                    super.onLoadingStateChange(browser, isLoading, canGoBack, canGoForward);
+                    String font = Main.getConfiguration().getString("default-font");
+                    if(font!=null&&font.length()!=0){
+                        browser.executeJavaScript("document.body.style.fontFamily = '"+font+"';","",0);
+                    }
+                }
+
+                @Override
+                public void onLoadStart(CefBrowser browser, CefFrame frame, CefRequest.TransitionType transitionType) {
+                    super.onLoadStart(browser, frame, transitionType);
+                }
+
+                @Override
+                public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+                    super.onLoadEnd(browser, frame, httpStatusCode);
+                }
+
+                @Override
+                public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
+                    super.onLoadError(browser, frame, errorCode, errorText, failedUrl);
                 }
             });
             CefMessageRouter.CefMessageRouterConfig messageConfig=new CefMessageRouter.CefMessageRouterConfig("ScreenInMC","ScreenInMCCancel");
