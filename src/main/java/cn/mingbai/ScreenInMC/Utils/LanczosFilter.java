@@ -1,4 +1,4 @@
-package cn.mingbai.ScreenInMC.Utils.CraftUtils;
+package cn.mingbai.ScreenInMC.Utils;
 
 import java.awt.image.BufferedImage;
 
