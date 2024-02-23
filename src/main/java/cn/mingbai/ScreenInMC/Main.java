@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
-    public static int nowVersion = 5;
+    public static int nowVersion = 6;
     public static int defaultFrameRateLimit = 18;
     public static int renderDistanceLimit = 32;
     public static final String PluginFilesPath = "plugins/ScreenInMC/";

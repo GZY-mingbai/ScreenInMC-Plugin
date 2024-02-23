@@ -56,7 +56,25 @@ public class JsonTextToNMSComponent {
             KeybindContentsClass = CraftUtils.getMinecraftClass("KeybindContents");
             TranslatableContentsClass = CraftUtils.getMinecraftClass("TranslatableContents");
             IChatMutableComponentClass = CraftUtils.getMinecraftClass("IChatMutableComponent");
-            LiteralContentsClassConstructor = CraftUtils.getConstructor(LiteralContentsClass);
+            try {
+                LiteralContentsClassConstructor = CraftUtils.getConstructor(LiteralContentsClass);
+            }catch (Exception e){
+                LiteralContentsClassConstructor=null;
+                literal:
+                for(Class i:CraftUtils.getMinecraftClass("LiteralContents").getDeclaredClasses()){
+                    for(Constructor j:i.getDeclaredConstructors())
+                    {
+                        if(j.getParameterCount()==1&&j.getParameters()[0].getType().equals(String.class)){
+                            LiteralContentsClassConstructor = j;
+                            LiteralContentsClass = i;
+                            break literal;
+                        }
+                    }
+                }
+                if(LiteralContentsClassConstructor==null) {
+                    throw new RuntimeException("class LiteralContents not found.");
+                }
+            }
             KeybindContentsClassConstructor = CraftUtils.getConstructor(KeybindContentsClass);
             TranslatableContentsClassConstructor = CraftUtils.getConstructor(TranslatableContentsClass);
             ChatHexColorClass = CraftUtils.getMinecraftClass("ChatHexColor");

@@ -87,7 +87,12 @@ public class CraftUtils {
                     }
                     if(i.endsWith("inventory.CraftItemStack")){
                         Class craftItemStackClass = Class.forName(i);
-                        CraftItemStackAsNMSCopy = getMethod(craftItemStackClass,"asNMSCopy");
+                        for(Method method : craftItemStackClass.getDeclaredMethods()){
+                            if(method.getName().equals("asNMSCopy")&&method.getParameterCount()==1&&method.getParameters()[0].getType().getSimpleName().equals("ItemStack")){
+                                CraftItemStackAsNMSCopy = method;
+                            }
+                        }
+                        if(CraftItemStackAsNMSCopy==null) getMethod(craftItemStackClass,"asNMSCopy");
                         CraftItemStackAsBukkitCopy = getMethod(craftItemStackClass,"asBukkitCopy");
                         CraftItemStackAsCraftMirror = getMethod(craftItemStackClass,"asCraftMirror");
                     }
