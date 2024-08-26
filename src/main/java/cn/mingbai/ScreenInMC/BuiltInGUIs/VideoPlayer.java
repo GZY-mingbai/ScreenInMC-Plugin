@@ -8,11 +8,9 @@ import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import cn.mingbai.ScreenInMC.VideoProcessor;
 import org.bukkit.Material;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.geom.Rectangle2D;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 
 public class VideoPlayer extends Core {

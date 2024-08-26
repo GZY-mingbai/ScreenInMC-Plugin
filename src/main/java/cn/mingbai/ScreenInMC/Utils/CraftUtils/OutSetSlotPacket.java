@@ -8,6 +8,9 @@ public class OutSetSlotPacket implements OutPacket{
     static int method=0;
     protected static void init() throws Exception {
         PacketPlayOutSetSlotClass = CraftUtils.getMinecraftClass("PacketPlayOutSetSlot");
+        if(PacketPlayOutSetSlotClass==null){
+            PacketPlayOutSetSlotClass = CraftUtils.getMinecraftClass("ClientboundContainerSetSlotPacket");
+        }
         try {
             PacketPlayOutSetSlotConstructor = PacketPlayOutSetSlotClass.getDeclaredConstructor(int.class,int.class,NMSItemStack.ItemStackClass);
             method=0;

@@ -5,21 +5,24 @@ import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.material.MaterialData;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.*;
 
 public class NMSItemStack {
+    static boolean newVersionItem = false;
     static Class ItemStackClass;
     static Class ItemClass;
 
     static Class ItemsClass;
     static Class IMaterialClass;
 
-    static Constructor ItemStackClassConstructor;
+//    static Constructor ItemStackClassConstructor;
     static Class NBTTagCompoundClass;
     static Field ItemStackNBTTagCompound;
     static Constructor NBTTagCompoundConstructor;
@@ -47,12 +50,31 @@ public class NMSItemStack {
         IMaterialClass=CraftUtils.getMinecraftClass("IMaterial");
         ItemClass=CraftUtils.getMinecraftClass("Item");
         ItemsClass=CraftUtils.getMinecraftClass("Items");
-        NBTTagCompoundClass=CraftUtils.getMinecraftClass("NBTTagCompound");
+        Class PlayerInventoryClass = Class.forName("org.bukkit.inventory.PlayerInventory");
         try {
-            ItemStackClassConstructor=ItemStackClass.getDeclaredConstructor(ItemClass,int.class);
+            GetItemInHand = PlayerInventoryClass.getDeclaredMethod("getItemInMainHand");
         }catch (Exception e){
-            ItemStackClassConstructor=ItemStackClass.getDeclaredConstructor(IMaterialClass,int.class);
+            GetItemInHand = PlayerInventoryClass.getDeclaredMethod("getItemInHand");
         }
+        try {
+            SetItemInHand = PlayerInventoryClass.getDeclaredMethod("setItemInMainHand",ItemStack.class);
+        }catch (Exception e){
+            SetItemInHand = PlayerInventoryClass.getDeclaredMethod("setItemInHand",ItemStack.class);
+        }
+        if((minecraftVersion==20&&subMinecraftVersion>=5)||minecraftVersion>20){
+            newVersionItem = true;
+            NMSItemStackNew.init();
+            return;
+        }
+        NBTTagCompoundClass=CraftUtils.getMinecraftClass("NBTTagCompound");
+        if(NBTTagCompoundClass==null){
+            NBTTagCompoundClass = CraftUtils.getMinecraftClass("CompoundTag");
+        }
+//        try {
+//            ItemStackClassConstructor=ItemStackClass.getDeclaredConstructor(ItemClass,int.class);
+//        }catch (Exception e){
+//            ItemStackClassConstructor=ItemStackClass.getDeclaredConstructor(IMaterialClass,int.class);
+//        }
         for(Field i:ItemStackClass.getDeclaredFields()){
             if(i.getType().equals(NBTTagCompoundClass)&& !Modifier.isStatic(i.getModifiers())){
                 ItemStackNBTTagCompound=i;
@@ -107,28 +129,17 @@ public class NMSItemStack {
         if(NBTTagListNBTBaseList==null){
             throw new RuntimeException("private List<NBTBase> ... = Lists.newArrayList(); not found");
         }
-        Class PlayerInventoryClass = Class.forName("org.bukkit.inventory.PlayerInventory");
-        try {
-            GetItemInHand = PlayerInventoryClass.getDeclaredMethod("getItemInMainHand");
-        }catch (Exception e){
-            GetItemInHand = PlayerInventoryClass.getDeclaredMethod("getItemInHand");
-        }
-        try {
-            SetItemInHand = PlayerInventoryClass.getDeclaredMethod("setItemInMainHand",ItemStack.class);
-        }catch (Exception e){
-            SetItemInHand = PlayerInventoryClass.getDeclaredMethod("setItemInHand",ItemStack.class);
-        }
     }
     private String[] itemIds;
     private int count;
     private short oldId;
-    private boolean unbreakable = false;
+    protected boolean unbreakable = false;
 
     public void setUnbreakable(boolean unbreakable) {
         this.unbreakable = unbreakable;
     }
-    private Integer customModelData=null;
-    private String screenInMCData = null;
+    protected Integer customModelData=null;
+    protected String screenInMCData = null;
 
     public void setScreenInMCData(String screenInMCData) {
         this.screenInMCData = screenInMCData;
@@ -138,6 +149,7 @@ public class NMSItemStack {
         this.customModelData = customModelData;
     }
     public static int getCustomModelData(ItemStack itemStack){
+        if(newVersionItem) return NMSItemStackNew.getCustomModelData(itemStack);
         try {
             Object item = bukkitToNmsItemStack(itemStack);
             Object nbt = ItemStackNBTTagCompound.get(item);
@@ -154,20 +166,30 @@ public class NMSItemStack {
         }
     }
 
-    private LangUtils.JsonText[] lore = null;
-    private LangUtils.JsonText name = null;
-    public static NMSItemStack EMPTY = new NMSItemStack(new String[0],1);
+    protected LangUtils.JsonText[] lore = null;
+    protected LangUtils.JsonText name = null;
+    public static NMSItemStack EMPTY = NMSItemStack.create(new String[0],1);
 
     public void setOldId(short oldId) {
         this.oldId = oldId;
     }
 
+    public static NMSItemStack create(String[] itemIds,int count){
+        if(newVersionItem) return new NMSItemStackNew(itemIds,count);
+        return new NMSItemStack(itemIds,count);
+    }
+    public static NMSItemStack create(String[] itemIds,int count,short oldId){
+        if(newVersionItem) return new NMSItemStackNew(itemIds,count,oldId);
+        return new NMSItemStack(itemIds,count,oldId);
+    }
+
     // When generating items,
     // each item ID will be tried one by one from the itemIds list.
     // If the item with that ID does not exist in the current version of Minecraft, the next ID will be tried.
-    public NMSItemStack(String[] itemIds,int count) {
+    protected NMSItemStack(String[] itemIds,int count) {
         this(itemIds,count,(short) 0);
     }
+
 
     public final static short COLOR_WHITE = 0;
     public final static short COLOR_ORANGE = 1;
@@ -188,11 +210,12 @@ public class NMSItemStack {
 
 
 
-    public NMSItemStack(String[] itemIds,int count,short oldId){
+    protected NMSItemStack(String[] itemIds,int count,short oldId){
         this.itemIds = itemIds;
         this.count=count;
         this.oldId=oldId;
     }
+
     public void setLore(LangUtils.JsonText[] lore){
         this.lore=lore;
     }
@@ -206,7 +229,7 @@ public class NMSItemStack {
         }
         return false;
     }
-
+    protected void setNbtNew(Object itemStack){}
     protected void setNbt(Object nbt) throws Exception {
         Object displayNbt = NBTTagCompoundConstructor.newInstance();
         if(name!=null) {
@@ -254,6 +277,10 @@ public class NMSItemStack {
                 bukkitItem.setDurability((short) oldId);
             }
             Object stack = bukkitToNmsItemStack(bukkitItem);
+            if(newVersionItem){
+                setNbtNew(stack);
+                return stack;
+            }
             Object nbt = NBTTagCompoundConstructor.newInstance();
             setNbt(nbt);
             ItemStackNBTTagCompound.set(stack,nbt);
@@ -263,6 +290,7 @@ public class NMSItemStack {
         }
     }
     public static String readScreenInMCData(ItemStack itemStack){
+        if(newVersionItem) return NMSItemStackNew.readScreenInMCData(itemStack);
         try {
             Object item = bukkitToNmsItemStack(itemStack);
             Object nbt = ItemStackNBTTagCompound.get(item);
@@ -279,6 +307,10 @@ public class NMSItemStack {
         }
     }
     public static void writeScreenInMCData(ItemStack itemStack,String data){
+        if(newVersionItem){
+            NMSItemStackNew.writeScreenInMCData(itemStack,data);
+            return;
+        }
         try {
             Object item = bukkitToNmsItemStack(itemStack);
             Object nbt = ItemStackNBTTagCompound.get(item);

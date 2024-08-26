@@ -7,6 +7,9 @@ public class OutWindowDataPacket implements OutPacket{
     static Constructor PacketPlayOutWindowDataConstructor;
     protected static void init() throws Exception {
         PacketPlayOutWindowDataClass = CraftUtils.getMinecraftClass("PacketPlayOutWindowData");
+        if(PacketPlayOutWindowDataClass==null){
+            PacketPlayOutWindowDataClass = CraftUtils.getMinecraftClass("ClientboundContainerSetDataPacket");
+        }
         PacketPlayOutWindowDataConstructor = PacketPlayOutWindowDataClass.getDeclaredConstructor(int.class,int.class,int.class);
     }
     public static Object create(int a,int b,int c){

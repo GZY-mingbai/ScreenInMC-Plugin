@@ -12,6 +12,9 @@ public class OutWindowItemsPacket implements OutPacket{
     static int method = 0;
     protected static void init() throws Exception {
         PacketPlayOutWindowItemsClass = CraftUtils.getMinecraftClass("PacketPlayOutWindowItems");
+        if(PacketPlayOutWindowItemsClass==null){
+            PacketPlayOutWindowItemsClass = CraftUtils.getMinecraftClass("ClientboundContainerSetContentPacket");
+        }
         try {
             PacketPlayOutWindowItemsConstructor=PacketPlayOutWindowItemsClass.getDeclaredConstructor(int.class, List.class);
             method = 0;

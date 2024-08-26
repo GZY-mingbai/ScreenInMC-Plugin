@@ -2,11 +2,9 @@ package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.UUID;
 
 
@@ -40,6 +38,9 @@ public class OutAddMapEntityPacket implements OutPacket{
 
     protected static void init() throws Exception {
         PacketPlayOutSpawnEntityClass = CraftUtils.getMinecraftClass("PacketPlayOutSpawnEntity");
+        if(PacketPlayOutSpawnEntityClass==null){
+            PacketPlayOutSpawnEntityClass = CraftUtils.getMinecraftClass("ClientboundAddEntityPacket");
+        }
         EntityClass = CraftUtils.getMinecraftClass("Entity");
         if(CraftUtils.minecraftVersion<=13) {
             PacketPlayOutSpawnEntityConstructor = CraftUtils.getConstructor(PacketPlayOutSpawnEntityClass);
@@ -66,11 +67,17 @@ public class OutAddMapEntityPacket implements OutPacket{
             return;
         }
         EntityTypesClass=CraftUtils.getMinecraftClass("EntityTypes");
+        if(EntityTypesClass==null){
+            EntityTypesClass = CraftUtils.getMinecraftClass("EntityType");
+        }
         Vec3DClass=CraftUtils.getMinecraftClass("Vec3D");
+        if(Vec3DClass==null){
+            Vec3DClass = CraftUtils.getMinecraftClass("Vec3");
+        }
         Vec3DConstructor=Vec3DClass.getDeclaredConstructor(double.class,double.class,double.class);
         Vec3D000 = Vec3DConstructor.newInstance(0d,0d,0d);
         for(Field i:EntityTypesClass.getDeclaredFields()){
-            if(i.getGenericType().getTypeName().contains("EntityItemFrame")){
+            if(i.getGenericType().getTypeName().contains("EntityItemFrame")||i.getGenericType().getTypeName().contains("ItemFrame")){
                 EntityTypesItemFrame=i.get(null);
             }
         }

@@ -24,7 +24,7 @@ https://github.com/GZY-mingbai/ScreenInMC-Plugin/actions
 使用 MIT 许可证。
 
 # 运行要求: 
-1. 1.8-1.20 Bukkit 服务端 (推荐PaperMC) (必须)
+1. 1.8-1.21.1 Bukkit 服务端 (推荐PaperMC) (必须)
 2. OpenCL 支持 (可选)
 3. 64位 Windows 10+ 系统 (可选)
 4. Java 8+ (必须)

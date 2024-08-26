@@ -11,7 +11,6 @@ import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONObject;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
@@ -27,7 +26,6 @@ import org.cef.network.CefResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
@@ -35,7 +33,6 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 import static cn.mingbai.ScreenInMC.Utils.FileUtils.deleteDir;
 import static cn.mingbai.ScreenInMC.Utils.FileUtils.deleteDirOnExit;

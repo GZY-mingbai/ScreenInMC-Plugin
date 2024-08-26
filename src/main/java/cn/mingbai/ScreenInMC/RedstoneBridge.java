@@ -1,24 +1,15 @@
 package cn.mingbai.ScreenInMC;
 
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
-import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.type.RedstoneWire;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.*;
+import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.checkRedstoneRepeater;
 
 public class RedstoneBridge implements Cloneable {
     private Core core;

@@ -11,7 +11,10 @@ import org.bukkit.material.Diode;
 import org.bukkit.material.MaterialData;
 
 import java.io.File;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
@@ -24,15 +27,19 @@ import java.util.jar.JarEntry;
 public class CraftUtils {
     static final String craftBukkit = "org.bukkit.craftbukkit";
     static final String minecraft = "net.minecraft";
-    public static int minecraftVersion = 20;
+    public static int minecraftVersion = 30;
     public static int subMinecraftVersion = 0;
 
     static Method CraftPlayerGetHandle;
     static Class ConnectionClass;
+    static Class ServerCommonPacketListenerImplClass;
+    static Field ServerPlayerServerCommonPacketListenerImpl;
+    static Field ServerCommonPacketListenerImplConnection;
     static Field ServerPlayerConnection;
     static Class NetworkManagerClass;
     static Field ConnectionNetworkManager;
     static Field NetworkManagerChannel;
+    static Field ConnectionChannel;
     static Method CraftItemStackAsNMSCopy;
     static Method CraftItemStackAsBukkitCopy;
     static Method CraftItemStackAsCraftMirror;
@@ -64,8 +71,9 @@ public class CraftUtils {
             return false;
         }
     }
+    public static Class CraftRegistryClass;
     public static void init() throws Exception{
-            for(int i=8;i<21;i++) {
+            for(int i=8;i<30;i++) {
                 if (Bukkit.getBukkitVersion().contains("1."+i)) {
                     minecraftVersion = i;
                 }
@@ -96,6 +104,9 @@ public class CraftUtils {
                         CraftItemStackAsBukkitCopy = getMethod(craftItemStackClass,"asBukkitCopy");
                         CraftItemStackAsCraftMirror = getMethod(craftItemStackClass,"asCraftMirror");
                     }
+                    if(i.endsWith("CraftRegistry")){
+                        CraftRegistryClass = Class.forName(i);
+                    }
                 }
             for(Field field :CraftPlayerGetHandle.getReturnType().getDeclaredFields()) {
                 if(field.getType().getSimpleName().equals("PlayerConnection")){
@@ -104,38 +115,64 @@ public class CraftUtils {
                     ServerPlayerConnection.setAccessible(true);
                 }
             }
-            for(Field field:ConnectionClass.getDeclaredFields()){
-                if(field.getType().getSimpleName().equals("NetworkManager")) {
-                    NetworkManagerClass=field.getType();
-                    ConnectionNetworkManager = field;
-                    ConnectionNetworkManager.setAccessible(true);
+            if(ConnectionClass==null){
+                for(Field field :CraftPlayerGetHandle.getReturnType().getDeclaredFields()) {
+                    if(field.getType().getSimpleName().equals("ServerGamePacketListenerImpl")){
+                        ServerCommonPacketListenerImplClass = field.getType().getSuperclass();
+                        ServerPlayerServerCommonPacketListenerImpl = field;
+                        ServerPlayerServerCommonPacketListenerImpl.setAccessible(true);
+                        for(Field f :ServerCommonPacketListenerImplClass.getDeclaredFields()) {
+                            if(f.getType().getSimpleName().equals("Connection")){
+                                ConnectionClass = f.getType();
+                                ServerCommonPacketListenerImplConnection = f;
+                                ServerCommonPacketListenerImplConnection.setAccessible(true);
+                                for (Field i : ConnectionClass.getDeclaredFields()) {
+                                    if (i.getType().getSimpleName().equals("Channel")) {
+                                        ConnectionChannel = i;
+                                        ConnectionChannel.setAccessible(true);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-            if(ConnectionNetworkManager == null){
-                for(Field field:ConnectionClass.getSuperclass().getDeclaredFields()){
-                    if(field.getType().getSimpleName().equals("NetworkManager")) {
-                        NetworkManagerClass=field.getType();
+            }else {
+                for (Field field : ConnectionClass.getDeclaredFields()) {
+                    if (field.getType().getSimpleName().equals("NetworkManager")) {
+                        NetworkManagerClass = field.getType();
                         ConnectionNetworkManager = field;
                         ConnectionNetworkManager.setAccessible(true);
                     }
                 }
-            }
-            for(Field field:NetworkManagerClass.getDeclaredFields()){
-                if(field.getType().getSimpleName().equals("Channel")) {
-                    NetworkManagerChannel = field;
-                    NetworkManagerChannel.setAccessible(true);
+                if (ConnectionNetworkManager == null) {
+                    for (Field field : ConnectionClass.getSuperclass().getDeclaredFields()) {
+                        if (field.getType().getSimpleName().equals("NetworkManager")) {
+                            NetworkManagerClass = field.getType();
+                            ConnectionNetworkManager = field;
+                            ConnectionNetworkManager.setAccessible(true);
+                        }
+                    }
+                }
+                for (Field field : NetworkManagerClass.getDeclaredFields()) {
+                    if (field.getType().getSimpleName().equals("Channel")) {
+                        NetworkManagerChannel = field;
+                        NetworkManagerChannel.setAccessible(true);
+                    }
                 }
             }
             String[] classesNames = getSubClasses(minecraft);
             List<Class> classes = new ArrayList<>();
             for (String i:classesNames){
                 try {
-                    classes.add(Class.forName(i));
+                      classes.add(Class.forName(i));
                 } catch (NoClassDefFoundError error){}
                 catch (IncompatibleClassChangeError error){}
                 catch (Error error){}
                 catch (Throwable error){}
             }
+
+
+
             minecraftClasses = classes.toArray(new Class[0]);
             JsonTextToNMSComponent.init();
             NMSItemStack.init();
@@ -248,6 +285,28 @@ public class CraftUtils {
         }
         return null;
     }
+    static List<Class> getMinecraftClasses(String name,boolean allowSubClass){
+        List<Class> classes = new ArrayList<>();
+        for(Class i:minecraftClasses){
+            try {
+                if(allowSubClass){
+                    if(i.getSimpleName().equals(name)) {
+                        classes.add(i);
+                    }
+                }else{
+                    String[] typeName = i.getTypeName().split("\\.");
+                    if(typeName[typeName.length-1].equals(name)){
+                        classes.add(i);
+                    }
+                }
+
+            }catch (IncompatibleClassChangeError e){}
+            catch (Error e){
+            }catch (Throwable t){
+            }
+        }
+        return classes;
+    }
     private static List<File> listFiles(File file){
         List<File> files = new ArrayList<>();
         if(file.isDirectory()){
@@ -317,6 +376,12 @@ public class CraftUtils {
     protected static Channel getChannel(Player player){
         try {
             Object serverPlayer = CraftPlayerGetHandle.invoke(player);
+            if(ServerPlayerConnection==null){
+                Object serverCommonPacketListenerImpl = ServerPlayerServerCommonPacketListenerImpl.get(serverPlayer);
+                Object connection = ServerCommonPacketListenerImplConnection.get(serverCommonPacketListenerImpl);
+                Channel channel = (Channel) ConnectionChannel.get(connection);
+                return channel;
+            }
             Object connection = ServerPlayerConnection.get(serverPlayer);
             Object networkManager = ConnectionNetworkManager.get(connection);
             Channel channel = (Channel) NetworkManagerChannel.get(networkManager);

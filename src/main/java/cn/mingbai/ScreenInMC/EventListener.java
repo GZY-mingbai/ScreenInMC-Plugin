@@ -3,13 +3,13 @@ package cn.mingbai.ScreenInMC;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.InClickEntityPacket;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.InPacket;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,9 +18,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.Diode;
-import org.bukkit.material.MaterialData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,6 +162,9 @@ public class EventListener implements Listener {
         }
     }
     private static boolean handleClick(Player player,Utils.MouseClickType type){
+        if(Main.getConfiguration().getBoolean("click-op-only")){
+            if(!player.isOp()) return true;
+        }
         ItemStack item = getItemInHand(player.getInventory());
         if (item != null && item.hasItemMeta()) {
             if (NMSItemStack.getCustomModelData(item) == CONTROLLER) {

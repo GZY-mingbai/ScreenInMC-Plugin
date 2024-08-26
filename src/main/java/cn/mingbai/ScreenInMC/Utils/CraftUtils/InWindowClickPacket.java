@@ -18,6 +18,9 @@ public class InWindowClickPacket implements InPacket {
 
     protected static void init() throws Exception{
         PacketPlayInWindowClickClass = CraftUtils.getMinecraftClass("PacketPlayInWindowClick");
+        if(PacketPlayInWindowClickClass==null){
+            PacketPlayInWindowClickClass = CraftUtils.getMinecraftClass("ServerboundContainerClickPacket");
+        }
         if(CraftUtils.minecraftVersion<9){
             isActionNumber = true;
             for(Field i:PacketPlayInWindowClickClass.getDeclaredFields()){
@@ -33,6 +36,9 @@ public class InWindowClickPacket implements InPacket {
         }else{
             isActionNumber = false;
             InventoryClickTypeClass = CraftUtils.getMinecraftClass("InventoryClickType");
+            if(InventoryClickTypeClass==null){
+                InventoryClickTypeClass = CraftUtils.getMinecraftClass("ClickType");
+            }
             InventoryClickTypeOrdinal = Enum.class.getDeclaredMethod("ordinal");
             if(CraftUtils.minecraftVersion<17){
                 for(Field i:PacketPlayInWindowClickClass.getDeclaredFields()){

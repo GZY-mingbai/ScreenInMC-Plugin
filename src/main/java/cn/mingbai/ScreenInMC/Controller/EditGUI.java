@@ -3,26 +3,26 @@ package cn.mingbai.ScreenInMC.Controller;
 import cn.mingbai.ScreenInMC.Controller.EditGUI.EditGUICoreInfo.EditGUICoreSettingsList;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.*;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.InWindowClickPacket.ClickType;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
-
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.function.Function;
 
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.*;
-import static cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText.*;
+import static cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText.ClickEvent;
 
 public class EditGUI {
     public static class EditGUICoreInfo{
@@ -124,7 +124,7 @@ public class EditGUI {
     }
     private static final String BookAuthor = "ScreenInMC";
     private NMSBook getBasicBook(){
-        NMSBook book = new NMSBook();
+        NMSBook book = NMSBook.create();
         book.setAuthor(BookAuthor);
         book.setTitle(LangUtils.getText("controller-editor-gui-title"));
         book.setGeneration(0);
@@ -544,10 +544,10 @@ public class EditGUI {
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
-            NMSItemStack itemStack = new NMSItemStack(new String[]{"red_wool","wool"},1,COLOR_RED);
+            NMSItemStack itemStack = NMSItemStack.create(new String[]{"red_wool","wool"},1,COLOR_RED);
             itemStack.setName(new JsonText("false (×)").setColor("red"));
             list.set(0,itemStack);
-            itemStack = new NMSItemStack(new String[]{"lime_wool","wool"},1,COLOR_LIME);
+            itemStack = NMSItemStack.create(new String[]{"lime_wool","wool"},1,COLOR_LIME);
             itemStack.setName(new JsonText("true (√)")
                     .setColor("green"));
             list.set(1,NMSItemStack.EMPTY);
@@ -559,8 +559,8 @@ public class EditGUI {
                     stateID,list
             );
             CraftUtils.sendPacket(player,packet);
-            packet = OutWindowDataPacket.create(containerID,0,0);
-            CraftUtils.sendPacket(player,packet);
+//            packet = OutWindowDataPacket.create(containerID,0,0);
+//            CraftUtils.sendPacket(player,packet);
         }
         @Override
         public void closeWindow(Player player) {
@@ -633,10 +633,10 @@ public class EditGUI {
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
             list.add(0,NMSItemStack.EMPTY);
-            NMSItemStack itemStack = new NMSItemStack(new String[]{"light_gray_stained_glass_pane","stained_glass_pane"},1, NMSItemStack.COLOR_SILVER);
+            NMSItemStack itemStack = NMSItemStack.create(new String[]{"lime_stained_glass_pane","stained_glass_pane"},1, COLOR_LIME);
             itemStack.setName(new JsonText(nowStringValue).disableRichStringInOldVersion());
             list.set(0,itemStack);
-            itemStack = new NMSItemStack(new String[]{"lime_stained_glass_pane","stained_glass_pane"},1, COLOR_LIME);
+            itemStack = NMSItemStack.create(new String[]{"lime_stained_glass_pane","stained_glass_pane"},1, COLOR_LIME);
             itemStack.setName(new JsonText(LangUtils.getText("complete"))
                     .setColor("green"));
             list.set(1,NMSItemStack.EMPTY);
@@ -663,9 +663,9 @@ public class EditGUI {
                                 )).setColor("gold").toComponent()
                 );
                 CraftUtils.sendPacket(player,packet);
+                resetItems(player);
                 reopen=false;
             }
-            resetItems(player);
 
         }
 
@@ -977,7 +977,7 @@ public class EditGUI {
                 list.set(45,getItemSwitchPage(false,nowPage,totalPage));
             }
             if(completeButton){
-                NMSItemStack stack = new NMSItemStack(new String[]{"lime_wool","wool"},COLOR_LIME);
+                NMSItemStack stack = NMSItemStack.create(new String[]{"lime_wool","wool"},COLOR_LIME);
                 stack.setName(new JsonText(LangUtils.getText("complete"))
                         .setColor("green")
                 );
@@ -988,8 +988,8 @@ public class EditGUI {
                     stateID,list
             );
             CraftUtils.sendPacket(player,packet);
-            packet = OutWindowDataPacket.create(containerID,0,0);
-            CraftUtils.sendPacket(player,packet);
+//            packet = OutWindowDataPacket.create(containerID,0,0);
+//            CraftUtils.sendPacket(player,packet);
         }
         @Override
         public void closeWindow(Player player) {
@@ -1045,7 +1045,7 @@ public class EditGUI {
                     break;
                 }
                 boolean isInsert = types.get(i).getKey()==-1;
-                NMSItemStack stack = new NMSItemStack(new String[]{isInsert?"gold_block":"diamond_block"},1);
+                NMSItemStack stack = NMSItemStack.create(new String[]{isInsert?"gold_block":"diamond_block"},1);
                 if(isInsert){
                     stack.setName(new JsonText(
                             LangUtils.getText("insert"))
@@ -1142,7 +1142,7 @@ public class EditGUI {
                 if(i>strings.length-1){
                     break;
                 }
-                NMSItemStack stack = new NMSItemStack(new String[]{"diamond_block"},1);
+                NMSItemStack stack = NMSItemStack.create(new String[]{"diamond_block"},1);
                 stack.setName(new JsonText(
                         strings[i]
                 )
@@ -1645,7 +1645,7 @@ public class EditGUI {
         openedPlayer=null;
     }
     private NMSItemStack getItem0(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"black_glazed_terracotta","black_wool","wool"},1, COLOR_BLACK);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"black_glazed_terracotta","black_wool","wool"},1, COLOR_BLACK);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-title")).setColor("gold");
         JsonText[] lore = new JsonText[]{
             new JsonText(LangUtils.getText("controller-editor-id"))
@@ -1684,7 +1684,7 @@ public class EditGUI {
         return stack;
     }
     private NMSItemStack getItem1(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"magenta_glazed_terracotta","magenta_wool","wool"},1, COLOR_MAGENTA);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"magenta_glazed_terracotta","magenta_wool","wool"},1, COLOR_MAGENTA);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-replace-core-title")).setColor("light_purple");
         JsonText[] lore = new JsonText[]{
             new JsonText(LangUtils.getText("controller-editor-replace-core-info"))
@@ -1696,7 +1696,7 @@ public class EditGUI {
         return stack;
     }
     private NMSItemStack getItem2(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"red_glazed_terracotta","red_wool","wool"},1,COLOR_RED);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"red_glazed_terracotta","red_wool","wool"},1,COLOR_RED);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-title")).setColor("red");
         JsonText[] lore = new JsonText[]{
             new JsonText(LangUtils.getText("controller-editor-redstone-connect-info"))
@@ -1708,19 +1708,19 @@ public class EditGUI {
         return stack;
     }
     private NMSItemStack getItem3(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"tnt"},1);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"tnt"},1);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-remove-title")).setColor("red");
         stack.setName(jsonText);
         return stack;
     }
     private NMSItemStack getItem2NotSupported(){
-        NMSItemStack stack = new NMSItemStack(new String[]{"red_stained_glass","stained_glass"},1,COLOR_RED);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"red_stained_glass","stained_glass"},1,COLOR_RED);
         JsonText jsonText = new JsonText(LangUtils.getText("controller-editor-redstone-connect-not-supported")).setColor("red");
         stack.setName(jsonText);
         return stack;
     }
     private NMSItemStack getCoreInfoItem(EditGUICoreInfo info){
-        NMSItemStack stack = new NMSItemStack(new String[]{info.icon.name().toLowerCase()},1);
+        NMSItemStack stack = NMSItemStack.create(new String[]{info.icon.name().toLowerCase()},1);
         String name = info.name;
         if(name.startsWith("@")){
             name=LangUtils.getText(name.substring(1));
@@ -1763,13 +1763,13 @@ public class EditGUI {
                 oldId = COLOR_LIME;
             }
         }
-        NMSItemStack stack = new NMSItemStack(new String[]{type,"stained_glass_pane"},1,oldId);
+        NMSItemStack stack = NMSItemStack.create(new String[]{type,"stained_glass_pane"},1,oldId);
         JsonText jsonText = new JsonText("");
         stack.setName(jsonText);
         return stack;
     }
     private static NMSItemStack getItemSwitchPage(boolean next,int nowPage,int totalPage){
-        NMSItemStack stack = new NMSItemStack(new String[]{"stone_button"},1);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"stone_button"},1);
         JsonText jsonText = new JsonText(next?
                 LangUtils.getText("controller-editor-next-page"):
                 LangUtils.getText("controller-editor-previous-page")
@@ -1788,7 +1788,7 @@ public class EditGUI {
         return stack;
     }
     public NMSItemStack getCoreSettingItem(Utils.Pair<String, Class> settings){
-        NMSItemStack stack = new NMSItemStack(new String[]{"redstone_block"},1);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"redstone_block"},1);
         String settingName = settings.getKey();
         if(settingName.startsWith("@")){
             settingName = LangUtils.getText(settingName.substring(1));
@@ -1894,7 +1894,7 @@ public class EditGUI {
         return settings;
     }
     private NMSItemStack getRedstoneConnectItem(Utils.Pair<String, RedstoneBridge.RedstoneSignalInterface> info){
-        NMSItemStack stack = new NMSItemStack(new String[]{"redstone","redstone_wire"},1);
+        NMSItemStack stack = NMSItemStack.create(new String[]{"redstone","redstone_wire"},1);
         String text = info.getKey();
         if(text.startsWith("@")){
             text=LangUtils.getText(text.substring(1));

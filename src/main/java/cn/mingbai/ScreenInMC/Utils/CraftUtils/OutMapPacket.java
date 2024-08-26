@@ -2,6 +2,7 @@ package cn.mingbai.ScreenInMC.Utils.CraftUtils;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.getConstructor;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.minecraftVersion;
@@ -11,18 +12,29 @@ public class OutMapPacket implements OutPacket{
     static Constructor PacketPlayOutMapConstructor;
     static Class MapDataClass;
     static Constructor MapDataConstructor;
+    static Class MapIdClass;
+    static Constructor MapIdConstructor;
     protected static void init() throws Exception{
         PacketPlayOutMapClass = CraftUtils.getMinecraftClass("PacketPlayOutMap");
+        if(PacketPlayOutMapClass==null){
+            PacketPlayOutMapClass = CraftUtils.getMinecraftClass("ClientboundMapItemDataPacket");
+        }
         for(Constructor i:PacketPlayOutMapClass.getDeclaredConstructors()){
             if(i.getParameterCount()!=0 && !i.getParameters()[0].getType().getSimpleName().equals("PacketDataSerializer")){
+                if(i.getParameterCount()==5&&i.getParameters()[4].getType().equals(Optional.class)) continue;
                 PacketPlayOutMapConstructor=i;
                 PacketPlayOutMapConstructor.setAccessible(true);
             }
         }
         if(PacketPlayOutMapConstructor.getParameterCount() == 5) {
             MapDataClass=PacketPlayOutMapConstructor.getParameters()[4].getType();
+
             MapDataConstructor= getConstructor(MapDataClass);
             MapDataConstructor.setAccessible(true);
+        }
+        MapIdClass = CraftUtils.getMinecraftClass("MapId");
+        if(MapIdClass!=null){
+            MapIdConstructor = MapIdClass.getDeclaredConstructor(int.class);
         }
     }
     private static byte[] mapDataTo128x128(byte[] colors,int startX,int startY,int width,int height){
@@ -59,7 +71,11 @@ public class OutMapPacket implements OutPacket{
             //1.17+
             if(PacketPlayOutMapConstructor.getParameterCount() == 5){
                 Object data = MapDataConstructor.newInstance(startX, startY, width, height,colors);
-                return PacketPlayOutMapConstructor.newInstance(mapId, (byte) 0,false, new ArrayList<>(), data);
+                if(PacketPlayOutMapConstructor.getParameters()[0].getType().getSimpleName().equals("MapId")){
+                    return PacketPlayOutMapConstructor.newInstance(MapIdConstructor.newInstance(mapId), (byte) 0,false, new ArrayList<>(), data);
+                }else{
+                    return PacketPlayOutMapConstructor.newInstance(mapId, (byte) 0,false, new ArrayList<>(), data);
+                }
             }
 
         }catch (Exception e) {

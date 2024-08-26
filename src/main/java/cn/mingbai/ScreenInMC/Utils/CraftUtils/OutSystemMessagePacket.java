@@ -21,6 +21,9 @@ public class OutSystemMessagePacket implements OutPacket {
     protected static void init() throws Exception {
         ClientboundSystemChatPacketClass = CraftUtils.getMinecraftClass("ClientboundSystemChatPacket");
         IChatBaseComponentClass = CraftUtils.getMinecraftClass("IChatBaseComponent");
+        if(IChatBaseComponentClass==null){
+            IChatBaseComponentClass = CraftUtils.getMinecraftClass("Component");
+        }
         if (ClientboundSystemChatPacketClass != null) {
             try {
                 ClientboundSetActionBarTextPacketConstructor = ClientboundSystemChatPacketClass.getDeclaredConstructor(IChatBaseComponentClass, boolean.class);

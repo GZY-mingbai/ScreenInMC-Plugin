@@ -24,7 +24,13 @@ public class OutOpenBookPacket implements OutPacket{
     protected static void init() throws Exception {
         try {
             PacketPlayOutOpenBookClass = CraftUtils.getMinecraftClass("PacketPlayOutOpenBook");
+            if(PacketPlayOutOpenBookClass==null){
+                PacketPlayOutOpenBookClass = CraftUtils.getMinecraftClass("ClientboundOpenBookPacket");
+            }
             EnumHandClass = CraftUtils.getMinecraftClass("EnumHand");
+            if(EnumHandClass==null){
+                EnumHandClass = CraftUtils.getMinecraftClass("InteractionHand");
+            }
             PacketPlayOutOpenBookConstructor = PacketPlayOutOpenBookClass.getDeclaredConstructor(EnumHandClass);
             method = 2;
         }catch (Exception e){
@@ -51,6 +57,9 @@ public class OutOpenBookPacket implements OutPacket{
         }
         if(method==1||method==2){
             EnumHandClass = CraftUtils.getMinecraftClass("EnumHand");
+            if(EnumHandClass==null){
+                EnumHandClass = CraftUtils.getMinecraftClass("InteractionHand");
+            }
             EnumHandValues = EnumHandClass.getDeclaredMethod("values");
             EnumHandOrdinal = Enum.class.getDeclaredMethod("ordinal");
             MainHand = ((Object[])EnumHandValues.invoke(null))[0];

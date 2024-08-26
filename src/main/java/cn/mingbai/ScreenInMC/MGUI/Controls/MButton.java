@@ -4,11 +4,8 @@ import cn.mingbai.ScreenInMC.MGUI.ClickType;
 import cn.mingbai.ScreenInMC.MGUI.MRenderer;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.*;
-
-import static cn.mingbai.ScreenInMC.MGUI.MContainer.minClickInterval;
 
 public class MButton extends MTextBlock {
     private boolean pressed = false;

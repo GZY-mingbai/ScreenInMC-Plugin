@@ -1,7 +1,6 @@
 package cn.mingbai.ScreenInMC.BuiltInGUIs;
 
 import cn.mingbai.ScreenInMC.Browsers.Browser;
-import cn.mingbai.ScreenInMC.Browsers.Chromium;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.MGUI.Alignment;

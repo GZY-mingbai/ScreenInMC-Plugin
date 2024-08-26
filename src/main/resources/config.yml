@@ -1,5 +1,5 @@
 download-browser-core:
-  github-proxy: "https://ghproxy.com/%URL%" #留空为不使用Github代理
+  github-proxy: "https://ghproxy.net/%URL%" #留空为不使用Github代理
   http-proxy: "" #留空为不使用http代理 例: http://127.0.0.1:1080
   jcef-download-url:
     type: 1 #0:直接下载文件(仅支持.tar.gz)(须手动选择对应系统) 1:下载Github仓库Releases文件(自动选择系统)
@@ -16,3 +16,4 @@ piece-size: 4 #分块大小 可设置 1(关闭抖色) 2 4 8 16
 render-distance-limit: 32 #显示器最小距离(超过该距离将不向玩家发送显示器内容) 单位: 方块
 default-fps-limit: 18 #默认fps限制(仅对带帧率限制功能的核心起作用)
 default-font: "" #默认字体设置(若为空则使用系统默认字体)
+click-op-only: false #是否仅允许管理员点击屏幕

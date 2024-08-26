@@ -7,6 +7,9 @@ public class OutCloseWindowPacket implements OutPacket{
     static Class PacketPlayOutCloseWindowClass;
     protected static void init() throws Exception {
         PacketPlayOutCloseWindowClass = CraftUtils.getMinecraftClass("PacketPlayOutCloseWindow");
+        if(PacketPlayOutCloseWindowClass==null){
+            PacketPlayOutCloseWindowClass = CraftUtils.getMinecraftClass("ClientboundContainerClosePacket");
+        }
         PacketPlayOutCloseWindowConstructor = PacketPlayOutCloseWindowClass.getDeclaredConstructor(int.class);
     }
     public static Object create(int windowID){

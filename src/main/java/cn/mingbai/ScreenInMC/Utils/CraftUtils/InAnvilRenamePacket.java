@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 public class InAnvilRenamePacket implements InPacket{
@@ -17,6 +16,9 @@ public class InAnvilRenamePacket implements InPacket{
     protected static void init() throws Exception {
         try {
             PacketPlayInItemNameClass = CraftUtils.getMinecraftClass("PacketPlayInItemName");
+            if(PacketPlayInItemNameClass==null){
+                PacketPlayInItemNameClass = CraftUtils.getMinecraftClass("ServerboundRenameItemPacket");
+            }
             for(Field i:PacketPlayInItemNameClass.getDeclaredFields()) {
                 if(!Modifier.isStatic(i.getModifiers())){
                     if(i.getType().equals(String.class)) Name = i;

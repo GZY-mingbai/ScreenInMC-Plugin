@@ -1,16 +1,12 @@
 package cn.mingbai.ScreenInMC;
 
-import cn.mingbai.ScreenInMC.Browsers.Chromium;
 import cn.mingbai.ScreenInMC.BuiltInGUIs.WebBrowser;
 import cn.mingbai.ScreenInMC.Controller.EditGUI;
 import cn.mingbai.ScreenInMC.Controller.Item;
-import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
-import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
-import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -27,13 +23,22 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static cn.mingbai.ScreenInMC.Main.getPluginLogger;
-import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.getOpenCLPlatforms;
+import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.setPieceSize;
 
 public class CommandListener implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         try {
-
+            if(args.length==0){
+                String[] helps = LangUtils.getText("command-help").split("\n");
+                for(String i:helps){
+                    Main.sendMessage(sender, new JsonText(i)
+                            .setColor("white")
+                    );
+                }
+                return true;
+            }
             if (args[0].equalsIgnoreCase("putScreen")) {
                 try {
                     if (args.length != 9) {

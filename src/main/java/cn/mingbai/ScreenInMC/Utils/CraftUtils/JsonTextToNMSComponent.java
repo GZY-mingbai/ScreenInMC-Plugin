@@ -45,23 +45,45 @@ public class JsonTextToNMSComponent {
 
     public static void init() throws Exception {
         ChatModifierClass = CraftUtils.getMinecraftClass("ChatModifier");
+        if(ChatModifierClass==null){
+            ChatModifierClass = CraftUtils.getMinecraftClass("Style");
+        }
         ChatModifierClassConstructor = CraftUtils.getConstructor(ChatModifierClass);
         ChatModifierClassConstructor.setAccessible(true);
         EnumChatFormatClass = CraftUtils.getMinecraftClass("EnumChatFormat");
+        if(EnumChatFormatClass==null){
+            EnumChatFormatClass = CraftUtils.getMinecraftClass("ChatFormatting");
+        }
         ChatClickableClass = CraftUtils.getMinecraftClass("ChatClickable");
+        if(ChatClickableClass == null){
+            ChatClickableClass = CraftUtils.getMinecraftClass("ClickEvent");
+        }
         ChatClickableClassConstructor = CraftUtils.getConstructor(ChatClickableClass);
         EnumClickActionClass = CraftUtils.getMinecraftClass("EnumClickAction");
+        if(EnumClickActionClass==null){
+            for(Class i : CraftUtils.getMinecraftClasses("Action",true)){
+                if(i.getName().contains("ClickEvent")){
+                    EnumClickActionClass = i;
+                }
+            }
+        }
         if(CraftUtils.minecraftVersion>=19){
             LiteralContentsClass = CraftUtils.getMinecraftClass("LiteralContents");
+            if(LiteralContentsClass==null){
+                LiteralContentsClass = CraftUtils.getMinecraftClass("PlainTextContents");
+            }
             KeybindContentsClass = CraftUtils.getMinecraftClass("KeybindContents");
             TranslatableContentsClass = CraftUtils.getMinecraftClass("TranslatableContents");
             IChatMutableComponentClass = CraftUtils.getMinecraftClass("IChatMutableComponent");
+            if(IChatMutableComponentClass == null){
+                IChatMutableComponentClass = CraftUtils.getMinecraftClass("MutableComponent");
+            }
             try {
                 LiteralContentsClassConstructor = CraftUtils.getConstructor(LiteralContentsClass);
             }catch (Exception e){
                 LiteralContentsClassConstructor=null;
                 literal:
-                for(Class i:CraftUtils.getMinecraftClass("LiteralContents").getDeclaredClasses()){
+                for(Class i:LiteralContentsClass.getDeclaredClasses()){
                     for(Constructor j:i.getDeclaredConstructors())
                     {
                         if(j.getParameterCount()==1&&j.getParameters()[0].getType().equals(String.class)){
@@ -78,6 +100,9 @@ public class JsonTextToNMSComponent {
             KeybindContentsClassConstructor = CraftUtils.getConstructor(KeybindContentsClass);
             TranslatableContentsClassConstructor = CraftUtils.getConstructor(TranslatableContentsClass);
             ChatHexColorClass = CraftUtils.getMinecraftClass("ChatHexColor");
+            if(ChatHexColorClass==null){
+                ChatHexColorClass = CraftUtils.getMinecraftClass("TextColor");
+            }
             for(Method i:IChatMutableComponentClass.getDeclaredMethods()){
                 if(i.getParameterCount()==1&&i.getParameters()[0].getType().getSimpleName().equals("ComponentContents")){
                     IChatMutableComponentFromComponentContents=i;
@@ -95,6 +120,9 @@ public class JsonTextToNMSComponent {
                 ChatComponentKeybindClass = CraftUtils.getMinecraftClass("ChatComponentKeybind");
                 ChatComponentKeybindClassConstructor = CraftUtils.getConstructor(ChatComponentKeybindClass);
                 ChatHexColorClass = CraftUtils.getMinecraftClass("ChatHexColor");
+                if(ChatHexColorClass==null){
+                    ChatHexColorClass = CraftUtils.getMinecraftClass("TextColor");
+                }
             } else {
                 if (CraftUtils.minecraftVersion >= 12) {
                     ChatComponentKeybindClass = CraftUtils.getMinecraftClass("ChatComponentKeybind");
@@ -112,7 +140,7 @@ public class JsonTextToNMSComponent {
         }
         if(ChatHexColorClass!=null) {
             for (Method i : ChatHexColorClass.getDeclaredMethods()) {
-                if (i.getParameterCount() == 1 && i.getParameters()[0].getType().getSimpleName().equals("EnumChatFormat")) {
+                if (i.getParameterCount() == 1 && i.getParameters()[0].getType().equals(EnumChatFormatClass)) {
                     ChatHexColorFromEnumChatFormat = i;
                     ChatHexColorFromEnumChatFormat.setAccessible(true);
                 }
@@ -125,10 +153,10 @@ public class JsonTextToNMSComponent {
                 IChatMutableComponentClass.getDeclaredMethods()){
             if(i.getParameterCount()==1){
                 String paramName = i.getParameters()[0].getType().getSimpleName();
-                if(paramName.equals("ChatModifier")) {
+                if(paramName.equals("ChatModifier") || paramName.equals("Style")) {
                     ChatBaseComponentSetChatModifier = i;
                 }
-                if(paramName.equals("IChatBaseComponent")){
+                if(paramName.equals("IChatBaseComponent") || paramName.equals("Component")){
                     ChatBaseComponentAddSibling = i;
                 }
             }

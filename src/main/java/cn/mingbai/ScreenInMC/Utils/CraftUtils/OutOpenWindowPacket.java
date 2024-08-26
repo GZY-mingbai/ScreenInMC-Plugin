@@ -21,9 +21,18 @@ public class OutOpenWindowPacket implements OutPacket{
 
     protected static void init() throws Exception {
         PacketPlayOutOpenWindowClass = CraftUtils.getMinecraftClass("PacketPlayOutOpenWindow");
+        if(PacketPlayOutOpenWindowClass==null){
+            PacketPlayOutOpenWindowClass = CraftUtils.getMinecraftClass("ClientboundOpenScreenPacket");
+        }
         IChatBaseComponentClass = CraftUtils.getMinecraftClass("IChatBaseComponent");
+        if(IChatBaseComponentClass==null){
+            IChatBaseComponentClass = CraftUtils.getMinecraftClass("Component");
+        }
         try {
             ContainersClass = CraftUtils.getMinecraftClass("Containers");
+            if(ContainersClass==null){
+                ContainersClass = CraftUtils.getMinecraftClass("MenuType");
+            }
         }catch (Exception e){
         }
         try {
@@ -32,11 +41,16 @@ public class OutOpenWindowPacket implements OutPacket{
             method=0;
             return;
         }catch (Exception e){
-            PacketPlayOutOpenWindowConstructor = PacketPlayOutOpenWindowClass.getDeclaredConstructor(int.class,ContainersClass,IChatBaseComponentClass);
+            try{
+                PacketPlayOutOpenWindowConstructor = PacketPlayOutOpenWindowClass.getDeclaredConstructor(int.class,ContainersClass,IChatBaseComponentClass);
+            }catch (Exception er){
+                ContainersClass = CraftUtils.getMinecraftClass("MenuType");
+                PacketPlayOutOpenWindowConstructor = PacketPlayOutOpenWindowClass.getDeclaredConstructor(int.class,ContainersClass,IChatBaseComponentClass);
+            }
             method=1;
         }
         for(Field i:ContainersClass.getDeclaredFields()){
-            if(i.getGenericType().getTypeName().contains("ContainerChest")){
+            if(i.getGenericType().getTypeName().contains("ContainerChest")||i.getGenericType().getTypeName().contains("ChestMenu")){
                 if(Generic9x1==null) {Generic9x1=i.get(null);continue;}
                 if(Generic9x2==null) {Generic9x2=i.get(null);continue;}
                 if(Generic9x3==null) {Generic9x3=i.get(null);continue;}
@@ -44,10 +58,10 @@ public class OutOpenWindowPacket implements OutPacket{
                 if(Generic9x5==null) {Generic9x5=i.get(null);continue;}
                 if(Generic9x6==null) {Generic9x6=i.get(null);continue;}
             }
-            if(i.getGenericType().getTypeName().contains("ContainerAnvil")) {
+            if(i.getGenericType().getTypeName().contains("ContainerAnvil")||i.getGenericType().getTypeName().contains("AnvilMenu")) {
                 Anvil = i.get(null);
             }
-            if(i.getGenericType().getTypeName().contains("ContainerHopper")) {
+            if(i.getGenericType().getTypeName().contains("ContainerHopper")||i.getGenericType().getTypeName().contains("HopperMenu")) {
                 Hopper = i.get(null);
             }
         }

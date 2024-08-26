@@ -10,6 +10,9 @@ public class InWindowClosePacket implements InPacket{
     static Field containerId;
     protected static void init() throws Exception {
         PacketPlayInCloseWindowClass = CraftUtils.getMinecraftClass("PacketPlayInCloseWindow");
+        if(PacketPlayInCloseWindowClass==null){
+            PacketPlayInCloseWindowClass = CraftUtils.getMinecraftClass("ServerboundContainerClosePacket");
+        }
         for(Field i:PacketPlayInCloseWindowClass.getDeclaredFields()){
             if(i.getType().equals(int.class)){
                 containerId = i;

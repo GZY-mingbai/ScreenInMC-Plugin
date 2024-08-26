@@ -6,7 +6,6 @@ import cn.mingbai.ScreenInMC.Utils.Utils;
 import org.bukkit.Bukkit;
 
 import java.awt.*;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

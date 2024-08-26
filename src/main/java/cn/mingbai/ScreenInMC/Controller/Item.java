@@ -4,11 +4,10 @@ import cn.mingbai.ScreenInMC.Core;
 import cn.mingbai.ScreenInMC.Main;
 import cn.mingbai.ScreenInMC.RedstoneBridge;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutActionBarPacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack;
+import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutActionBarPacket;
 import cn.mingbai.ScreenInMC.Utils.ImmediatelyCancellableBukkitRunnable;
-import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils;
 import cn.mingbai.ScreenInMC.Utils.LangUtils.JsonText;
 import cn.mingbai.ScreenInMC.Utils.Utils;
@@ -16,7 +15,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -29,7 +27,7 @@ import static cn.mingbai.ScreenInMC.Screen.Screen.getScreenFromUUID;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils.isRepeater;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.getItemInHand;
 import static cn.mingbai.ScreenInMC.Utils.CraftUtils.NMSItemStack.setItemInHand;
-import static cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.*;
+import static cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSON;
 
 public class Item {
     public static final int CONTROLLER = 1575771175;
@@ -245,7 +243,7 @@ public class Item {
         }
     }
     public static NMSItemStack getNMSItem(int mode){
-        NMSItemStack item = new NMSItemStack(new String[]{"wooden_hoe","wood_hoe"},1);
+        NMSItemStack item = NMSItemStack.create(new String[]{"wooden_hoe","wood_hoe"},1);
         item.setName(new JsonText(LangUtils.getText("controller-item-name")).setColor("gold"));
         item.setCustomModelData(CONTROLLER);
         item.setUnbreakable(true);

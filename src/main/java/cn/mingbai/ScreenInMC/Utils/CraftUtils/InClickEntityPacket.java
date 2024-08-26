@@ -16,7 +16,13 @@ public class InClickEntityPacket implements InPacket {
     public static final int INTERACT=0, ATTACK=1, INTERACT_AT=2;
     protected static void init() throws Exception {
         PacketPlayInUseEntityClass = CraftUtils.getMinecraftClass("PacketPlayInUseEntity");
+        if(PacketPlayInUseEntityClass==null){
+            PacketPlayInUseEntityClass = CraftUtils.getMinecraftClass("ServerboundInteractPacket");
+        }
         EnumEntityUseActionClass = CraftUtils.getMinecraftClass("EnumEntityUseAction",true);
+        if(EnumEntityUseActionClass==null){
+            EnumEntityUseActionClass=CraftUtils.getMinecraftClass("ActionType",true);
+        }
         EnumEntityUseActionOrdinal = Enum.class.getDeclaredMethod("ordinal");
         if(EnumEntityUseActionClass.isEnum()){
             method=0;
@@ -37,7 +43,7 @@ public class InClickEntityPacket implements InPacket {
                 }
                 continue;
             }
-            if(i.getType().equals(EnumEntityUseActionClass)){
+            if(i.getType().getSimpleName().equals("Action")){
                 if(Action==null){
                     Action = i;
                     Action.setAccessible(true);
@@ -66,6 +72,19 @@ public class InClickEntityPacket implements InPacket {
     public int getAction(){
         try {
             Object i = Action.get(packet);
+            if(i.getClass().getSimpleName().equals("InteractionAtLocationAction")){
+                return INTERACT_AT;
+            }
+            if(i.getClass().getSimpleName().equals("InteractionAction")){
+                return INTERACT;
+            }
+            for(Method j : i.getClass().getDeclaredMethods()) {
+                if(j.getReturnType().equals(EnumEntityUseActionClass)){
+                    j.setAccessible(true);
+                    i = j.invoke(null);
+                    break;
+                }
+            }
             if(method==0){
                 return Utils.getInt(EnumEntityUseActionOrdinal.invoke(i));
             }

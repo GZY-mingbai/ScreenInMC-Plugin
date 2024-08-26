@@ -6,25 +6,21 @@ import cn.mingbai.ScreenInMC.BuiltInGUIs.*;
 import cn.mingbai.ScreenInMC.Controller.Item;
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
 import cn.mingbai.ScreenInMC.Screen.Screen;
-import cn.mingbai.ScreenInMC.Utils.*;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.CraftUtils;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.OutSystemMessagePacket;
 import cn.mingbai.ScreenInMC.Utils.CraftUtils.PacketListener;
+import cn.mingbai.ScreenInMC.Utils.*;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ConfigPaletteLoader;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.DitheringProcessor;
 import cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils;
 import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils;
-import cn.mingbai.ScreenInMC.Utils.JSONUtils.JSONUtils.JSONArray;
-
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.yaml.snakeyaml.reader.StreamReader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +30,7 @@ import java.util.logging.Logger;
 import static cn.mingbai.ScreenInMC.Utils.ImageUtils.ImageUtils.*;
 
 public class Main extends JavaPlugin {
-    public static int nowVersion = 6;
+    public static int nowVersion = 7;
     public static int defaultFrameRateLimit = 18;
     public static int renderDistanceLimit = 32;
     public static final String PluginFilesPath = "plugins/ScreenInMC/";
@@ -48,7 +44,7 @@ public class Main extends JavaPlugin {
 
     private static Random random = new Random();
 
-    static {
+    private static void loadNative() {
         Utils.Pair<String, String> typeArch = Utils.getSystem();
         String prefix = "screen-in-mc-" + typeArch.getKey() + "-" + typeArch.getValue();
         String suffix = Utils.getLibraryPrefix(typeArch.getKey());
@@ -202,7 +198,11 @@ public class Main extends JavaPlugin {
                 try {
                     version=FileUtils.getString("https://raw.githubusercontent.com/GZY-mingbai/ScreenInMC-Plugin/master/.github/version.yml","");
                 }catch (Throwable e){
-                    logger.warning("检查更新失败: "+e.getMessage());
+                    try{
+                        version=FileUtils.getString("https://cdn.jsdelivr.net/gh/GZY-mingbai/ScreenInMC-Plugin@master/.github/version.yml","");
+                    }catch (Throwable er){
+                        logger.warning("检查更新失败: "+e.getMessage());
+                    }
                 }
                 if(version==null||version.length()==0) return;
                 try {
@@ -212,6 +212,7 @@ public class Main extends JavaPlugin {
                     int latest = configuration.getInt("latest-version");
                     if(latest>nowVersion){
                         logger.warning("检查到插件更新: 最新版本: "+latest+" 当前版本: "+nowVersion);
+                        logger.warning("请前往 https://github.com/GZY-mingbai/ScreenInMC-Plugin/releases/ 下载最新版本");
                     }else {
                         logger.info("未检查到更新, 当前版本为最新版本");
                     }
@@ -230,13 +231,19 @@ public class Main extends JavaPlugin {
             getPluginLogger().warning("ScreenInMC load failed.");
             return;
         }
+        thisPlugin.saveDefaultConfig();
+        config = thisPlugin.getConfig();
+        int device = config.getInt("opencl-device");
+        if(device!=-2&&device!=-4){
+            loadNative();
+        }
         try {
             ImageUtils.initImageUtils(new ConfigPaletteLoader().get(),new DitheringProcessor.JavaFastDitheringProcessor());
         }catch (RuntimeException e){
-            getLogger().warning(OpenCLLoadErrorMessage);
+            if(device!=-2&&device!=-4) {
+                getLogger().warning(OpenCLLoadErrorMessage);
+            }
         }
-        thisPlugin.saveDefaultConfig();
-        config = thisPlugin.getConfig();
         defaultFrameRateLimit = config.getInt("default-fps-limit");
         renderDistanceLimit = config.getInt("render-distance-limit");
         try{
@@ -253,7 +260,6 @@ public class Main extends JavaPlugin {
         Core.addCore(new WebBrowser());
         Bukkit.getServer().getPluginCommand("screen").setExecutor(new CommandListener());
         EventListener.init();
-        int device = config.getInt("opencl-device");
         if (device == -3) {
             try {
                 device = ImageUtils.getBestOpenCLDevice();

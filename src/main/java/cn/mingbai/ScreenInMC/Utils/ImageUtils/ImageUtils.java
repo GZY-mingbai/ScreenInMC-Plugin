@@ -1,8 +1,8 @@
 package cn.mingbai.ScreenInMC.Utils.ImageUtils;
 
 import cn.mingbai.ScreenInMC.Natives.GPUDither;
-import cn.mingbai.ScreenInMC.Utils.LanczosFilter;
 import cn.mingbai.ScreenInMC.Utils.IOUtils;
+import cn.mingbai.ScreenInMC.Utils.LanczosFilter;
 import cn.mingbai.ScreenInMC.Utils.Utils;
 
 import javax.imageio.ImageIO;

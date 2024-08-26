@@ -7,6 +7,9 @@ public class OutRemoveMapEntityPacket implements OutPacket{
     static Constructor PacketPlayOutEntityDestroyConstructor;
     protected static void init() throws Exception {
         PacketPlayOutEntityDestroyClass = CraftUtils.getMinecraftClass("PacketPlayOutEntityDestroy");
+        if(PacketPlayOutEntityDestroyClass==null){
+            PacketPlayOutEntityDestroyClass = CraftUtils.getMinecraftClass("ClientboundRemoveEntitiesPacket");
+        }
         PacketPlayOutEntityDestroyConstructor = PacketPlayOutEntityDestroyClass.getDeclaredConstructor(int[].class);
     }
     public static Object create(int[] entityIds){

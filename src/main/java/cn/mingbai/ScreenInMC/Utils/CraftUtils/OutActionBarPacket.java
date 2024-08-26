@@ -19,6 +19,9 @@ public class OutActionBarPacket implements OutPacket{
     protected static void init() throws Exception {
         ClientboundSetActionBarTextPacketClass = CraftUtils.getMinecraftClass("ClientboundSetActionBarTextPacket");
         IChatBaseComponentClass = CraftUtils.getMinecraftClass("IChatBaseComponent");
+        if(IChatBaseComponentClass==null){
+            IChatBaseComponentClass=CraftUtils.getMinecraftClass("Component");
+        }
         if(ClientboundSetActionBarTextPacketClass!=null){
             ClientboundSetActionBarTextPacketConstructor = ClientboundSetActionBarTextPacketClass.getDeclaredConstructor(IChatBaseComponentClass);
             return;
