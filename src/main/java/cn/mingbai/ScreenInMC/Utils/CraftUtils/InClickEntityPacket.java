@@ -43,12 +43,19 @@ public class InClickEntityPacket implements InPacket {
                 }
                 continue;
             }
-            if(i.getType().getSimpleName().equals("Action")||i.getType().equals(EnumEntityUseActionClass)){
+            if(i.getType().getSimpleName().equals("Action")){
                 if(Action==null){
                     Action = i;
                     Action.setAccessible(true);
                 }
-                continue;
+            }
+        }
+        if(Action == null){
+            for(Field i:PacketPlayInUseEntityClass.getDeclaredFields()){
+                if(i.getType().equals(EnumEntityUseActionClass)){
+                    Action = i;
+                    Action.setAccessible(true);
+                }
             }
         }
     }
