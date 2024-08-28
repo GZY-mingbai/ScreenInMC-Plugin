@@ -1,2 +1,2 @@
-latest-version: 7
-messages: "支持1.20.5-1.21.1"
+latest-version: 8
+messages: "修复了在低于1.20.5版本无法使用的BUG"

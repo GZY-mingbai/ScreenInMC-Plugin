@@ -43,7 +43,7 @@ public class InClickEntityPacket implements InPacket {
                 }
                 continue;
             }
-            if(i.getType().getSimpleName().equals("Action")){
+            if(i.getType().getSimpleName().equals("Action")||i.getType().equals(EnumEntityUseActionClass)){
                 if(Action==null){
                     Action = i;
                     Action.setAccessible(true);
