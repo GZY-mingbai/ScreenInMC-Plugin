@@ -88,7 +88,7 @@ public class InClickEntityPacket implements InPacket {
             for(Method j : i.getClass().getDeclaredMethods()) {
                 if(j.getReturnType().equals(EnumEntityUseActionClass)){
                     j.setAccessible(true);
-                    i = j.invoke(null);
+                    i = j.invoke(i);
                     break;
                 }
             }
