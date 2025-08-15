@@ -1,5 +1,5 @@
 # ScreenInMC-Plugin
-![ScreenInMC Logo(Temporary) By zhuWin](https://gh-proxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/logo.png?raw=true)
+![ScreenInMC Logo(Temporary) By zhuWin](https://user-assets.sxlcdn.com/images/451416/Fmq8ktKx2ei4KvSM-mlt2BT-F0Pt.png)
 # 欢迎使用 ScreenInMC Bukkit插件！
 * [到 Actions 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/actions/workflows/build-all.yml)
 * [到 Releases 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/releases)
