@@ -5,6 +5,7 @@
 * [到 Releases 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/releases)
 
 此插件可以通过地图画，在Minecraft中拼接出一个显示器
+
 由于不可抗力，该项目将暂时停止维护，不要灰心，我们即将返回更新该项目。
 
 ![Example](https://gh-proxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/example.png?raw=true)  
