@@ -1,13 +1,13 @@
 # ScreenInMC-Plugin
-![ScreenInMC Logo(Temporary) By zhuWin](https://ghproxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/logo.png?raw=true)
+![ScreenInMC Logo(Temporary) By zhuWin](https://gh-proxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/logo.png?raw=true)
 # 欢迎使用 ScreenInMC Bukkit插件！
 * [到 Actions 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/actions/workflows/build-all.yml)
 * [到 Releases 中下载插件](https://github.com/GZY-mingbai/ScreenInMC-Plugin/releases)
 
 此插件可以通过地图画，在Minecraft中拼接出一个显示器
-目前因为开学，将暂停维护一段时间
+由于不可抗力，该项目将暂时停止维护，不要灰心，我们即将返回更新该项目。
 
-![Example](https://ghproxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/example.png?raw=true)  
+![Example](https://gh-proxy.com/https://github.com/GZY-mingbai/ScreenInMC-Plugin/blob/master/example.png?raw=true)  
 通过对 Minecraft 实际环境高度优化的抖色技术，我们将生成地图画的质量和速度推向了 Minecraft 的极限。
 1. 内置远程桌面客户端(VNC Client)功能。
 2. 可选的现代网页浏览器内核(Chromium)，让您在 Minecraft 中也可体验 Web 的乐趣。
